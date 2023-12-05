@@ -108,3 +108,7 @@ src/systemcmds/topic_listener/listener_generated.cpp
 
 # colcon
 log/
+src/examples/ares_drone/ares/AdcFrame_0_1.h
+src/examples/ares_drone/ares/Bearings_0_1.h
+src/examples/ares_drone/ares/GnssImu_0_1.h
+src/examples/ares_drone/nunavut/support/serialization.h
