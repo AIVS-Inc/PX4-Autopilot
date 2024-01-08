@@ -2,7 +2,7 @@
 
 uavcan.time.SynchronizedTimestamp.1.0 m_u64UtcMicrosecond		# timestamp
 
-uint32 m_u32SampleIndex											# sample index since meas start
+uint32 m_u32SampleIndex							# sample index since meas start
 
 reg.udral.physics.kinematics.geodetic.Point.0.1 m_glGnssLlh		# lat/lon in radians, eight above MSL, not altitude above the WGS84 geoid
 

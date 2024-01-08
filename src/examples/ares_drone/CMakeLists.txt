@@ -63,13 +63,17 @@
 # add_subdirectory(Phasor)
 # add_subdirectory(Storage)
 
-find_program(NNVG_PATH nnvg)
-if(NNVG_PATH)
-	message("Generating Cyphal ARES DSDL headers using Nunavut")
-	execute_process(COMMAND ${NNVG_PATH} ares --outdir ${CMAKE_CURRENT_SOURCE_DIR} --target-language c -I /home/ares/PX4-Autopilot/src/drivers/cyphal/public_regulated_data_types/uavcan -I /home/ares/PX4-Autopilot/src/drivers/cyphal/public_regulated_data_types/reg )
-else()
-	message(FATAL_ERROR "UAVCAN Nunavut nnvg not found")
-endif()
+# Uncomment this section to build the DSDL files.  Curerntly, there isn't a way to specify a fixed subjectID
+# in the Nunavut transpiler, so the output .h files must be manually edited.  Once the subjectIDs are
+# added to the .h, then recomment this block so that they don't get written over.
+#
+# find_program(NNVG_PATH nnvg)
+# if(NNVG_PATH)
+# 	message("Generating Cyphal ARES DSDL headers using Nunavut")
+# 	execute_process(COMMAND ${NNVG_PATH} ares --outdir ${CMAKE_CURRENT_SOURCE_DIR} --target-language c -I /home/ares/PX4-Autopilot/src/drivers/cyphal/public_regulated_data_types/uavcan -I /home/ares/PX4-Autopilot/src/drivers/cyphal/public_regulated_data_types/reg )
+# else()
+# 	message(FATAL_ERROR "UAVCAN Nunavut nnvg not found")
+# endif()
 
 px4_add_module(
 	MODULE examples__ares_drone
