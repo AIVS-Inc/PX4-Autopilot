@@ -1,21 +1,29 @@
 # AIVS Inc ARES bearing data description
 
-uavcan.time.SynchronizedTimestamp.1.0 m_u64UtcMicrosecond   # timestamp
+uint64  m_u32JulianMicrosecond		    # modified Julian timestamp, not uavcan.time.SynchronizedTimestamp.1.0
 
 uint32 m_u32SampleIndex                     # sample index of this bearing measurement
 
-uint8 m_iSourceIndex                        # index of the detected acoustic source
+uint32 m_iSourceIndex                       # index of the detected acoustic source
+
+float32 m_fSilDb                            # sound intensity level in dB, re: 1 pW
+
+float32 m_fActiveI                          # radial active intensity in dB, re: 1 pW
 
 float32 m_fSplDb                            # sound pressure level in dB, re: 20 uPa
 
-float32 m_fSilDb                            # sound intensity level in dB, re: 1 pW
+# Euler angles in radians
+uavcan.si.unit.angle.Scalar.1.0 m_fPitch
+uavcan.si.unit.angle.Scalar.1.0 m_fRoll
+uavcan.si.unit.angle.Scalar.1.0 m_fYaw
+
+# GNSS position and accuracy
+reg.udral.physics.kinematics.geodetic.Point.0.1 m_glGnssLlh		# lat/lon in radians, height above MSL, not altitude above the WGS84 geoid
+uavcan.si.unit.length.Scalar.1.0 m_fHorizontalAccuracy
+uavcan.si.unit.length.Scalar.1.0 m_fVerticalAccuracy
 
 float32 m_fAzimuth                          # azimuth in degrees [-180,180]
 
 float32 m_fElevation                        # elevation in degrees, [-90,90]
-
-float32 m_fActiveI                          # radial active intensity in dB, re: 1 pW
-
-float32 m_fBgSil                            # background radial sound intensity level in dB, re: 1 pW
 
 @sealed
