@@ -52,7 +52,7 @@
  * @reboot_required true
  * @group UAVCAN
  */
-PARAM_DEFINE_INT32(UAVCAN_ENABLE, 0);
+PARAM_DEFINE_INT32(UAVCAN_ENABLE, 1);
 
 /**
  * UAVCAN Node ID.
@@ -71,11 +71,11 @@ PARAM_DEFINE_INT32(UAVCAN_NODE_ID, 1);
  *
  * @unit bit/s
  * @min 20000
- * @max 1000000
+ * @max 5000000
  * @reboot_required true
  * @group UAVCAN
  */
-PARAM_DEFINE_INT32(UAVCAN_BITRATE, 1000000);
+PARAM_DEFINE_INT32(UAVCAN_BITRATE, 5000000);
 
 /**
  * UAVCAN rangefinder minimum range

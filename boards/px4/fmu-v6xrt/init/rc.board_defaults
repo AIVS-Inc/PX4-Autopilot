@@ -16,6 +16,12 @@ param set-default SENS_EN_INA238 0
 param set-default SENS_EN_INA228 0
 param set-default SENS_EN_INA226 1
 
+# Add defaults for analog power measurement using ADS1115
+param set-default BAT1_V_DIV 18.18
+param set-default BAT1_A_PER_V 36
+param set-default BAT1_V_CHANNEL 0
+param set-default BAT1_I_CHANNEL 1
+
 safety_button start
 
 if param greater -s UAVCAN_ENABLE 0
