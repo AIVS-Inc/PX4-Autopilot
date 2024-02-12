@@ -119,7 +119,7 @@ int CyphalNode::start(uint32_t node_id, uint32_t bitrate)
 		return -1;
 	}
 
-	bool can_fd = false;
+	bool can_fd = true;
 
 	if (can_fd) {
 		_instance = new CyphalNode(node_id, 8, CANARD_MTU_CAN_FD);
