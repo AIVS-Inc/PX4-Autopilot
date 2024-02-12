@@ -1,0 +1,7 @@
+# AIVS Inc noise event measurement paramters 
+
+float32     m_relativeDb      # relative intensity level change to define an event (low: -10, high: 20, nom: 20)
+uint32      m_numSources      # number of to detect (low: 1, high: 360, nom: 2)
+float32     m_angularRes      # histogram resolution (low: 1, high: 45, nom: 10)
+float32     m_bkgndSILtc      # background SIL time constant (low: 1, high: 10000, nom: 500)
+float32     m_eventWindow     # number of updates to the histogram per event, in delta-t steps (low: 1, high: 200, nom: 2)
