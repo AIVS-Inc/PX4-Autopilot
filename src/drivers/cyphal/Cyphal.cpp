@@ -83,6 +83,7 @@ CyphalNode::CyphalNode(uint32_t node_id, size_t capacity, size_t mtu_bytes) :
 	_pub_manager.updateParams();
 
 	_sub_manager.subscribe();
+	PX4_INFO("Subs done");
 
 	_mixing_output.mixingOutput().setMaxTopicUpdateRate(1000000 / 200);
 }
@@ -264,6 +265,7 @@ void CyphalNode::print_info()
 			PX4_INFO("Message port id %d", sub->port_id);
 
 		} else {
+			PX4_INFO("sub->port_id=%d",sub->port_id);
 			((UavcanBaseSubscriber *)sub->user_reference)->printInfo(sub->port_id);
 		}
 	});
@@ -299,7 +301,7 @@ void CyphalNode::print_info()
 static void print_usage()
 {
 	PX4_INFO("usage: \n"
-		 "\tuavcannode {start|status|stop}");
+		 "\tcyphal {start|status|stop}");
 }
 
 extern "C" __EXPORT int cyphal_main(int argc, char *argv[])

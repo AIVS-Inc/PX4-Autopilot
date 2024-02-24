@@ -31,6 +31,8 @@
 #
 ############################################################################
 
+include(CMakePrintHelpers)
+
 set(LIBCANARD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libcanard)
 set(DSDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/public_regulated_data_types)
 set(LEGACY_DSDL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/legacy_data_types)
@@ -92,6 +94,7 @@ foreach (_variableName ${_variableNames})
     string(REGEX MATCH "^CONFIG_CYPHAL_" CYPHAL_OPTION ${_variableName})
 
     if(CYPHAL_OPTION)
+	cmake_print_variables(_variableName)
         if(${${_variableName}} STREQUAL "y")
             list(APPEND DRIVERS_CYPHAL_OPTIONS "-D${_variableName}=1")
         else()

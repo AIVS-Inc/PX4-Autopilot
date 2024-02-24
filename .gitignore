@@ -113,3 +113,8 @@ src/examples/ares_drone/ares/Bearings_0_1.h
 src/examples/ares_drone/ares/GnssImu_0_1.h
 src/examples/ares_drone/nunavut/support/serialization.h
 boards/px4/fmu-v6xrt/nuttx-config/nsh/defconfig
+src/examples/ares_drone/ares/EventParams_0_1.h
+src/examples/ares_drone/ares/FFTcontrol_0_1.h
+src/examples/ares_drone/ares/GnssPos_0_1.h
+src/examples/ares_drone/ares/GnssRelPosNed_0_1.h
+src/examples/ares_drone/ares/Rtcm_0_1.h

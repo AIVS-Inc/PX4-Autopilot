@@ -148,6 +148,16 @@ public:
 		}
 	}
 
+	UavcanBaseSubscriber *next()
+	{
+		return _next_sub;
+	}
+
+	void setNext(UavcanBaseSubscriber *next)
+	{
+		_next_sub = next;
+	}
+
 protected:
 	struct SubjectSubscription {
 		CanardRxSubscription _canard_sub;
@@ -159,5 +169,6 @@ protected:
 	const char *_prefix_name;
 	SubjectSubscription _subj_sub;
 	uint8_t _instance {0};
+	UavcanBaseSubscriber *_next_sub {nullptr};
 	/// TODO: 'type' parameter? uavcan.pub.PORT_NAME.type (see 384.Access.1.0.uavcan)
 };

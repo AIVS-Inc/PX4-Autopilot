@@ -56,7 +56,7 @@ int CanardSocketCAN::init()
 	struct ifreq ifr;
 
 	//FIXME HOTFIX to make this code compile
-	bool can_fd = 1;
+	bool can_fd = true;
 
 	_can_fd = can_fd;
 

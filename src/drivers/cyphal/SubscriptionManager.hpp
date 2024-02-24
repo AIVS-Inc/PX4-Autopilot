@@ -41,6 +41,7 @@
 
 #pragma once
 
+// Dynamic Port Subscribers
 #ifndef CONFIG_CYPHAL_ESC_SUBSCRIBER
 #define CONFIG_CYPHAL_ESC_SUBSCRIBER 0
 #endif
@@ -61,6 +62,12 @@
 #define CONFIG_CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER 0
 #endif
 
+// Base Subscribers
+#define CONFIG_CYPHAL_ARES_POSITION 1
+#define CONFIG_CYPHAL_ARES_RELPOSNED 1
+#define CONFIG_CYPHAL_ARES_EVENT 1
+#define CONFIG_CYPHAL_ARES_ADC_FRAME 1
+
 /* Preprocessor calculation of Subscribers count */
 
 #define UAVCAN_SUB_COUNT CONFIG_CYPHAL_ESC_SUBSCRIBER + \
@@ -68,6 +75,12 @@
 	CONFIG_CYPHAL_GNSS_SUBSCRIBER_1 + \
 	CONFIG_CYPHAL_BMS_SUBSCRIBER + \
 	CONFIG_CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER
+
+#define CYPHAL_BASE_SUB_COUNT \
+	CONFIG_CYPHAL_ARES_POSITION + \
+	CONFIG_CYPHAL_ARES_RELPOSNED + \
+	CONFIG_CYPHAL_ARES_EVENT + \
+	CONFIG_CYPHAL_ARES_ADC_FRAME
 
 #include <px4_platform_common/defines.h>
 #include <drivers/drv_hrt.h>
@@ -84,12 +97,22 @@
 #include "Subscribers/udral/Gnss.hpp"
 #include "Subscribers/legacy/LegacyBatteryInfo.hpp"
 #include "Subscribers/uORB/uorb_subscriber.hpp"
+#include "../../examples/ares_drone/AresEventSubscriber.hpp"
+#include "../../examples/ares_drone/AdcFrameSubscriber.hpp"
+#include "../../examples/ares_drone/GnssPositionSubscriber.hpp"
+#include "../../examples/ares_drone/GnssRelPosNedSubscriber.hpp"
 
 typedef struct {
 	UavcanDynamicPortSubscriber *(*create_sub)(CanardHandle &handle, UavcanParamManager &pmgr) {};
 	const char *subject_name;
 	const uint8_t instance;
 } UavcanDynSubBinder;
+
+typedef struct {
+	UavcanBaseSubscriber *(*create_sub)(CanardHandle &handle) {};
+	const char *subject_name;
+	const uint8_t instance;
+} UavcanBaseSubBinder;
 
 class SubscriptionManager
 {
@@ -103,10 +126,12 @@ public:
 
 private:
 	void updateDynamicSubscriptions();
+	void updateBaseSubscriptions();
 
 	CanardHandle &_canard_handle;
 	UavcanParamManager &_param_manager;
 	UavcanDynamicPortSubscriber *_dynsubscribers {nullptr};
+	UavcanBaseSubscriber *_basesubscribers{nullptr};
 
 	UavcanHeartbeatSubscriber _heartbeat_sub {_canard_handle};
 
@@ -177,6 +202,49 @@ private:
 				return new uORB_over_UAVCAN_Subscriber<sensor_gps_s>(handle, pmgr, ORB_ID(sensor_gps));
 			},
 			"uorb.sensor_gps",
+			0
+		},
+#endif
+	};
+	const UavcanBaseSubBinder _uavcan_base_subs[CYPHAL_BASE_SUB_COUNT]
+	{
+#if CONFIG_CYPHAL_ARES_POSITION
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new GnssPositionSubscriber(handle, 0);
+			},
+			"ares.gnsspos",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_RELPOSNED
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new GnssRelPosNedSubscriber(handle, 0);
+			},
+			"ares.gnssrelposned",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_EVENT
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new AresEventSubscriber(handle, 0);
+			},
+			"ares.bearings",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_ADC_FRAME
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new AdcFrameSubscriber(handle, 0);
+			},
+			"ares.adcframe",
 			0
 		},
 #endif

@@ -46,6 +46,7 @@
 PublicationManager::~PublicationManager()
 {
 	_dynpublishers.clear();
+	_basepublishers.clear();
 }
 
 void PublicationManager::updateDynamicPublications()
@@ -97,10 +98,45 @@ void PublicationManager::updateDynamicPublications()
 	}
 }
 
+void PublicationManager::updateBasePublications()
+{
+	for (auto &sub : _uavcan_base_pubs) {
+
+		bool found_publisher = false;
+
+		for (auto &basepub : _basepublishers) {
+			// Check if publisher has already been created
+			char full_subj_name[200];
+			snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", basepub->getPrefixName(), basepub->getSubjectName());
+			const uint8_t instance = basepub->getInstance();
+
+			if (strcmp(full_subj_name, sub.subject_name) == 0 && instance == sub.instance) {
+				found_publisher = true;
+				break;
+			}
+		}
+		if (found_publisher) {
+			continue;
+		}
+		BasePublisher *basepub = sub.create_pub(_canard_handle);
+
+		if (basepub == nullptr) {
+			PX4_ERR("Out of memory");
+			return;
+		}
+		_basepublishers.add(basepub);
+
+		basepub->updateParam();
+	}
+}
+
 void PublicationManager::printInfo()
 {
 	for (auto &dynpub : _dynpublishers) {
 		dynpub->printInfo();
+	}
+	for (auto &basepub : _basepublishers) {
+		basepub->printInfo();
 	}
 }
 
@@ -112,6 +148,13 @@ void PublicationManager::updateParams()
 
 	// Check for any newly-enabled publication
 	updateDynamicPublications();
+
+	for (auto &basepub : _basepublishers) {
+		basepub->updateParam();
+	}
+
+	// Check for any newly-enabled publication
+	updateBasePublications();
 }
 
 UavcanPublisher *PublicationManager::getPublisher(const char *subject_name)
@@ -130,5 +173,8 @@ void PublicationManager::update()
 {
 	for (auto &dynpub : _dynpublishers) {
 		dynpub->update();
+	}
+	for (auto &basepub : _basepublishers) {
+		basepub->update();
 	}
 }

@@ -34,41 +34,52 @@
 /**
  * @file AdcFrameSubscriber.hpp
  *
- * Defines functionality of ARES Cyphal GNSS-IMU message subscription
+ * Defines functionality of ARES Cyphal ADC Frame message subscription
  *
  * @author Jim Waite <jim.waite@aivs.us>
  */
 
 #pragma once
 
-// UDRAL Specification Messages
+#include <uORB/uORB.h>
+#include <uORB/topics/sensor_avs_adc.h>
 #include "ares/AdcFrame_0_1.h"
+#include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 
 class AdcFrameSubscriber : public UavcanBaseSubscriber
-{k
+{
+	struct sensor_avs_adc_s timedata;
+	orb_advert_t adc_pub;
+	struct sensor_gps_s gps_report;
+	orb_advert_t gps_pub;
 public:
-	AdcFrameSubscriber(CanardHandle &handle, UavcanParamManager &pmgr, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, pmgr, "ares.", "adcframe", instance) { };
+	AdcFrameSubscriber(CanardHandle &handle, uint8_t instance = 0) :
+		UavcanBaseSubscriber(handle, "ares.", "adcframe", instance) { };
 
 	void subscribe() override
 	{
-		// Subscribe to messages reg.drone.physics.kinematics.geodetic.Point.0.1
 		_canard_handle.RxSubscribe(CanardTransferKindMessage,
-					   ares_Bearings_0_1_FIXED_PORT_ID_,
-					   ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
+					   ARES_SUBJECT_ID_FFT_ADC_FRAME,
+					   ares_AdcFrame_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
+
+		/* advertise timedata topic */
+		memset(&this->timedata, 0, sizeof(this->timedata));
+		this->adc_pub = orb_advertise(ORB_ID(sensor_avs_adc), &this->timedata);
+
+		/* advertise gnss topic */
+		memset(&this->gps_report, 0, sizeof(this->gps_report));
+		this->gps_pub = orb_advertise(ORB_ID(sensor_gps), &this->gps_report);
+		PX4_INFO("subscribed to AdcFrame");
 	};
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		// Test with Yakut:
-		// export YAKUT_TRANSPORT="pyuavcan.transport.can.CANTransport(pyuavcan.transport.can.media.slcan.SLCANMedia('/dev/serial/by-id/usb-Zubax_Robotics_Zubax_Babel_23002B000E514E413431302000000000-if00', 8, 115200), 42)"
-		// yakut pub 1500.reg.drone.physics.kinematics.geodetic.Point.0.1 '{latitude: 1.234, longitude: 2.34, altitude: {meter: 0.5}}'
 		PX4_INFO("AdcFrameCallback");
 
-		ares_Bearings_0_1 adcframe {};
+		ares_AdcFrame_0_1 adcframe {};
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_AdcFrame_0_1_deserialize_(&adcframe, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
@@ -77,19 +88,39 @@ public:
 		double lat = geo.latitude;
 		double lon = geo.longitude;
 		double alt = geo.altitude.meter;
-		uavcan_si_unit_length_Scalar_1_0 deltah = adcframe.m_fHorizontalAccuracy;
-		uavcan_si_unit_length_Scalar_1_0 deltav = adcframe.m_fVerticalAccuracy;
+		uavcan_si_unit_length_Scalar_1_0 dh = adcframe.m_fHorizontalAccuracy;
+		uavcan_si_unit_length_Scalar_1_0 dv = adcframe.m_fVerticalAccuracy;
 		uavcan_si_unit_angle_Scalar_1_0 pitch = adcframe.m_fPitch;
 		uavcan_si_unit_angle_Scalar_1_0 roll = adcframe.m_fRoll;
 		uavcan_si_unit_angle_Scalar_1_0 yaw = adcframe.m_fYaw;
-		uint32_t sampliIdx = adcframe.m_u32SampleIndex;
-		float splDb = adcframe.m_fSplDb;
-		float silDb = adcframe.m_fSilDb;
-		float activeI = adcframe.m_fActiveI;
-		float azim = adcframe.m_fAzimuth;
-		float elev = adcframe.m_fElevation;
+		uint32_t node = receive.metadata.remote_node_id;
+		uint32_t tID = receive.metadata.remote_node_id;
 
-		PX4_INFO("Latitude: %f, Longitude: %f, Altitude: %f", lat, lon, alt);
-		/// do something with the data
+		PX4_INFO("node:%lu,id:%lu,usec:%llu,lat:%f,lon:%f,alt:%f,dh:%f,dv:%f,pitch:%f,roll:%f,yaw:%f",
+		  	  node,tID,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian );
+
+		timedata.device_id = node;
+		timedata.transfer_id = tID;
+		timedata.time_utc_usec = utc_us;
+		timedata.latitude_deg = lat;
+		timedata.latitude_deg = lon;
+		timedata.altitude_ellipsoid_m = alt;
+		timedata.eph = dh.meter;
+		timedata.epv = dv.meter;
+		timedata.pitch = pitch.radian;
+		timedata.roll = roll.radian;
+		timedata.yaw = yaw.radian;
+		timedata.timestamp_sample = adcframe.m_u32SampleIndex;
+		memcpy(timedata.adc_frame, adcframe.m_ai32Data, sizeof(adcframe.m_ai32Data));
+
+		gps_report.time_utc_usec = utc_us;
+		gps_report.latitude_deg = lat;
+		gps_report.latitude_deg = lon;
+		gps_report.altitude_ellipsoid_m = alt;
+		gps_report.eph = dh.meter;
+		gps_report.epv = dv.meter;
+
+		orb_publish( ORB_ID(sensor_avs_adc), this->adc_pub, &this->timedata);	///< uORB pub for AVS events
+		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->gps_report);	///< uORB pub for AVS events
 	};
 };

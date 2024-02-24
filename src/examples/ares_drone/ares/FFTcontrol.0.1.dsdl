@@ -2,7 +2,9 @@
 
 uint16      m_u16ControlId     # see below
 uint16      m_u16Length
-uint8[<48]  m_u8Command        # "enable" = 1 byte, but could be a path name
+uint8[48]   m_u8Command        # "enable" = 1 byte, but could be a path name
+
+@sealed
 
 # enum class ControlId
 # {

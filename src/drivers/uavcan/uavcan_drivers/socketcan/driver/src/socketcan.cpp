@@ -76,7 +76,7 @@ uavcan::uint32_t CanIface::socketInit(uint32_t index)
 	struct ifreq ifr;
 
 	//FIXME Change this when we update to DroneCAN with CAN FD support
-	bool can_fd = 0;
+	bool can_fd = true;
 
 	_can_fd = can_fd;
 

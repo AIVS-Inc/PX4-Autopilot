@@ -64,6 +64,9 @@
 #define CONFIG_CYPHAL_UORB_SENSOR_GPS_PUBLISHER 0
 #endif
 
+// Base Publishers
+#define CONFIG_CYPHAL_ARES_EVENT_PUBLISHER 1
+
 /* Preprocessor calculation of publisher count */
 
 #define UAVCAN_PUB_COUNT CONFIG_CYPHAL_GNSS_PUBLISHER + \
@@ -72,24 +75,35 @@
 	CONFIG_CYPHAL_UORB_ACTUATOR_OUTPUTS_PUBLISHER + \
 	CONFIG_CYPHAL_UORB_SENSOR_GPS_PUBLISHER
 
+#define UAVCAN_BASE_PUB_COUNT CONFIG_CYPHAL_ARES_EVENT_PUBLISHER
+
 #include <px4_platform_common/defines.h>
 #include <drivers/drv_hrt.h>
 #include "Publishers/Publisher.hpp"
+#include "Publishers/BasePublisher.hpp"
 #include "CanardInterface.hpp"
 
 #include <uORB/topics/actuator_outputs.h>
 #include <uORB/topics/sensor_gps.h>
+#include <uORB/topics/sensor_avs_evt_control.h>
 
 #include "Actuators/EscClient.hpp"
 #include "Publishers/udral/Readiness.hpp"
 #include "Publishers/udral/Gnss.hpp"
 #include "Publishers/uORB/uorb_publisher.hpp"
+#include "../../examples/ares_drone/AresEventPublisher.hpp"
 
 typedef struct {
 	UavcanPublisher *(*create_pub)(CanardHandle &handle, UavcanParamManager &pmgr) {};
 	const char *subject_name;
 	const uint8_t instance;
 } UavcanDynPubBinder;
+
+typedef struct {
+	BasePublisher *(*create_pub)(CanardHandle &handle) {};
+	const char *subject_name;
+	const uint8_t instance;
+} UavcanBasePubBinder;
 
 class PublicationManager
 {
@@ -105,10 +119,12 @@ public:
 
 private:
 	void updateDynamicPublications();
+	void updateBasePublications();
 
 	CanardHandle &_canard_handle;
 	UavcanParamManager &_param_manager;
 	List<UavcanPublisher *> _dynpublishers;
+	List<BasePublisher *> _basepublishers;
 
 
 	const UavcanDynPubBinder _uavcan_pubs[UAVCAN_PUB_COUNT] {
@@ -159,6 +175,19 @@ private:
 				return new uORB_over_UAVCAN_Publisher<sensor_gps_s>(handle, pmgr, ORB_ID(sensor_gps));
 			},
 			"uorb.sensor_gps",
+			0
+		},
+#endif
+	};
+
+	const UavcanBasePubBinder _uavcan_base_pubs[UAVCAN_BASE_PUB_COUNT] {
+#if CONFIG_CYPHAL_ARES_EVENT_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new AresEventPublisher(handle, 0);
+			},
+			"ares.eventparams",
 			0
 		},
 #endif

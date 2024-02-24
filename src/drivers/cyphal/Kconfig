@@ -4,7 +4,7 @@
 #
 menuconfig DRIVERS_CYPHAL
 	bool "Cyphal"
-	default n
+	default y
 	---help---
 		Enable support for Cyphal
 
@@ -64,6 +64,10 @@ if DRIVERS_CYPHAL
             bool "uORB sensor_gps publisher"
             default n
 
+        config CYPHAL_ARES_EVENT_PUBLISHER
+            bool "Ares Event parameters publisher"
+            default y
+
     endmenu
 
     menu "Subscriber support"
@@ -87,6 +91,23 @@ if DRIVERS_CYPHAL
         config CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER
             bool "uORB sensor_gps Subscriber"
             default n
+
+        config CYPHAL_ARES_POSITION
+            bool "Ares Position Subscriber"
+            default y
+
+        config CYPHAL_ARES_RELPOSNED
+            bool "Ares RelPosNed Subscriber"
+            default y
+
+        config CYPHAL_ARES_EVENT
+            bool "ARES Event Subscriber"
+            default y
+
+        config CYPHAL_ARES_ADC_FRAME
+            bool "ARES ADC Frame Subscriber"
+            default y
+
     endmenu
 
     menu "Advertised Services"

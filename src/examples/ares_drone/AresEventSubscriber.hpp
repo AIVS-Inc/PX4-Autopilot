@@ -41,55 +41,97 @@
 
 #pragma once
 
-// UDRAL Specification Messages
+#include <uORB/uORB.h>
+#include <uORB/topics/sensor_avs.h>
 #include "ares/Bearings_0_1.h"
+#include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 
 class AresEventSubscriber : public UavcanBaseSubscriber
-{k
+{
+	struct sensor_avs_s bearings;
+	orb_advert_t avs_pub;
+	struct sensor_gps_s gps_report;
+	orb_advert_t gps_pub;
 public:
-	AresEventSubscriber(CanardHandle &handle, UavcanParamManager &pmgr, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, pmgr, "ares.", "aresevent", instance) { };
+	AresEventSubscriber(CanardHandle &handle, uint8_t instance = 0) :
+		UavcanBaseSubscriber(handle, "ares.", "bearings", instance) { };
 
 	void subscribe() override
 	{
-		// Subscribe to messages reg.drone.physics.kinematics.geodetic.Point.0.1
+		// Subscribe to CAN message
 		_canard_handle.RxSubscribe(CanardTransferKindMessage,
-					   ares_Bearings_0_1_FIXED_PORT_ID_,
+					   ARES_SUBJECT_ID_FFT_BEARING_ANGLES,
 					   ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
+
+		/* advertise bearings topic */
+		memset(&this->bearings, 0, sizeof(this->bearings));
+		this->avs_pub = orb_advertise(ORB_ID(sensor_avs), &this->bearings);
+
+		/* advertise gnss topic */
+		memset(&this->gps_report, 0, sizeof(this->gps_report));
+		this->gps_pub = orb_advertise(ORB_ID(sensor_gps), &this->gps_report);
+		PX4_INFO("subscribed to BearingAngles");
 	};
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		// Test with Yakut:
-		// export YAKUT_TRANSPORT="pyuavcan.transport.can.CANTransport(pyuavcan.transport.can.media.slcan.SLCANMedia('/dev/serial/by-id/usb-Zubax_Robotics_Zubax_Babel_23002B000E514E413431302000000000-if00', 8, 115200), 42)"
-		// yakut pub 1500.reg.drone.physics.kinematics.geodetic.Point.0.1 '{latitude: 1.234, longitude: 2.34, altitude: {meter: 0.5}}'
 		PX4_INFO("AresEventCallback");
 
 		ares_Bearings_0_1 aresevent {};
 		size_t msg_size_in_bits = receive.payload_size;
-		ares_AresEvent_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
+		ares_Bearings_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
 		uint64_t utc_us = aresevent.m_u32JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
 		reg_udral_physics_kinematics_geodetic_Point_0_1 geo = aresevent.m_glGnssLlh;
 		double lat = geo.latitude;
 		double lon = geo.longitude;
 		double alt = geo.altitude.meter;
-		uavcan_si_unit_length_Scalar_1_0 deltah = aresevent.m_fHorizontalAccuracy;
-		uavcan_si_unit_length_Scalar_1_0 deltav = aresevent.m_fVerticalAccuracy;
+		uavcan_si_unit_length_Scalar_1_0 dh = aresevent.m_fHorizontalAccuracy;
+		uavcan_si_unit_length_Scalar_1_0 dv = aresevent.m_fVerticalAccuracy;
 		uavcan_si_unit_angle_Scalar_1_0 pitch = aresevent.m_fPitch;
 		uavcan_si_unit_angle_Scalar_1_0 roll = aresevent.m_fRoll;
 		uavcan_si_unit_angle_Scalar_1_0 yaw = aresevent.m_fYaw;
-		uint32_t sampliIdx = aresevent.m_u32SampleIndex;
-		float splDb = aresevent.m_fSplDb;
-		float silDb = aresevent.m_fSilDb;
-		float activeI = aresevent.m_fActiveI;
-		float azim = aresevent.m_fAzimuth;
-		float elev = aresevent.m_fElevation;
+		double spl = aresevent.m_fSplDb;
+		double sil = aresevent.m_fSilDb;
+		double acti = aresevent.m_fActiveI;
+		double azim = aresevent.m_fAzimuth;
+		double elev = aresevent.m_fElevation;
+		uint32_t idx = aresevent.m_iSourceIndex;
+		uint32_t node = receive.metadata.remote_node_id;
 
-		PX4_INFO("Latitude: %f, Longitude: %f, Altitude: %f", lat, lon, alt);
-		/// do something with the data
+		PX4_INFO("node:%lu,idx:%ld,usec:%llu,lat:%f,lon:%f,alt:%f,dh:%f,dv:%f,pitch:%f,roll:%f,yaw:%f,spl:%f,sil:%f,acti:%f,az:%f,el:%f",
+		  	  node,idx,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian,spl,sil,acti,azim,elev );
+
+		bearings.device_id = node;
+		bearings.time_utc_usec = utc_us;
+		bearings.latitude_deg = lat;
+		bearings.latitude_deg = lon;
+		bearings.altitude_ellipsoid_m = alt;
+		bearings.eph = dh.meter;
+		bearings.epv = dv.meter;
+		bearings.pitch = pitch.radian;
+		bearings.roll = roll.radian;
+		bearings.yaw = yaw.radian;
+		bearings.spl = spl;
+		bearings.sil = sil;
+		bearings.active_intensity = acti;
+		bearings.azimuth_deg = azim;
+		bearings.elevation_deg = elev;
+		bearings.timestamp_sample = aresevent.m_u32SampleIndex;
+		bearings.source_index = idx;
+
+		gps_report.time_utc_usec = utc_us;
+		gps_report.latitude_deg = lat;
+		gps_report.latitude_deg = lon;
+		gps_report.altitude_ellipsoid_m = alt;
+		gps_report.eph = dh.meter;
+		gps_report.epv = dv.meter;
+
+		orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
+		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->gps_report);	///< uORB pub for AVS events
 	};
+private:
 };
