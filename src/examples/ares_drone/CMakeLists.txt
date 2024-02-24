@@ -80,16 +80,26 @@ px4_add_module(
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${CMAKE_CURRENT_BINARY_DIR}
 		"/home/ares/PX4-Autopilot/build/px4_fmu-v6xrt_default/src/drivers/cyphal/dsdlc_generated/"
-	STACK_MAIN 2000
+	STACK_MAIN 4096
 	SRCS
 		ares_drone_main.cpp
 		ares_drone.h
 		ares/AdcFrame.0.1.dsdl
 		ares/GnssImu.0.1.dsdl
 		ares/Bearings.0.1.dsdl
+		ares/GnssPos.0.1.dsdl
+		ares/GnssRelPosNed.0.1.dsdl
+		ares/Rtcm.0.1.dsdl
+		ares/EventParams.0.1.dsdl
+		ares/FFTcontrol.0.1.dsdl
+		AresEventSubscriber.hpp
+		AresEventPublisher.hpp
+		GnssPositionSubscriber.hpp
+		GnssRelPosNedSubscriber.hpp
+		AdcFrameSubscriber.hpp
+		UavCanId.h
+	MODULE_CONFIG
+		module.yaml
 	DEPENDS
+		uorb_msgs
 	)
-# add all dependencies
-# foreach(task ${ares_all})
-# 	target_link_libraries(examples__ares_drone PUBLIC ${task})
-# endforeach()

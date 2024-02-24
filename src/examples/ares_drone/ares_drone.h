@@ -41,6 +41,11 @@
 #include "ares/AdcFrame_0_1.h"
 #include "ares/GnssImu_0_1.h"
 #include "ares/Bearings_0_1.h"
+#include "ares/GnssPos_0_1.h"
+#include "ares/GnssRelPosNed_0_1.h"
+#include "ares/FFTcontrol_0_1.h"
+#include "ares/EventParams_0_1.h"
+#include "ares/Rtcm_0_1.h"
 
 using namespace time_literals;
 
@@ -50,9 +55,11 @@ extern "C" __EXPORT int ares_drone_main(int argc, char *argv[]);
 class AresDrone : public ModuleBase<AresDrone>, public ModuleParams
 {
 public:
-	AresDrone(int example_param, bool example_flag);
+	AresDrone(bool debug_flag, uint8_t *nodeID);
 
-	virtual ~AresDrone() = default;
+	AresDrone();
+
+	~AresDrone() = default;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
@@ -72,6 +79,7 @@ public:
 	/** @see ModuleBase::print_status() */
 	int print_status() override;
 
+	int send_command();
 private:
 
 	/**
@@ -80,11 +88,18 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
-
+	uint8_t aresNodeId[2];
+	bool debug;
 
 	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,   /**< example parameter */
-		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig  /**< another parameter */
+		(ParamInt<px4::params::SYS_AUTOSTART>) 	_param_sys_autostart,   /**< example parameter */
+		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig,  /**< another parameter */
+		(ParamInt<px4::params::FFT_ENABLE>) 	_fft_enable,
+		(ParamInt<px4::params::EVT_REL_DB>) 	_evt_rel_dB,
+		(ParamInt<px4::params::EVT_NUM_SRC>) 	_evt_num_src,
+		(ParamInt<px4::params::EVT_ANG_RES>) 	_evt_ang_res,
+		(ParamInt<px4::params::EVT_BG_TC>) 	_evt_bg_tc,
+		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win
 	)
 
 	// Subscriptions
