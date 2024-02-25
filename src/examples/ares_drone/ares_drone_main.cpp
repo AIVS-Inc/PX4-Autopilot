@@ -185,7 +185,7 @@ void AresDrone::run()
 	// run the loop synchronized to topic publications
 	int sensor_avs_sub = orb_subscribe(ORB_ID(sensor_avs));
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
-	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
+	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gps));
 	int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
 
 	px4_pollfd_struct_t fds[] = {
