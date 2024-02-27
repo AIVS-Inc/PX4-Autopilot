@@ -38,7 +38,7 @@
 #include <uORB/SubscriptionInterval.hpp>
 #include <uORB/topics/parameter_update.h>
 
-#include "ares/AdcFrame_0_1.h"
+//#include "ares/AdcFrame_0_1.h"
 #include "ares/GnssImu_0_1.h"
 #include "ares/Bearings_0_1.h"
 #include "ares/GnssPos_0_1.h"
@@ -49,21 +49,21 @@
 
 using namespace time_literals;
 
-extern "C" __EXPORT int ares_drone_main(int argc, char *argv[]);
+extern "C" __EXPORT int ares_avs_main(int argc, char *argv[]);
 
 
-class AresDrone : public ModuleBase<AresDrone>, public ModuleParams
+class AresAvs : public ModuleBase<AresAvs>, public ModuleParams
 {
 public:
-	AresDrone(uint8_t nodeID_top, uint8_t nodeID_bot);
+	AresAvs(uint8_t nodeID_top, uint8_t nodeID_bot);
 
-	virtual ~AresDrone() = default;
+	virtual ~AresAvs() = default;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
 
 	/** @see ModuleBase */
-	static AresDrone *instantiate(int argc, char *argv[]);
+	static AresAvs *instantiate(int argc, char *argv[]);
 
 	/** @see ModuleBase */
 	static int custom_command(int argc, char *argv[]);

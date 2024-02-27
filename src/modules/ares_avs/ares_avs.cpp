@@ -31,31 +31,32 @@
  *
  ****************************************************************************/
 
-#include "ares_drone.h"
+#include "ares_avs.h"
 
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/log.h>
 #include <px4_platform_common/posix.h>
 
 #include <uORB/topics/parameter_update.h>
+#include <uORB/topics/sensor_combined.h>
 #include <uORB/topics/sensor_avs.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include <uORB/topics/sensor_gps.h>
-#include <uORB/topics/sensor_avs_adc.h>
+//#include <uORB/topics/sensor_avs_adc.h>
 #include <uORB/topics/sensor_avs_evt_control.h>
 
 
-int AresDrone::print_status()
+int AresAvs::print_status()
 {
-	PX4_INFO("Running, current settings:");
+	PX4_INFO("Running");
 	// TODO: print additional runtime information about the state of the module
 
 	return 0;
 }
 
-int AresDrone::custom_command(int argc, char *argv[])
+int AresAvs::custom_command(int argc, char *argv[])
 {
-	AresDrone *object;
+	AresAvs *object;
 
 	if (!is_running()) {
 		print_usage("not running");
@@ -80,7 +81,7 @@ int AresDrone::custom_command(int argc, char *argv[])
 }
 
 
-int AresDrone::task_spawn(int argc, char *argv[])
+int AresAvs::task_spawn(int argc, char *argv[])
 {
 	_task_id = px4_task_spawn_cmd("ares",
 				      SCHED_DEFAULT,
@@ -93,11 +94,10 @@ int AresDrone::task_spawn(int argc, char *argv[])
 		_task_id = -1;
 		return -errno;
 	}
-	PX4_INFO("Spawned ares_drone task");
 	return 0;
 }
 
-AresDrone *AresDrone::instantiate(int argc, char *argv[])
+AresAvs *AresAvs::instantiate(int argc, char *argv[])
 {
 	bool error_flag = false;
 
@@ -134,36 +134,36 @@ AresDrone *AresDrone::instantiate(int argc, char *argv[])
 		return nullptr;
 	}
 
-	AresDrone *instance = new AresDrone(nodeID_top, nodeID_bot);
+	AresAvs *instance = new AresAvs(nodeID_top, nodeID_bot);
 
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
+	} else {
+		PX4_INFO("ares_avs started")
 	}
-	PX4_INFO("ares - instantiated()");
-
 	return instance;
 }
 
-AresDrone::AresDrone(uint8_t nodeID_top, uint8_t nodeID_bot): ModuleParams(nullptr)
+AresAvs::AresAvs(uint8_t nodeID_top, uint8_t nodeID_bot)
+	: ModuleParams(nullptr)
 {
 	aresNodeId_top = nodeID_top;
 	aresNodeId_bot = nodeID_bot;
 }
 
-void AresDrone::run()
+void AresAvs::run()
 {
 	// run the loop synchronized to topic publications
 	int sensor_avs_sub = orb_subscribe(ORB_ID(sensor_avs));
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gps));
-	int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
-	PX4_INFO("ares - begin run()" );
+	//int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
 
 	px4_pollfd_struct_t fds[] = {
 		{.fd = sensor_avs_sub, 		 .events = POLLIN},
 		{.fd = sensor_gnss_relative_sub, .events = POLLIN},
-		{.fd = sensor_gps_sub, 		 .events = POLLIN},
-		{.fd = sensor_avs_adc_sub, 	 .events = POLLIN}
+		{.fd = sensor_gps_sub, 		 .events = POLLIN}
+		//{.fd = sensor_avs_adc_sub, 	 .events = POLLIN}
 	};
 
 	// initialize parameters
@@ -176,8 +176,9 @@ void AresDrone::run()
 		int pret = px4_poll(fds, 1, 1000);
 
 		if (pret == 0) {
-			/* this means none of our providers is giving us data */
-			PX4_ERR("Got no data within a second");
+			/*Timeout: let the loop run anyway, none of our providers are sending data */
+			// don't do `continue` here
+			//PX4_ERR("No data within a second...");
 
 		} else if (pret < 0) {
 			/* this is seriously bad - should be an emergency */
@@ -186,44 +187,40 @@ void AresDrone::run()
 				PX4_ERR("ERROR return value from poll(): %d, %d", pret, errno);
 			}
 			error_counter++;
-			//px4_usleep(50000);
-			//continue;
-
-		} else if (fds[0].revents & POLLIN) {
+		}
+		else if (fds[0].revents & POLLIN) {
 			struct sensor_avs_s sensor_avs;
 			orb_copy(ORB_ID(sensor_avs), sensor_avs_sub, &sensor_avs);
 			// TODO: do something with the data...
 			PX4_INFO("got sensor_avs, node: %lu, time: %lld", sensor_avs.device_id, sensor_avs.timestamp);
-
 		}
 		else if (fds[1].revents & POLLIN) {
 			struct sensor_gnss_relative_s sensor_gnss_relative;
 			orb_copy(ORB_ID(sensor_gnss_relative), sensor_gnss_relative_sub, &sensor_gnss_relative);
 			// TODO: do something with the data...
 			PX4_INFO("got sensor_gnss_relative, node: %lu, time: %lld", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
-
 		}
 		else if (fds[2].revents & POLLIN) {
 			struct sensor_gps_s sensor_gps;
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
 			// TODO: do something with the data...
 			PX4_INFO("got sensor_gps, node: %lu, time: %lld", sensor_gps.device_id, sensor_gps.timestamp);
-
-		} else if (fds[3].revents & POLLIN) {
-			struct sensor_avs_adc_s sensor_avs_adc;
-			orb_copy(ORB_ID(sensor_avs_adc), sensor_avs_adc_sub, &sensor_avs_adc);
-			// TODO: do something with the data...
-			PX4_INFO("got sensor_avs_adc, node: %lu, tID: %lu, time: %lld", sensor_avs_adc.transfer_id, sensor_avs_adc.device_id, sensor_avs_adc.timestamp);
 		}
+		// else if (fds[3].revents & POLLIN) {
+		// 	struct sensor_avs_adc_s sensor_avs_adc;
+		// 	orb_copy(ORB_ID(sensor_avs_adc), sensor_avs_adc_sub, &sensor_avs_adc);
+		// 	// TODO: do something with the data...
+		// 	PX4_INFO("got sensor_avs_adc, node: %lu, tID: %lu, time: %lld", sensor_avs_adc.device_id, sensor_avs_adc.transfer_id, sensor_avs_adc.timestamp);
+		// }
 		parameters_update();
 	}
 	orb_unsubscribe(sensor_avs_sub);
 	orb_unsubscribe(sensor_gnss_relative_sub);
 	orb_unsubscribe(sensor_gps_sub);
+	//orb_unsubscribe(sensor_avs_adc_sub);
 }
 
-
-void AresDrone::parameters_update(bool force)
+void AresAvs::parameters_update(bool force)
 {
 	// check for parameter updates
 	if (_parameter_update_sub.updated() || force) {
@@ -236,7 +233,7 @@ void AresDrone::parameters_update(bool force)
 	}
 }
 
-int AresDrone::print_usage(const char *reason)
+int AresAvs::print_usage(const char *reason)
 {
 	if (reason) {
 		PX4_WARN("%s\n", reason);
@@ -267,13 +264,13 @@ $ ares_drone start -d -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("send");
 	PRINT_MODULE_USAGE_COMMAND("stop");
 	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
-	PRINT_MODULE_USAGE_PARAM_INT('b', 6, 1, 127, "AVS node ID (bottom)", true);
+	PRINT_MODULE_USAGE_PARAM_INT('b', 24, 1, 127, "AVS node ID (bottom)", true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 
 	return 0;
 }
 
-int AresDrone::send_command()		// update event params in ARES, enable/disable FFT
+int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 {
 	int32_t val;
 
@@ -295,7 +292,7 @@ int AresDrone::send_command()		// update event params in ARES, enable/disable FF
 	return 0;
 }
 
-int ares_drone_main(int argc, char *argv[])
+int ares_avs_main(int argc, char *argv[])
 {
-	return AresDrone::main(argc, argv);
+	return AresAvs::main(argc, argv);
 }

@@ -1,0 +1,6 @@
+# AIVS Inc ARES Rtcm data payload
+
+uint8[<1024]    m_u8Data
+uint32          m_u32Length
+
+@sealed

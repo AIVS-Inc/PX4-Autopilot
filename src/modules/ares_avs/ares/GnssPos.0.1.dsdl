@@ -1,0 +1,10 @@
+# AIVS Inc ARES GNSS position data description
+
+uint32                           m_u32Itow
+float64                          m_dLatitude
+float64                          m_dLongitude
+float64                          m_dAltitudeMsl
+uavcan.si.unit.length.Scalar.1.0 m_fHorizontalAccuracy
+uavcan.si.unit.length.Scalar.1.0 m_fVerticalAccuracy
+
+@sealed
