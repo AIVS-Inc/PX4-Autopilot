@@ -55,11 +55,9 @@ extern "C" __EXPORT int ares_drone_main(int argc, char *argv[]);
 class AresDrone : public ModuleBase<AresDrone>, public ModuleParams
 {
 public:
-	AresDrone(bool debug_flag, uint8_t *nodeID);
+	AresDrone(uint8_t nodeID_top, uint8_t nodeID_bot);
 
-	AresDrone();
-
-	~AresDrone() = default;
+	virtual ~AresDrone() = default;
 
 	/** @see ModuleBase */
 	static int task_spawn(int argc, char *argv[]);
@@ -88,8 +86,8 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
-	uint8_t aresNodeId[2];
-	bool debug;
+	uint8_t aresNodeId_top;
+	uint8_t aresNodeId_bot;
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::SYS_AUTOSTART>) 	_param_sys_autostart,   /**< example parameter */

@@ -45,31 +45,10 @@
 #include <uORB/topics/sensor_avs_evt_control.h>
 
 
-int AresDrone::send_command()		// update event params in ARES, enable/disable FFT
-{
-	int32_t val;
-
-	/* advertise avs_evt_control topic */
-	struct sensor_avs_evt_control_s evt;
-	memset(&evt, 0, sizeof(evt));
-	orb_advert_t evt_pub = orb_advertise(ORB_ID(sensor_avs_evt_control), &evt);
-
-	param_get(param_find("EVT_NUM_SRC"), &val); evt.num_sources = (uint16_t)val;
-	param_get(param_find("EVT_BG_TC"),   &val); evt.bg_timeconst = (uint16_t)val;
-	param_get(param_find("FFT_ENABLE"),  &val); evt.fft_enable = (uint8_t)val;
-	param_get(param_find("EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
-	param_get(param_find("EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
-	param_get(param_find("EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
-
-	PX4_INFO("Send event parameters to ARES nodes:");
-	orb_publish(ORB_ID(sensor_avs_evt_control), evt_pub, &evt);
-
-	return 0;
-}
-
 int AresDrone::print_status()
 {
 	PX4_INFO("Running, current settings:");
+	// TODO: print additional runtime information about the state of the module
 
 	return 0;
 }
@@ -103,7 +82,7 @@ int AresDrone::custom_command(int argc, char *argv[])
 
 int AresDrone::task_spawn(int argc, char *argv[])
 {
-	_task_id = px4_task_spawn_cmd("module",
+	_task_id = px4_task_spawn_cmd("ares",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
 				      1024,
@@ -114,35 +93,31 @@ int AresDrone::task_spawn(int argc, char *argv[])
 		_task_id = -1;
 		return -errno;
 	}
-
+	PX4_INFO("Spawned ares_drone task");
 	return 0;
 }
 
 AresDrone *AresDrone::instantiate(int argc, char *argv[])
 {
-	bool debug_flag = false;
 	bool error_flag = false;
-	uint8_t nodeID[2];	// Node ids involved in the AVS measurement
 
 	int myoptind = 1;
 	int ch;
 	const char *myoptarg = nullptr;
-	nodeID[0] = 0;	// default if node not present
-	nodeID[1] = 0;	// default if node not present
+	uint8_t nodeID_top = 0;	// default if node not present
+	uint8_t nodeID_bot = 0;	// default if node not present
 
 	// parse CLI arguments
-	while ((ch = px4_getopt(argc, argv, "t:b:d", &myoptind, &myoptarg)) != EOF) {
+	while ((ch = px4_getopt(argc, argv, "t:b:", &myoptind, &myoptarg)) != EOF) {
+		PX4_INFO("parse arg: %c", *myoptarg);
+
 		switch (ch) {
 		case 't':	// top sensor node ID
-			nodeID[0] = (int)strtol(myoptarg, nullptr, 10);
+			nodeID_top = atoi(myoptarg);
 			break;
 
 		case 'b':	// bottom sensor node ID
-			nodeID[1] = (int)strtol(myoptarg, nullptr, 10);
-			break;
-
-		case 'd':
-			debug_flag = true;
+			nodeID_bot = atoi(myoptarg);
 			break;
 
 		case '?':
@@ -159,25 +134,20 @@ AresDrone *AresDrone::instantiate(int argc, char *argv[])
 		return nullptr;
 	}
 
-	AresDrone *instance = new AresDrone(debug_flag, nodeID);
+	AresDrone *instance = new AresDrone(nodeID_top, nodeID_bot);
 
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
 	}
+	PX4_INFO("ares - instantiated()");
 
 	return instance;
 }
 
-AresDrone::AresDrone(bool debug_flag, uint8_t *nodeID): ModuleParams(nullptr)
+AresDrone::AresDrone(uint8_t nodeID_top, uint8_t nodeID_bot): ModuleParams(nullptr)
 {
-	debug = debug_flag;
-	aresNodeId[0] = nodeID[0];
-	aresNodeId[1] = nodeID[1];
-}
-
-AresDrone::AresDrone(): ModuleParams(nullptr)
-{
-
+	aresNodeId_top = nodeID_top;
+	aresNodeId_bot = nodeID_bot;
 }
 
 void AresDrone::run()
@@ -187,6 +157,7 @@ void AresDrone::run()
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
+	PX4_INFO("ares - begin run()" );
 
 	px4_pollfd_struct_t fds[] = {
 		{.fd = sensor_avs_sub, 		 .events = POLLIN},
@@ -295,10 +266,31 @@ $ ares_drone start -d -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("status");
 	PRINT_MODULE_USAGE_COMMAND("send");
 	PRINT_MODULE_USAGE_COMMAND("stop");
-	PRINT_MODULE_USAGE_PARAM_FLAG('d', "Debug flag", true);
 	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
 	PRINT_MODULE_USAGE_PARAM_INT('b', 6, 1, 127, "AVS node ID (bottom)", true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
+
+	return 0;
+}
+
+int AresDrone::send_command()		// update event params in ARES, enable/disable FFT
+{
+	int32_t val;
+
+	/* advertise avs_evt_control topic */
+	struct sensor_avs_evt_control_s evt;
+	memset(&evt, 0, sizeof(evt));
+	orb_advert_t evt_pub = orb_advertise(ORB_ID(sensor_avs_evt_control), &evt);
+
+	param_get(param_find("EVT_NUM_SRC"), &val); evt.num_sources = (uint16_t)val;
+	param_get(param_find("EVT_BG_TC"),   &val); evt.bg_timeconst = (uint16_t)val;
+	param_get(param_find("FFT_ENABLE"),  &val); evt.fft_enable = (uint8_t)val;
+	param_get(param_find("EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
+	param_get(param_find("EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
+	param_get(param_find("EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
+
+	PX4_INFO("Send event parameters to ARES nodes:");
+	orb_publish(ORB_ID(sensor_avs_evt_control), evt_pub, &evt);
 
 	return 0;
 }
