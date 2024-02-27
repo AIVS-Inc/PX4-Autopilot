@@ -139,7 +139,7 @@ AresAvs *AresAvs::instantiate(int argc, char *argv[])
 	if (instance == nullptr) {
 		PX4_ERR("alloc failed");
 	} else {
-		PX4_INFO("ares_avs started")
+		PX4_INFO("ares_avs started");
 	}
 	return instance;
 }
