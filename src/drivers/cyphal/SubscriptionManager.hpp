@@ -97,10 +97,10 @@
 #include "Subscribers/udral/Gnss.hpp"
 #include "Subscribers/legacy/LegacyBatteryInfo.hpp"
 #include "Subscribers/uORB/uorb_subscriber.hpp"
-#include "../../examples/ares_drone/AresEventSubscriber.hpp"
-#include "../../examples/ares_drone/AdcFrameSubscriber.hpp"
-#include "../../examples/ares_drone/GnssPositionSubscriber.hpp"
-#include "../../examples/ares_drone/GnssRelPosNedSubscriber.hpp"
+#include "../../modules/ares_avs/AresEventSubscriber.hpp"
+#include "../../modules/ares_avs/AdcFrameSubscriber.hpp"
+#include "../../modules/ares_avs/GnssPositionSubscriber.hpp"
+#include "../../modules/ares_avs/GnssRelPosNedSubscriber.hpp"
 
 typedef struct {
 	UavcanDynamicPortSubscriber *(*create_sub)(CanardHandle &handle, UavcanParamManager &pmgr) {};

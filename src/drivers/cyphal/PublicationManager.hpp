@@ -66,6 +66,7 @@
 
 // Base Publishers
 #define CONFIG_CYPHAL_ARES_EVENT_PUBLISHER 1
+#define CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER 1
 
 /* Preprocessor calculation of publisher count */
 
@@ -75,7 +76,8 @@
 	CONFIG_CYPHAL_UORB_ACTUATOR_OUTPUTS_PUBLISHER + \
 	CONFIG_CYPHAL_UORB_SENSOR_GPS_PUBLISHER
 
-#define UAVCAN_BASE_PUB_COUNT CONFIG_CYPHAL_ARES_EVENT_PUBLISHER
+#define UAVCAN_BASE_PUB_COUNT CONFIG_CYPHAL_ARES_EVENT_PUBLISHER + \
+	CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER
 
 #include <px4_platform_common/defines.h>
 #include <drivers/drv_hrt.h>
@@ -91,7 +93,9 @@
 #include "Publishers/udral/Readiness.hpp"
 #include "Publishers/udral/Gnss.hpp"
 #include "Publishers/uORB/uorb_publisher.hpp"
-#include "../../examples/ares_drone/AresEventPublisher.hpp"
+#include "../../modules/ares_avs/AresEventServiceRequest.hpp"
+#include "../../modules/ares_avs/AresFftControlServiceRequest.hpp"
+#include "../../modules/ares_avs/UavCanId.h"
 
 typedef struct {
 	UavcanPublisher *(*create_pub)(CanardHandle &handle, UavcanParamManager &pmgr) {};
@@ -102,6 +106,7 @@ typedef struct {
 typedef struct {
 	BasePublisher *(*create_pub)(CanardHandle &handle) {};
 	const char *subject_name;
+	CanardPortID id;
 	const uint8_t instance;
 } UavcanBasePubBinder;
 
@@ -185,9 +190,19 @@ private:
 		{
 			[](CanardHandle & handle) -> BasePublisher *
 			{
-				return new AresEventPublisher(handle, 0);
+				return new AresEventServiceRequest(handle, ARES_SUBJECT_ID_FFT_PARAMS, 0);
 			},
 			"ares.eventparams",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new AresFftControlServiceRequest(handle, ARES_SUBJECT_ID_FFT_CONTROL, 0);
+			},
+			"ares.fftcontrol",
 			0
 		},
 #endif

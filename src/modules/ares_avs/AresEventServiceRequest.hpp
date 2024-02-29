@@ -34,26 +34,24 @@
 #pragma once
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
+#include "../../drivers/cyphal/Services/ServiceRequest.hpp"
+
 #include "ares/EventParams_0_1.h"
-#include "ares/FFTcontrol_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs_evt_control.h>
 
-class AresEventPublisher : public BasePublisher
+class AresEventServiceRequest : public BasePublisher
 {
 public:
-	AresEventPublisher(CanardHandle &handle, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "eventparams", instance)
-	{
+	AresEventServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
+		BasePublisher(handle, "ares", "eventparams", instance), _portID(portID)  { };
 
-	};
-
-	~AresEventPublisher() override = default;
+	~AresEventServiceRequest() override = default;
 
 	// Update the uORB Subscription and broadcast a UAVCAN message
-	void update() override
+	void update()
 	{
 		int32_t result;
 
@@ -62,32 +60,6 @@ public:
 			PX4_INFO("ARES event param update");
 			sensor_avs_evt_control_s evt {};
 			_evt_sub.update(&evt);
-
-			// disable the FFT before updating event parameters
-			size_t fft_payload_size = ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
-			uint8_t fft_payload_buffer[ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
-			ares_FFTcontrol_0_1 fft {};
-
-			fft.m_u16ControlId = FftControlId_Enable;
-			fft.m_u16Length = 1;
-			fft.m_u8Command[0] = 0;		// 0=disable, 1=enable
-
-			const CanardTransferMetadata fft_transfer_metadata_0 = {
-				.priority       = CanardPriorityNominal,
-				.transfer_kind  = CanardTransferKindMessage,
-				.port_id        = ARES_SUBJECT_ID_FFT_CONTROL,
-				.remote_node_id = CANARD_NODE_ID_UNSET,
-				.transfer_id    = _transfer_id_fft_en,
-			};
-			result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
-
-			if (result == 0) {
-				++_transfer_id_fft_en;
-				result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-							       &fft_transfer_metadata_0,
-							       fft_payload_size,
-							       &fft_payload_buffer);
-			}
 
 			size_t cmd_payload_size = ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t cmd_payload_buffer[ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
@@ -100,51 +72,62 @@ public:
 			cmd.m_bkgndSILtc = (float) evt.bg_timeconst;
 			cmd.m_eventWindow = (float) evt.event_window;
 
-			const CanardTransferMetadata cmd_transfer_metadata = {
-				.priority       = CanardPriorityNominal,
-				.transfer_kind  = CanardTransferKindMessage,
-				.port_id        = ARES_SUBJECT_ID_FFT_PARAMS,
-				.remote_node_id = CANARD_NODE_ID_UNSET,
-				.transfer_id    = _transfer_id,
-			};
-			result = ares_EventParams_0_1_serialize_(&cmd, cmd_payload_buffer, &cmd_payload_size);
+			if (evt.fft_enable == false && evt.node_top > 0) {
 
-			if (result == 0) {
-				++_transfer_id;
-				result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-							       &cmd_transfer_metadata,
-							       cmd_payload_size,
-							       &cmd_payload_buffer);
-			}
-
-			if (evt.fft_enable == 1) {	// enable FFT after setting event parameters
-				fft.m_u16ControlId = FftControlId_Enable;
-				fft.m_u16Length = 1;
-				fft.m_u8Command[0] = 1;	// 0=disable, 1=enable
-
-				const CanardTransferMetadata fft_transfer_metadata_1 = {
+				const CanardTransferMetadata cmd_transfer_metadata = {
 					.priority       = CanardPriorityNominal,
-					.transfer_kind  = CanardTransferKindMessage,
-					.port_id        = ARES_SUBJECT_ID_FFT_CONTROL,
-					.remote_node_id = CANARD_NODE_ID_UNSET,
-					.transfer_id    = _transfer_id_fft_en,
+					.transfer_kind  = CanardTransferKindRequest,
+					.port_id        = _portID,
+					.remote_node_id = evt.node_top,
+					.transfer_id    = _transfer_id_evt_en_top,
 				};
-				result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+				result = ares_EventParams_0_1_serialize_(&cmd, cmd_payload_buffer, &cmd_payload_size);
 
 				if (result == 0) {
-					++_transfer_id_fft_en;
+					++_transfer_id_evt_en_top;
 					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&fft_transfer_metadata_1,
-								fft_payload_size,
-								&fft_payload_buffer);
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer);
 				}
+				PX4_INFO("ARES event param update - complete, node %hd", evt.node_top);
 			}
-			PX4_INFO("ARES event param update - complete");
+			else if (evt.node_top > 0) {
+				PX4_INFO("ARES event param update on node %hd failed since FFT is still enabled", evt.node_top);
+			}
+			if (evt.fft_enable == false && evt.node_bot > 0) {
+
+				const CanardTransferMetadata cmd_transfer_metadata = {
+					.priority       = CanardPriorityNominal,
+					.transfer_kind  = CanardTransferKindRequest,
+					.port_id        = _portID,
+					.remote_node_id = evt.node_bot,
+					.transfer_id    = _transfer_id_evt_en_bot,
+				};
+				result = ares_EventParams_0_1_serialize_(&cmd, cmd_payload_buffer, &cmd_payload_size);
+
+				if (result == 0) {
+					++_transfer_id_evt_en_bot;
+					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer);
+				}
+				PX4_INFO("ARES event param update - complete, node %hd", evt.node_bot);
+			}
+			else if (evt.node_bot > 0) {
+				PX4_INFO("ARES event param update on node %hd failed since FFT is still enabled", evt.node_bot);
+			}
 		}
 	};
 
 private:
 
 	uORB::Subscription _evt_sub{ORB_ID(sensor_avs_evt_control)};
-	CanardTransferID _transfer_id_fft_en {0};
+	CanardTransferID _transfer_id_evt_en_top {0};
+	CanardTransferID _transfer_id_evt_en_bot {0};
+	CanardPortID _portID;
+
+	//UavcanServiceRequestInterface *_response_callback = nullptr;
+
 };

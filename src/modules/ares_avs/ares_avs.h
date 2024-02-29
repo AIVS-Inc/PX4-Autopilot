@@ -78,6 +78,10 @@ public:
 	int print_status() override;
 
 	int send_command();
+
+	int enable_command();
+
+	int disable_command();
 private:
 
 	/**
@@ -88,11 +92,11 @@ private:
 	void parameters_update(bool force = false);
 	uint8_t aresNodeId_top;
 	uint8_t aresNodeId_bot;
+	bool fftEnable;
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::SYS_AUTOSTART>) 	_param_sys_autostart,   /**< example parameter */
 		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig,  /**< another parameter */
-		(ParamInt<px4::params::FFT_ENABLE>) 	_fft_enable,
 		(ParamInt<px4::params::EVT_REL_DB>) 	_evt_rel_dB,
 		(ParamInt<px4::params::EVT_NUM_SRC>) 	_evt_num_src,
 		(ParamInt<px4::params::EVT_ANG_RES>) 	_evt_ang_res,

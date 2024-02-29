@@ -2,7 +2,9 @@
 
 uint64 timestamp			# time since system start (microseconds)
 
-uint8 fft_enable
+bool fft_enable
+uint8 node_top
+uint8 node_bot
 int8 relative_db
 uint16 num_sources
 uint8 angular_resln

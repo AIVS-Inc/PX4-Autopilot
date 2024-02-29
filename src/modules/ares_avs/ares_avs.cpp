@@ -44,6 +44,7 @@
 #include <uORB/topics/sensor_gps.h>
 //#include <uORB/topics/sensor_avs_adc.h>
 #include <uORB/topics/sensor_avs_evt_control.h>
+#include <uORB/topics/sensor_avs_fft_control.h>
 
 
 int AresAvs::print_status()
@@ -74,7 +75,32 @@ int AresAvs::custom_command(int argc, char *argv[])
 				return 1;
 			}
 		}
-	} else {
+	}
+	else if (!strcmp(argv[0], "enable")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->enable_command();	// update event params in ARES, enable/disable FFT
+			} else {
+				PX4_INFO("enable: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "disable")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->disable_command();	// update event params in ARES, enable/disable FFT
+			} else {
+				PX4_INFO("disable: task not running");
+				return 1;
+			}
+		}
+	}
+	else {
 		return print_usage("unknown command");
 	}
 	return 0;
@@ -109,15 +135,14 @@ AresAvs *AresAvs::instantiate(int argc, char *argv[])
 
 	// parse CLI arguments
 	while ((ch = px4_getopt(argc, argv, "t:b:", &myoptind, &myoptarg)) != EOF) {
-		PX4_INFO("parse arg: %c", *myoptarg);
 
 		switch (ch) {
 		case 't':	// top sensor node ID
-			nodeID_top = atoi(myoptarg);
+			nodeID_top = (uint8_t)strtoul(myoptarg, nullptr, 10);
 			break;
 
 		case 'b':	// bottom sensor node ID
-			nodeID_bot = atoi(myoptarg);
+			nodeID_bot = (uint8_t)strtoul(myoptarg, nullptr, 10);
 			break;
 
 		case '?':
@@ -133,6 +158,8 @@ AresAvs *AresAvs::instantiate(int argc, char *argv[])
 	if (error_flag) {
 		return nullptr;
 	}
+	PX4_INFO("nodeID_top=%hd", nodeID_top);
+	PX4_INFO("nodeID_bot=%hd", nodeID_bot);
 
 	AresAvs *instance = new AresAvs(nodeID_top, nodeID_bot);
 
@@ -149,6 +176,8 @@ AresAvs::AresAvs(uint8_t nodeID_top, uint8_t nodeID_bot)
 {
 	aresNodeId_top = nodeID_top;
 	aresNodeId_bot = nodeID_bot;
+	fftEnable = false;		// assume that this is the initial ARES state
+					// TODO: query state
 }
 
 void AresAvs::run()
@@ -242,7 +271,7 @@ int AresAvs::print_usage(const char *reason)
 	PRINT_MODULE_DESCRIPTION(
 		R"DESCR_STR(
 ### Description
-ares_drone is a background task with start/stop/send/status functionality.
+ares_avs is a background task with start/stop/send/status functionality.
 
 ### Implementation
 Reads uORB messages send in response to received ARES CAN data.
@@ -251,18 +280,20 @@ Event parameters must be set as desired prior to invocation of the send command
 
 ### Examples
 CLI usage (parameter should be one of the following):
-$ ares_drone help/start/status/send/stop
+$ ares_drone help/start/status/send/enable/disable/stop
 
 With optional arguments:
-$ ares_drone start -d -t 6 -b 24
+$ ares_drone start -t 6 -b 24
 
 )DESCR_STR");
 
-	PRINT_MODULE_USAGE_NAME("ares_drone", "template");
-	PRINT_MODULE_USAGE_COMMAND("start");
-	PRINT_MODULE_USAGE_COMMAND("status");
-	PRINT_MODULE_USAGE_COMMAND("send");
-	PRINT_MODULE_USAGE_COMMAND("stop");
+	PRINT_MODULE_USAGE_NAME("ares_avs", "template");
+	PRINT_MODULE_USAGE_COMMAND("start");	// start app (autostart on boot is set)
+	PRINT_MODULE_USAGE_COMMAND("status");	// reply if running or not
+	PRINT_MODULE_USAGE_COMMAND("enable");	// enable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("send");	// send event params to all node_ids
+	PRINT_MODULE_USAGE_COMMAND("disable");	// disable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
 	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
 	PRINT_MODULE_USAGE_PARAM_INT('b', 24, 1, 127, "AVS node ID (bottom)", true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
@@ -274,6 +305,10 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 {
 	int32_t val;
 
+	if (fftEnable == true){
+		disable_command();
+	}
+
 	/* advertise avs_evt_control topic */
 	struct sensor_avs_evt_control_s evt;
 	memset(&evt, 0, sizeof(evt));
@@ -281,13 +316,51 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 
 	param_get(param_find("EVT_NUM_SRC"), &val); evt.num_sources = (uint16_t)val;
 	param_get(param_find("EVT_BG_TC"),   &val); evt.bg_timeconst = (uint16_t)val;
-	param_get(param_find("FFT_ENABLE"),  &val); evt.fft_enable = (uint8_t)val;
 	param_get(param_find("EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
 	param_get(param_find("EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
 	param_get(param_find("EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
+	evt.node_top = aresNodeId_top;
+	evt.node_bot = aresNodeId_bot;
+	evt.fft_enable = fftEnable;
 
 	PX4_INFO("Send event parameters to ARES nodes:");
 	orb_publish(ORB_ID(sensor_avs_evt_control), evt_pub, &evt);
+
+	return 0;
+}
+
+int AresAvs::enable_command()		// update event params in ARES, enable/disable FFT
+{
+	/* advertise avs_fft_control topic */
+	struct sensor_avs_fft_control_s fft;
+	memset(&fft, 0, sizeof(fft));
+	orb_advert_t fft_pub = orb_advertise(ORB_ID(sensor_avs_fft_control), &fft);
+
+	fft.node_top = aresNodeId_top;
+	fft.node_bot = aresNodeId_bot;
+	fftEnable = true;
+	fft.fft_enable = true;
+
+	PX4_INFO("Enable FFT on ARES nodes:");
+	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
+
+	return 0;
+}
+
+int AresAvs::disable_command()		// update event params in ARES, enable/disable FFT
+{
+	/* advertise avs_fft_control topic */
+	struct sensor_avs_fft_control_s fft;
+	memset(&fft, 0, sizeof(fft));
+	orb_advert_t fft_pub = orb_advertise(ORB_ID(sensor_avs_fft_control), &fft);
+
+	fft.node_top = aresNodeId_top;
+	fft.node_bot = aresNodeId_bot;
+	fftEnable = false;
+	fft.fft_enable = false;
+
+	PX4_INFO("Disable FFT on ARES nodes:");
+	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;
 }

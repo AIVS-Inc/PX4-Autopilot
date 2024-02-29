@@ -53,7 +53,8 @@ px4_add_module(
 		ares/EventParams.0.1.dsdl
 		ares/FFTcontrol.0.1.dsdl
 		AresEventSubscriber.hpp
-		AresEventPublisher.hpp
+		AresEventServiceRequest.hpp
+		AresFftControlServiceRequest.hpp
 		GnssPositionSubscriber.hpp
 		GnssRelPosNedSubscriber.hpp
 		AdcFrameSubscriber.hpp
