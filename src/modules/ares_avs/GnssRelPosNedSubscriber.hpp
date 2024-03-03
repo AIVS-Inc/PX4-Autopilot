@@ -59,21 +59,21 @@ class GnssRelPosNedSubscriber : public UavcanBaseSubscriber
 	struct sensor_gnss_relative_s report;
 	orb_advert_t gnss_relative_pub;
 public:
-	GnssRelPosNedSubscriber(CanardHandle &handle, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, "ares.", "gnssrelposned", instance) { };
+	GnssRelPosNedSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
+		UavcanBaseSubscriber(handle, "ares.", "gnssrelposned", instance), _portID(portID) { };
 
 	void subscribe() override
 	{
 		// Subscribe to messages
 		_canard_handle.RxSubscribe(CanardTransferKindMessage,
-					   ARES_SUBJECT_ID_GNSS_RELPOSNED,
+					   _portID,
 					   ares_GnssRelPosNed_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
 		/* advertise gnss topic */
 		memset(&this->report, 0, sizeof(this->report));
 		this->gnss_relative_pub = orb_advertise(ORB_ID(sensor_gnss_relative), &this->report);
-		PX4_INFO("subscribed to GnssRelPosNed");
+		PX4_INFO("subscribed to GnssRelPosNed, port %d", _portID);
 	};
 
 	void callback(const CanardRxTransfer &receive) override
@@ -103,6 +103,7 @@ public:
 					(double)relPosHeading, (double)accH, (double)relPosLength, (double)accL, (double)relPosN,
 					(double)relPosE, (double)relPosD, (double)accN, (double)accE, (double)accD);
 
+		report.timestamp = hrt_absolute_time();
 		report.device_id = node;
 		report.position[0] = relPosN;
 		report.position[1] = relPosE;
@@ -124,4 +125,6 @@ public:
 
 		orb_publish( ORB_ID(sensor_gnss_relative), this->gnss_relative_pub, &this->report);	///< uORB pub for gps position
 	};
+private:
+	CanardPortID _portID;
 };

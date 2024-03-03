@@ -72,7 +72,7 @@ void PublicationManager::updateDynamicPublications()
 		}
 
 		char uavcan_param[90];
-		snprintf(uavcan_param, sizeof(uavcan_param), "uavcan.pub.%s.%d.id", sub.subject_name, sub.instance);
+		snprintf(uavcan_param, sizeof(uavcan_param), "cyphal.pub.%s.%d.id", sub.subject_name, sub.instance);
 		uavcan_register_Value_1_0 value;
 
 		if (_param_manager.GetParamByName(uavcan_param, value)) {

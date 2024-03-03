@@ -45,12 +45,13 @@
 #include <px4_platform_common/log.h>
 
 #include <lib/parameters/param.h>
+#include <containers/List.hpp>
 
 #include "../CanardHandle.hpp"
 #include "../CanardInterface.hpp"
 #include "../ParamManager.hpp"
 
-class UavcanBaseSubscriber
+class UavcanBaseSubscriber: public ListNode<UavcanBaseSubscriber *>
 {
 public:
 	UavcanBaseSubscriber(CanardHandle &handle, const char *prefix_name, const char *subject_name, uint8_t instance = 0) :
@@ -148,15 +149,11 @@ public:
 		}
 	}
 
-	UavcanBaseSubscriber *next()
+	void updateParam()
 	{
-		return _next_sub;
-	}
-
-	void setNext(UavcanBaseSubscriber *next)
-	{
-		_next_sub = next;
-	}
+		// Only called once at init time
+		subscribe();
+	};
 
 protected:
 	struct SubjectSubscription {
@@ -169,6 +166,6 @@ protected:
 	const char *_prefix_name;
 	SubjectSubscription _subj_sub;
 	uint8_t _instance {0};
-	UavcanBaseSubscriber *_next_sub {nullptr};
+
 	/// TODO: 'type' parameter? uavcan.pub.PORT_NAME.type (see 384.Access.1.0.uavcan)
 };

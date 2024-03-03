@@ -8,8 +8,8 @@
 // are named with an underscore at the end, like foo_bar_().
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
-// Source file:   /home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl
-// Generated at:  2024-02-22 21:58:29.317621 UTC
+// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl
+// Generated at:  2024-03-03 17:30:19.705255 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.AdcFrame
@@ -44,19 +44,19 @@
 #include <uavcan/si/unit/length/Scalar_1_0.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
-              "/home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_OMIT_FLOAT_SERIALIZATION_SUPPORT == 0,
-              "/home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_SERIALIZATION_ASSERTS == 0,
-              "/home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_OVERRIDE_VARIABLE_ARRAY_CAPACITY == 0,
-              "/home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_CAST_FORMAT == 2368206204,
-              "/home/ares/PX4-Autopilot/src/examples/ares_drone/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/AdcFrame.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 
 #ifdef __cplusplus

@@ -127,3 +127,4 @@ src/examples/ares_drone/ares/GnssPos_0_1.h
 src/examples/ares_drone/ares/GnssRelPosNed_0_1.h
 src/examples/ares_drone/ares/Rtcm_0_1.h
 src/examples/ares_drone/nunavut/support/serialization.h
+.vscode/launch.ext.json

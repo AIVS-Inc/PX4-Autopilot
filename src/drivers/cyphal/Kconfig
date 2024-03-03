@@ -68,6 +68,9 @@ if DRIVERS_CYPHAL
             bool "Ares Event parameters publisher"
             default y
 
+        config CYPHAL_ARES_FFT_CONTROL_PUBLISHER
+            bool "Ares FFT parameters publisher"
+            default y
     endmenu
 
     menu "Subscriber support"

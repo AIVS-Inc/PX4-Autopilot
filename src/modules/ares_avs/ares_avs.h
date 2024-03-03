@@ -90,8 +90,8 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
-	uint8_t aresNodeId_top;
-	uint8_t aresNodeId_bot;
+	uint8_t aresNodeId_top = 6;
+	uint8_t aresNodeId_bot = 24;
 	bool fftEnable;
 
 	DEFINE_PARAMETERS(

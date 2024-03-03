@@ -58,9 +58,9 @@
 #define CONFIG_CYPHAL_BMS_SUBSCRIBER 0
 #endif
 
-#ifndef CONFIG_CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER
+//#ifndef CONFIG_CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER
 #define CONFIG_CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER 0
-#endif
+//#endif
 
 // Base Subscribers
 #define CONFIG_CYPHAL_ARES_POSITION 1
@@ -111,6 +111,7 @@ typedef struct {
 typedef struct {
 	UavcanBaseSubscriber *(*create_sub)(CanardHandle &handle) {};
 	const char *subject_name;
+	CanardPortID id;
 	const uint8_t instance;
 } UavcanBaseSubBinder;
 
@@ -121,17 +122,22 @@ public:
 	~SubscriptionManager();
 
 	void subscribe();
-	void printInfo();
+
 	void updateParams();
+	void printInfo();
 
 private:
 	void updateDynamicSubscriptions();
 	void updateBaseSubscriptions();
 
+	void updateBaseParams();
+	void updateDynParams();
+
 	CanardHandle &_canard_handle;
 	UavcanParamManager &_param_manager;
-	UavcanDynamicPortSubscriber *_dynsubscribers {nullptr};
-	UavcanBaseSubscriber *_basesubscribers{nullptr};
+
+	List<UavcanDynamicPortSubscriber *> _dynsubscribers;
+	List<UavcanBaseSubscriber *> _basesubscribers;
 
 	UavcanHeartbeatSubscriber _heartbeat_sub {_canard_handle};
 
@@ -144,7 +150,7 @@ private:
 	UavcanAccessResponse  _access_rsp {_canard_handle, _param_manager};
 	UavcanListResponse  _list_rsp {_canard_handle, _param_manager};
 
-	const UavcanDynSubBinder _uavcan_subs[UAVCAN_SUB_COUNT] {
+	const UavcanDynSubBinder _cyphal_dyn_subs[UAVCAN_SUB_COUNT] {
 #if CONFIG_CYPHAL_ESC_SUBSCRIBER
 		{
 			[](CanardHandle & handle, UavcanParamManager & pmgr) -> UavcanDynamicPortSubscriber *
@@ -206,13 +212,13 @@ private:
 		},
 #endif
 	};
-	const UavcanBaseSubBinder _uavcan_base_subs[CYPHAL_BASE_SUB_COUNT]
+	const UavcanBaseSubBinder _cyphal_base_subs[CYPHAL_BASE_SUB_COUNT]
 	{
 #if CONFIG_CYPHAL_ARES_POSITION
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
 			{
-				return new GnssPositionSubscriber(handle, 0);
+				return new GnssPositionSubscriber(handle, ARES_SUBJECT_ID_GNSS_POSITION, 0);
 			},
 			"ares.gnsspos",
 			0
@@ -222,7 +228,7 @@ private:
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
 			{
-				return new GnssRelPosNedSubscriber(handle, 0);
+				return new GnssRelPosNedSubscriber(handle, ARES_SUBJECT_ID_GNSS_RELPOSNED, 0);
 			},
 			"ares.gnssrelposned",
 			0
@@ -232,7 +238,7 @@ private:
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
 			{
-				return new AresEventSubscriber(handle, 0);
+				return new AresEventSubscriber(handle, ARES_SUBJECT_ID_FFT_BEARING_ANGLES, 0);
 			},
 			"ares.bearings",
 			0
@@ -242,7 +248,7 @@ private:
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
 			{
-				return new AdcFrameSubscriber(handle, 0);
+				return new AdcFrameSubscriber(handle, ARES_SUBJECT_ID_FFT_ADC_FRAME, 0);
 			},
 			"ares.adcframe",
 			0

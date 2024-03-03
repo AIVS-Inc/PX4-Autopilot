@@ -112,7 +112,7 @@ int AresAvs::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("ares",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_DEFAULT,
-				      1024,
+				      2048,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -130,8 +130,8 @@ AresAvs *AresAvs::instantiate(int argc, char *argv[])
 	int myoptind = 1;
 	int ch;
 	const char *myoptarg = nullptr;
-	uint8_t nodeID_top = 0;	// default if node not present
-	uint8_t nodeID_bot = 0;	// default if node not present
+	uint8_t nodeID_top = 6;	// default if node not present
+	uint8_t nodeID_bot = 24;	// default if node not present
 
 	// parse CLI arguments
 	while ((ch = px4_getopt(argc, argv, "t:b:", &myoptind, &myoptarg)) != EOF) {
@@ -202,7 +202,7 @@ void AresAvs::run()
 	while (!should_exit()) {
 
 		/* wait for sensor update of 1 file descriptor for 1000 ms */
-		int pret = px4_poll(fds, 1, 1000);
+		int pret = px4_poll(fds, (sizeof(fds) / sizeof(fds[0])), 1000);
 
 		if (pret == 0) {
 			/*Timeout: let the loop run anyway, none of our providers are sending data */
@@ -221,25 +221,25 @@ void AresAvs::run()
 			struct sensor_avs_s sensor_avs;
 			orb_copy(ORB_ID(sensor_avs), sensor_avs_sub, &sensor_avs);
 			// TODO: do something with the data...
-			PX4_INFO("got sensor_avs, node: %lu, time: %lld", sensor_avs.device_id, sensor_avs.timestamp);
+			PX4_INFO("got sensor_avs, node: %lu, time: %llu", sensor_avs.device_id, sensor_avs.time_utc_usec);
 		}
 		else if (fds[1].revents & POLLIN) {
 			struct sensor_gnss_relative_s sensor_gnss_relative;
 			orb_copy(ORB_ID(sensor_gnss_relative), sensor_gnss_relative_sub, &sensor_gnss_relative);
 			// TODO: do something with the data...
-			PX4_INFO("got sensor_gnss_relative, node: %lu, time: %lld", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
+			PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
 		}
 		else if (fds[2].revents & POLLIN) {
 			struct sensor_gps_s sensor_gps;
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
 			// TODO: do something with the data...
-			PX4_INFO("got sensor_gps, node: %lu, time: %lld", sensor_gps.device_id, sensor_gps.timestamp);
+			PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
 		}
 		// else if (fds[3].revents & POLLIN) {
 		// 	struct sensor_avs_adc_s sensor_avs_adc;
 		// 	orb_copy(ORB_ID(sensor_avs_adc), sensor_avs_adc_sub, &sensor_avs_adc);
 		// 	// TODO: do something with the data...
-		// 	PX4_INFO("got sensor_avs_adc, node: %lu, tID: %lu, time: %lld", sensor_avs_adc.device_id, sensor_avs_adc.transfer_id, sensor_avs_adc.timestamp);
+		// 	PX4_INFO("got sensor_avs_adc, node: %lu, tID: %lu, time: %llu", sensor_avs_adc.device_id, sensor_avs_adc.transfer_id, sensor_avs_adc.timestamp);
 		// }
 		parameters_update();
 	}
@@ -323,7 +323,7 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 	evt.node_bot = aresNodeId_bot;
 	evt.fft_enable = fftEnable;
 
-	PX4_INFO("Send event parameters to ARES nodes:");
+	PX4_INFO("Send event parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_evt_control), evt_pub, &evt);
 
 	return 0;
@@ -341,7 +341,7 @@ int AresAvs::enable_command()		// update event params in ARES, enable/disable FF
 	fftEnable = true;
 	fft.fft_enable = true;
 
-	PX4_INFO("Enable FFT on ARES nodes:");
+	PX4_INFO("Enable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;
@@ -359,7 +359,7 @@ int AresAvs::disable_command()		// update event params in ARES, enable/disable F
 	fftEnable = false;
 	fft.fft_enable = false;
 
-	PX4_INFO("Disable FFT on ARES nodes:");
+	PX4_INFO("Disable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;

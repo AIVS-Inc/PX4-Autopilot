@@ -30,3 +30,10 @@ then
 	ifup can1
 	ifup can2
 fi
+
+if param greater -s CYPHAL_ENABLE 0
+then
+	ifup can0
+	ifup can1
+	ifup can2
+fi

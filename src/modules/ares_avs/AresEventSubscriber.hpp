@@ -54,14 +54,14 @@ class AresEventSubscriber : public UavcanBaseSubscriber
 	struct sensor_gps_s gps_report;
 	orb_advert_t gps_pub;
 public:
-	AresEventSubscriber(CanardHandle &handle, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, "ares.", "bearings", instance) { };
+	AresEventSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
+		UavcanBaseSubscriber(handle, "ares.", "bearings", instance), _portID(portID) { };
 
 	void subscribe() override
 	{
 		// Subscribe to CAN message
 		_canard_handle.RxSubscribe(CanardTransferKindMessage,
-					   ARES_SUBJECT_ID_FFT_BEARING_ANGLES,
+					   _portID,
 					   ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
@@ -73,7 +73,7 @@ public:
 		/* advertise gnss topic */
 		memset(&this->gps_report, 0, sizeof(this->gps_report));
 		this->gps_pub = orb_advertise(ORB_ID(sensor_gps), &this->gps_report);
-		PX4_INFO("subscribed to BearingAngles");
+		PX4_INFO("subscribed to BearingAngles, port %d", _portID);
 	};
 
 	void callback(const CanardRxTransfer &receive) override
@@ -102,13 +102,14 @@ public:
 		uint32_t idx = aresevent.m_iSourceIndex;
 		uint32_t node = receive.metadata.remote_node_id;
 
-		PX4_INFO("node:%lu,idx:%ld,usec:%llu,lat:%f,lon:%f,alt:%f,dh:%f,dv:%f,pitch:%f,roll:%f,yaw:%f,spl:%f,sil:%f,acti:%f,az:%f,el:%f",
+		PX4_INFO("node:%lu,idx:%lu,usec:%llu,lat:%.9f,lon:%.9f,alt:%.2f,dh:%.2f,dv:%.2f,pitch:%.2f,roll:%.2f,yaw:%.2f,spl:%.2f,sil:%.2f,acti:%.2f,az:%.2f,el:%.2f",
 		  	  node,idx,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian,spl,sil,acti,azim,elev );
 
+		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;
 		bearings.time_utc_usec = utc_us;
 		bearings.latitude_deg = lat;
-		bearings.latitude_deg = lon;
+		bearings.longitude_deg = lon;
 		bearings.altitude_ellipsoid_m = alt;
 		bearings.eph = dh.meter;
 		bearings.epv = dv.meter;
@@ -123,9 +124,10 @@ public:
 		bearings.timestamp_sample = aresevent.m_u32SampleIndex;
 		bearings.source_index = idx;
 
+		gps_report.timestamp = bearings.timestamp;
 		gps_report.time_utc_usec = utc_us;
 		gps_report.latitude_deg = lat;
-		gps_report.latitude_deg = lon;
+		gps_report.longitude_deg = lon;
 		gps_report.altitude_ellipsoid_m = alt;
 		gps_report.eph = dh.meter;
 		gps_report.epv = dv.meter;
@@ -134,4 +136,5 @@ public:
 		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->gps_report);	///< uORB pub for AVS events
 	};
 private:
+	CanardPortID _portID;
 };

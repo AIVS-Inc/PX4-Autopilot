@@ -1,5 +1,0 @@
-menuconfig EXAMPLES_ARES_DRONE
-	bool "ares_drone"
-	default n
-	---help---
-		ares_drone application

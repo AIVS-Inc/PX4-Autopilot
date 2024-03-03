@@ -544,7 +544,6 @@ else
 			cyphal start
 		fi
 	# fi
-	ares_avs start
 
 	if param greater -s ZENOH_ENABLE 0
 	then

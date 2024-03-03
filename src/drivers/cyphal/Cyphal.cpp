@@ -265,7 +265,6 @@ void CyphalNode::print_info()
 			PX4_INFO("Message port id %d", sub->port_id);
 
 		} else {
-			PX4_INFO("sub->port_id=%d",sub->port_id);
 			((UavcanBaseSubscriber *)sub->user_reference)->printInfo(sub->port_id);
 		}
 	});
@@ -293,7 +292,7 @@ void CyphalNode::print_info()
 		}
 	});
 
-	_mixing_output.printInfo();
+	//_mixing_output.printInfo();
 
 	pthread_mutex_unlock(&_node_mutex);
 }
