@@ -38,14 +38,15 @@
 #include <px4_platform_common/posix.h>
 
 #include <uORB/topics/parameter_update.h>
-#include <uORB/topics/sensor_combined.h>
 #include <uORB/topics/sensor_avs.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include <uORB/topics/sensor_gps.h>
 //#include <uORB/topics/sensor_avs_adc.h>
 #include <uORB/topics/sensor_avs_evt_control.h>
 #include <uORB/topics/sensor_avs_fft_control.h>
-
+#include <uORB/topics/sensor_avs_sd_control.h>
+#include <uORB/topics/sensor_avs_gnss_control.h>
+#include <uORB/topics/sensor_avs_sync_control.h>
 
 int AresAvs::print_status()
 {
@@ -69,33 +70,93 @@ int AresAvs::custom_command(int argc, char *argv[])
 			object = _object.load();
 
 			if (object) {
-				return object->send_command();	// update event params in ARES, enable/disable FFT
+				return object->send_command();	// update event params
 			} else {
-				PX4_INFO("evt send: task not running");
+				PX4_INFO("send: task not running");
 				return 1;
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "enable")) {
+	else if (!strcmp(argv[0], "sync")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
-				return object->enable_command();	// update event params in ARES, enable/disable FFT
+				return object->sync_command_now();	// sync now (+5 sec)
 			} else {
-				PX4_INFO("enable: task not running");
+				PX4_INFO("sync: task not running");
 				return 1;
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "disable")) {
+	else if (!strcmp(argv[0], "ena1")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
-				return object->disable_command();	// update event params in ARES, enable/disable FFT
+				return object->ena_command(true);	// enable FFT
 			} else {
-				PX4_INFO("disable: task not running");
+				PX4_INFO("ena1: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "ena0")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->ena_command(false);	// disable FFT
+			} else {
+				PX4_INFO("ena0: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "cap1")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->cap_command(true);	// capture on
+			} else {
+				PX4_INFO("cap1: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "cap0")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->cap_command(false);	// capture off
+			} else {
+				PX4_INFO("cap0: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "rtcm1")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->rtcm_command(true);	// rtcm on
+			} else {
+				PX4_INFO("rtcm1: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "rtcm0")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->rtcm_command(false);	// rtcm off
+			} else {
+				PX4_INFO("rtcm0: task not running");
 				return 1;
 			}
 		}
@@ -198,6 +259,13 @@ void AresAvs::run()
 	// initialize parameters
 	parameters_update(true);
 
+	// time and clock synchronization
+	bool sync_done = false;	// for system sync if there are two nodes
+	bool clock_set = false; // update local FMU clock to GPS time
+	bool top_node_reported = (aresNodeId_top > 0) ? false : true;
+	bool bot_node_reported = (aresNodeId_bot > 0) ? false : true;
+
+	// the first time we get an AVS packet from either node indicates that ARES GPS clock is solid for that node
 	int error_counter = 0;
 	while (!should_exit()) {
 
@@ -220,20 +288,65 @@ void AresAvs::run()
 		else if (fds[0].revents & POLLIN) {
 			struct sensor_avs_s sensor_avs;
 			orb_copy(ORB_ID(sensor_avs), sensor_avs_sub, &sensor_avs);
-			// TODO: do something with the data...
 			PX4_INFO("got sensor_avs, node: %lu, time: %llu", sensor_avs.device_id, sensor_avs.time_utc_usec);
+
+			if ((sensor_avs.device_id > 0) && ((clock_set == false) || (sync_done == false))) {
+
+				if (clock_set == false)	{
+					// convert node UTC time to date time
+					char buf[80];
+					struct tm date_time;
+					time_t time_s = (time_t)(sensor_avs.time_utc_usec / 1000000);
+					long time_ns = (sensor_avs.time_utc_usec - (uint64_t)(time_s * 1000000)) * 1000;
+					localtime_r(&time_s, &date_time);
+					strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", &date_time);
+
+					// get time since boot
+					hrt_abstime since_boot_sec = hrt_absolute_time() / 1000000;
+
+					PX4_INFO("Unix epoch time: %ld", (long)time_s);
+					PX4_INFO("System time: %s", buf);
+					PX4_INFO("Uptime (since boot): %" PRIu64 " s", since_boot_sec);
+
+					//set system time from GPS time
+					struct timespec ts = {};
+					ts.tv_sec = time_s;
+					ts.tv_nsec = time_ns;
+					int res = px4_clock_settime(CLOCK_REALTIME, &ts);
+
+					if (res == 0) {
+						PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
+					} else {
+						PX4_ERR("Failed to set system time (%i)", res);
+					}
+					clock_set = true;
+				}
+				if (sync_done == false) {
+					// need both nodes to report AVS event msg before we can sync
+					if (sensor_avs.device_id == aresNodeId_top) {
+						top_node_reported = true;
+					}
+					else if (sensor_avs.device_id == aresNodeId_bot) {
+						bot_node_reported = true;
+					}
+					if ((top_node_reported == true) && (bot_node_reported == true)) {
+						// convert node UTC time to date time
+						time_t time_s = (time_t)(sensor_avs.time_utc_usec / 1000000);
+						sync_command( time_s);
+						sync_done = true;	// don't do sync again
+					}
+				}
+			}
 		}
 		else if (fds[1].revents & POLLIN) {
 			struct sensor_gnss_relative_s sensor_gnss_relative;
 			orb_copy(ORB_ID(sensor_gnss_relative), sensor_gnss_relative_sub, &sensor_gnss_relative);
-			// TODO: do something with the data...
-			PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
+			//PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
 		}
 		else if (fds[2].revents & POLLIN) {
 			struct sensor_gps_s sensor_gps;
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
-			// TODO: do something with the data...
-			PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
+			//PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
 		}
 		// else if (fds[3].revents & POLLIN) {
 		// 	struct sensor_avs_adc_s sensor_avs_adc;
@@ -280,19 +393,35 @@ Event parameters must be set as desired prior to invocation of the send command
 
 ### Examples
 CLI usage (parameter should be one of the following):
-$ ares_drone help/start/status/send/enable/disable/stop
+$ ares_avs help		// display this help
+	   start	// start the ARES app, begin monitoring CAN messages
+	   status	// reply with run status
+	   cap1		// enable SD raw data capture
+	   cap0		// disable SD raw data capture
+	   rtcm1	// enable rtcm data for base and rover
+	   rtcm0	// disable rtcm data for base and rover
+	   send		// send event parameters to ARES
+	   sync		// sync ARES ADCs
+	   ena1		// enable event detection
+	   ena0		// disable event detection
+	   stop		// stop the ARES application
 
 With optional arguments:
-$ ares_drone start -t 6 -b 24
+$ ares_avs start -t 6 -b 24
 
 )DESCR_STR");
 
 	PRINT_MODULE_USAGE_NAME("ares_avs", "template");
-	PRINT_MODULE_USAGE_COMMAND("start");	// start app (autostart on boot is set)
+	PRINT_MODULE_USAGE_COMMAND("start");	// start app
 	PRINT_MODULE_USAGE_COMMAND("status");	// reply if running or not
-	PRINT_MODULE_USAGE_COMMAND("enable");	// enable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("cap1");	// SD capture on
+	PRINT_MODULE_USAGE_COMMAND("cap0");	// SD capture off
+	PRINT_MODULE_USAGE_COMMAND("rtcm1");	// RTCM on
+	PRINT_MODULE_USAGE_COMMAND("rtcm0");	// RTCM off
 	PRINT_MODULE_USAGE_COMMAND("send");	// send event params to all node_ids
-	PRINT_MODULE_USAGE_COMMAND("disable");	// disable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("sync");	// sync ARES ADCs
+	PRINT_MODULE_USAGE_COMMAND("ena1");  	// enable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
 	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
 	PRINT_MODULE_USAGE_PARAM_INT('b', 24, 1, 127, "AVS node ID (bottom)", true);
@@ -306,7 +435,7 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 	int32_t val;
 
 	if (fftEnable == true){
-		disable_command();
+		ena_command( false);
 	}
 
 	/* advertise avs_evt_control topic */
@@ -329,7 +458,43 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 	return 0;
 }
 
-int AresAvs::enable_command()		// update event params in ARES, enable/disable FFT
+int AresAvs::sync_command_now()
+{
+	//get system time at the last whole second
+	struct timespec ts = {};
+	px4_clock_gettime(CLOCK_REALTIME, &ts);
+
+	return sync_command( ts.tv_sec);
+}
+
+int AresAvs::sync_command( time_t time_s)	// send an ADC sync to ARES at a specific time
+{
+	// do a system sync 5 seconds from the last whole second
+	time_s += 5;
+	char buf[80];	// display the planned sync time
+	struct tm date_time;
+	localtime_r(&time_s, &date_time);
+	strftime(buf, sizeof(buf), "%a %Y-%m-%d %H:%M:%S %Z", &date_time);
+
+	PX4_INFO("Sync @ epoch time: %ld", (long)time_s);
+	PX4_INFO("Sync time of day: %s", buf);
+
+	/* advertise avs_sync_control topic */
+	struct sensor_avs_sync_control_s sync;
+	memset(&sync, 0, sizeof(sync));
+	orb_advert_t sync_pub = orb_advertise(ORB_ID(sensor_avs_sync_control), &sync);
+
+	sync.node_top = aresNodeId_top;
+	sync.node_bot = aresNodeId_bot;
+	sync.sync_utc_sec = (uint64_t) time_s;
+
+	PX4_INFO("Send SYNC to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	orb_publish(ORB_ID(sensor_avs_sync_control), sync_pub, &sync);
+
+	return 0;
+}
+
+int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/disable FFT
 {
 	/* advertise avs_fft_control topic */
 	struct sensor_avs_fft_control_s fft;
@@ -338,29 +503,59 @@ int AresAvs::enable_command()		// update event params in ARES, enable/disable FF
 
 	fft.node_top = aresNodeId_top;
 	fft.node_bot = aresNodeId_bot;
-	fftEnable = true;
-	fft.fft_enable = true;
+	fftEnable = flag;
+	fft.fft_enable = flag;
 
-	PX4_INFO("Enable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	if (flag == true)
+		PX4_INFO("Enable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	else
+		PX4_INFO("Disable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;
 }
 
-int AresAvs::disable_command()		// update event params in ARES, enable/disable FFT
+int AresAvs::cap_command( bool flag)		// update event params in ARES, enable/disable FFT
 {
-	/* advertise avs_fft_control topic */
-	struct sensor_avs_fft_control_s fft;
-	memset(&fft, 0, sizeof(fft));
-	orb_advert_t fft_pub = orb_advertise(ORB_ID(sensor_avs_fft_control), &fft);
+	/* advertise avs_sd_control topic */
+	struct sensor_avs_sd_control_s sd;
+	memset(&sd, 0, sizeof(sd));
+	orb_advert_t sd_pub = orb_advertise(ORB_ID(sensor_avs_sd_control), &sd);
 
-	fft.node_top = aresNodeId_top;
-	fft.node_bot = aresNodeId_bot;
-	fftEnable = false;
-	fft.fft_enable = false;
+	sd.node_top = aresNodeId_top;
+	sd.node_bot = aresNodeId_bot;
+	captureActive = flag;
+	sd.sd_capture = flag;
 
-	PX4_INFO("Disable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
-	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
+	if (flag == true)
+		PX4_INFO("Enable SD capture on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	else
+		PX4_INFO("Disable SD capture on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+
+	orb_publish(ORB_ID(sensor_avs_sd_control), sd_pub, &sd);
+
+	return 0;
+}
+
+int AresAvs::rtcm_command( bool flag)		// update event params in ARES, enable/disable FFT
+{
+	/* advertise avs_rtcm_control topic */
+	struct sensor_avs_gnss_control_s rtcm;
+	memset(&rtcm, 0, sizeof(rtcm));
+	orb_advert_t rtcm_pub = orb_advertise(ORB_ID(sensor_avs_gnss_control), &rtcm);
+
+	rtcm.node_top = aresNodeId_top;
+	rtcm.node_bot = aresNodeId_bot;
+	rtcmActive = flag;
+	rtcm.rtcm_mode = flag;
+
+	if (flag == true)
+		PX4_INFO("Enable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	else
+		PX4_INFO("Disable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+
+	orb_publish(ORB_ID(sensor_avs_gnss_control), rtcm_pub, &rtcm);
 
 	return 0;
 }

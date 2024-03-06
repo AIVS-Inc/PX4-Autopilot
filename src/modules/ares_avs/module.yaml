@@ -1,18 +1,6 @@
 module_name: AVS Acoustic Vector Sensor
 
 parameters:
-  - group: FFT
-    definitions:
-      FFT_ENABLE:
-        description:
-          short: FFT enable
-          long: Enable or disable FFT measurement
-        type: int32
-        min: 0
-        max: 1
-        increment: 1
-        default: 0
-
   - group: EVT
     definitions:
       EVT_REL_DB:

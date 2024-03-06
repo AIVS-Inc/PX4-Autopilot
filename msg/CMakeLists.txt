@@ -182,6 +182,9 @@ set(msg_files
 	SensorAvsAdc.msg
 	SensorAvsEvtControl.msg
 	SensorAvsFftControl.msg
+	SensorAvsSdControl.msg
+	SensorAvsGnssControl.msg
+	SensorAvsSyncControl.msg
 	SensorBaro.msg
 	SensorCombined.msg
 	SensorCorrection.msg

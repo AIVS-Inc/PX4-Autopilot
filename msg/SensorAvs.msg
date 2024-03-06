@@ -1,7 +1,7 @@
 # Acoustic Vector Sensor event
 
 uint64 timestamp		# time since system start (microseconds)
-uint64 timestamp_sample		# AVS sensor sample index since system SYNC
+uint32 timestamp_sample		# AVS sensor sample index since system SYNC
 uint64 time_utc_usec            # Timestamp (microseconds, UTC)
 
 uint32 device_id		# unique device ID for the sensor that does not change between power cycles

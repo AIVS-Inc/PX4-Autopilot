@@ -34,6 +34,7 @@
 #pragma once
 
 #include <px4_platform_common/module.h>
+#include <px4_platform_common/time.h>
 #include <px4_platform_common/module_params.h>
 #include <uORB/SubscriptionInterval.hpp>
 #include <uORB/topics/parameter_update.h>
@@ -79,9 +80,15 @@ public:
 
 	int send_command();
 
-	int enable_command();
+	int sync_command_now();
 
-	int disable_command();
+	int sync_command( time_t time_sec);
+
+	int ena_command(bool flag);
+
+	int rtcm_command(bool flag);
+
+	int cap_command(bool flag);
 private:
 
 	/**
@@ -92,7 +99,9 @@ private:
 	void parameters_update(bool force = false);
 	uint8_t aresNodeId_top = 6;
 	uint8_t aresNodeId_bot = 24;
-	bool fftEnable;
+	bool fftEnable = false;
+	bool rtcmActive = false;
+	bool captureActive = false;
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::SYS_AUTOSTART>) 	_param_sys_autostart,   /**< example parameter */

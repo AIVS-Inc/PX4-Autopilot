@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl
-// Generated at:  2024-03-03 17:30:19.817997 UTC
+// Generated at:  2024-03-04 21:50:46.497514 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.EventParams

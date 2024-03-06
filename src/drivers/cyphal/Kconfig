@@ -71,6 +71,18 @@ if DRIVERS_CYPHAL
         config CYPHAL_ARES_FFT_CONTROL_PUBLISHER
             bool "Ares FFT parameters publisher"
             default y
+
+        config CYPHAL_ARES_SD_CONTROL_PUBLISHER
+            bool "Ares SD Card parameters publisher"
+            default y
+
+        config CYPHAL_ARES_GNSS_CONTROL_PUBLISHER
+            bool "Ares GNSS parameters publisher"
+            default y
+
+        config CYPHAL_ARES_SYNC_CONTROL_PUBLISHER
+            bool "Ares SYNC parameters publisher"
+            default y
     endmenu
 
     menu "Subscriber support"

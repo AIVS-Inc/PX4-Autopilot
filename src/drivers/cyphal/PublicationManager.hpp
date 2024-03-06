@@ -73,6 +73,18 @@
 #define CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER 0
 #endif
 
+#ifndef CONFIG_CYPHAL_ARES_SD_CONTROL_PUBLISHER
+#define CONFIG_CYPHAL_ARES_SD_CONTROL_PUBLISHER 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_GNSS_CONTROL_PUBLISHER
+#define CONFIG_CYPHAL_ARES_GNSS_CONTROL_PUBLISHER 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_SYNC_CONTROL_PUBLISHER
+#define CONFIG_CYPHAL_ARES_SYNC_CONTROL_PUBLISHER 0
+#endif
+
 /* Preprocessor calculation of publisher count */
 
 #define UAVCAN_PUB_COUNT \
@@ -84,7 +96,10 @@
 
 #define UAVCAN_BASE_PUB_COUNT \
 	CONFIG_CYPHAL_ARES_EVENT_PUBLISHER + \
-	CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER
+	CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER + \
+	CONFIG_CYPHAL_ARES_SD_CONTROL_PUBLISHER + \
+	CONFIG_CYPHAL_ARES_SYNC_CONTROL_PUBLISHER + \
+	CONFIG_CYPHAL_ARES_GNSS_CONTROL_PUBLISHER
 
 #include <px4_platform_common/defines.h>
 #include <drivers/drv_hrt.h>
@@ -102,6 +117,9 @@
 #include "Publishers/uORB/uorb_publisher.hpp"
 #include "../../modules/ares_avs/AresEventServiceRequest.hpp"
 #include "../../modules/ares_avs/AresFftControlServiceRequest.hpp"
+#include "../../modules/ares_avs/AresSdCapControlServiceRequest.hpp"
+#include "../../modules/ares_avs/AresGnssControlServiceRequest.hpp"
+#include "../../modules/ares_avs/AresSyncControlServiceRequest.hpp"
 #include "../../modules/ares_avs/UavCanId.h"
 
 typedef struct {
@@ -210,6 +228,36 @@ private:
 				return new AresFftControlServiceRequest(handle, ARES_SUBJECT_ID_FFT_CONTROL, 0);
 			},
 			"ares.fftcontrol",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_SD_CONTROL_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new AresSdCapControlServiceRequest(handle, ARES_SUBJECT_ID_STORAGE_CONTROL, 0);
+			},
+			"ares.sdcontrol",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_GNSS_CONTROL_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new AresGnssControlServiceRequest(handle, ARES_SUBJECT_ID_GNSS_PARAMS, 0);
+			},
+			"ares.gnsscontrol",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_SYNC_CONTROL_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new AresSyncControlServiceRequest(handle, ARES_SUBJECT_ID_ADC_SYNC, 0);
+			},
+			"ares.synccontrol",
 			0
 		},
 #endif

@@ -47,13 +47,6 @@
 #include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 
-typedef enum	// GnssCarrierPhaseStatus
-{
-	GnssCarrierPhaseStatus_None = 0,
-	GnssCarrierPhaseStatus_Floating = 1,
-	GnssCarrierPhaseStatus_Fixed = 2,
-} GnssCarrierPhaseStatus;
-
 class GnssRelPosNedSubscriber : public UavcanBaseSubscriber
 {
 	struct sensor_gnss_relative_s report;

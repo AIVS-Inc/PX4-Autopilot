@@ -1,6 +1,6 @@
 # AIVS Inc ARES GNSS position data description
 
-# uint32 m_u32Itow
+# uint32 m_u32Itow	# can't fit this value and stay within one CAN frame
 float64 m_dLatitude
 float64 m_dLongitude
 float32 m_dAltitudeMsl

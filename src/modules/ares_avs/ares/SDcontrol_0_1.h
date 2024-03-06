@@ -8,11 +8,11 @@
 // are named with an underscore at the end, like foo_bar_().
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
-// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl
-// Generated at:  2024-03-04 21:50:46.500699 UTC
+// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl
+// Generated at:  2024-03-04 21:50:46.522461 UTC
 // Is deprecated: no
 // Fixed port-ID: None
-// Full name:     ares.FFTcontrol
+// Full name:     ares.SDcontrol
 // Version:       0.1
 //
 // Platform
@@ -32,8 +32,8 @@
 //     enable_override_variable_array_capacity:  False
 //     cast_format:  (({type}) {value})
 
-#ifndef ARES_FF_TCONTROL_0_1_INCLUDED_
-#define ARES_FF_TCONTROL_0_1_INCLUDED_
+#ifndef ARES_S_DCONTROL_0_1_INCLUDED_
+#define ARES_S_DCONTROL_0_1_INCLUDED_
 
 #include <nunavut/support/serialization.h>
 #include <stdint.h>
@@ -41,19 +41,19 @@
 #include <string.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_OMIT_FLOAT_SERIALIZATION_SUPPORT == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_SERIALIZATION_ASSERTS == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_OVERRIDE_VARIABLE_ARRAY_CAPACITY == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_CAST_FORMAT == 2368206204,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/FFTcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 
 #ifdef __cplusplus
@@ -61,10 +61,10 @@ extern "C" {
 #endif
 
 /// This type does not have a fixed port-ID. See https://forum.opencyphal.org/t/choosing-message-and-service-ids/889
-#define ares_FFTcontrol_0_1_HAS_FIXED_PORT_ID_ false
+#define ares_SDcontrol_0_1_HAS_FIXED_PORT_ID_ false
 
-#define ares_FFTcontrol_0_1_FULL_NAME_             "ares.FFTcontrol"
-#define ares_FFTcontrol_0_1_FULL_NAME_AND_VERSION_ "ares.FFTcontrol.0.1"
+#define ares_SDcontrol_0_1_FULL_NAME_             "ares.SDcontrol"
+#define ares_SDcontrol_0_1_FULL_NAME_AND_VERSION_ "ares.SDcontrol.0.1"
 
 /// Extent is the minimum amount of memory required to hold any serialized representation of any compatible
 /// version of the data type; or, on other words, it is the the maximum possible size of received objects of this type.
@@ -73,14 +73,14 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_FFTcontrol_0_1_EXTENT_BYTES_                    52UL
-#define ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 52UL
-static_assert(ares_FFTcontrol_0_1_EXTENT_BYTES_ >= ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
+#define ares_SDcontrol_0_1_EXTENT_BYTES_                    20UL
+#define ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 20UL
+static_assert(ares_SDcontrol_0_1_EXTENT_BYTES_ >= ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
-/// Array metadata for: saturated uint8[48] m_u8Command
-#define ares_FFTcontrol_0_1_m_u8Command_ARRAY_CAPACITY_           48U
-#define ares_FFTcontrol_0_1_m_u8Command_ARRAY_IS_VARIABLE_LENGTH_ false
+/// Array metadata for: saturated uint8[16] m_u8Command
+#define ares_SDcontrol_0_1_m_u8Command_ARRAY_CAPACITY_           16U
+#define ares_SDcontrol_0_1_m_u8Command_ARRAY_IS_VARIABLE_LENGTH_ false
 
 typedef struct
 {
@@ -90,9 +90,9 @@ typedef struct
     /// saturated uint16 m_u16Length
     uint16_t m_u16Length;
 
-    /// saturated uint8[48] m_u8Command
-    uint8_t m_u8Command[48];
-} ares_FFTcontrol_0_1;
+    /// saturated uint8[16] m_u8Command
+    uint8_t m_u8Command[16];
+} ares_SDcontrol_0_1;
 
 /// Serialize an instance into the provided buffer.
 /// The lifetime of the resulting serialized representation is independent of the original instance.
@@ -102,7 +102,7 @@ typedef struct
 /// @param obj      The object to serialize.
 ///
 /// @param buffer   The destination buffer. There are no alignment requirements.
-///                 @see ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
+///                 @see ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
 ///
 /// @param inout_buffer_size_bytes  When calling, this is a pointer to the size of the buffer in bytes.
 ///                                 Upon return this value will be updated with the size of the constructed serialized
@@ -110,8 +110,8 @@ typedef struct
 ///                                 layer. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_FFTcontrol_0_1_serialize_(
-    const ares_FFTcontrol_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_SDcontrol_0_1_serialize_(
+    const ares_SDcontrol_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
 {
     if ((obj == NULL) || (buffer == NULL) || (inout_buffer_size_bytes == NULL))
     {
@@ -120,7 +120,7 @@ static inline int8_t ares_FFTcontrol_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 416UL)
+    if ((8U * (size_t) capacity_bytes) < 160UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -158,9 +158,9 @@ static inline int8_t ares_FFTcontrol_0_1_serialize_(
 
 
 
-    {   // saturated uint8[48] m_u8Command
+    {   // saturated uint8[16] m_u8Command
         const size_t _origin0_ = offset_bits;
-        for (size_t _index0_ = 0U; _index0_ < 48UL; ++_index0_)
+        for (size_t _index0_ = 0U; _index0_ < 16UL; ++_index0_)
         {
             // Saturation code not emitted -- native representation matches the serialized representation.
             buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8Command[_index0_]);  // C std, 6.3.1.3 Signed and unsigned integers
@@ -210,8 +210,8 @@ static inline int8_t ares_FFTcontrol_0_1_serialize_(
 ///                                 was activated. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_FFTcontrol_0_1_deserialize_(
-    ares_FFTcontrol_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_SDcontrol_0_1_deserialize_(
+    ares_SDcontrol_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
 {
     if ((out_obj == NULL) || (inout_buffer_size_bytes == NULL) || ((buffer == NULL) && (0 != *inout_buffer_size_bytes)))
     {
@@ -245,8 +245,8 @@ static inline int8_t ares_FFTcontrol_0_1_deserialize_(
 
 
 
-    // saturated uint8[48] m_u8Command
-    for (size_t _index1_ = 0U; _index1_ < 48UL; ++_index1_)
+    // saturated uint8[16] m_u8Command
+    for (size_t _index1_ = 0U; _index1_ < 16UL; ++_index1_)
     {
         if ((offset_bits + 8U) <= capacity_bits)
         {
@@ -272,13 +272,13 @@ static inline int8_t ares_FFTcontrol_0_1_deserialize_(
 /// This function intentionally leaves inactive elements uninitialized; for example, members of a variable-length
 /// array beyond its length are left uninitialized; aliased union memory that is not used by the first union field
 /// is left uninitialized, etc. If full zero-initialization is desired, just use memset(&obj, 0, sizeof(obj)).
-static inline void ares_FFTcontrol_0_1_initialize_(ares_FFTcontrol_0_1* const out_obj)
+static inline void ares_SDcontrol_0_1_initialize_(ares_SDcontrol_0_1* const out_obj)
 {
     if (out_obj != NULL)
     {
         size_t size_bytes = 0;
         const uint8_t buf = 0;
-        const int8_t err = ares_FFTcontrol_0_1_deserialize_(out_obj, &buf, &size_bytes);
+        const int8_t err = ares_SDcontrol_0_1_deserialize_(out_obj, &buf, &size_bytes);
 
         (void) err;
     }
@@ -289,4 +289,4 @@ static inline void ares_FFTcontrol_0_1_initialize_(ares_FFTcontrol_0_1* const ou
 #ifdef __cplusplus
 }
 #endif
-#endif // ARES_FF_TCONTROL_0_1_INCLUDED_
+#endif // ARES_S_DCONTROL_0_1_INCLUDED_
