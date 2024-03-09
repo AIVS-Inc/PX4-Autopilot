@@ -57,6 +57,7 @@
 #include <uORB/topics/vehicle_status.h>
 
 #include "streams/ACTUATOR_OUTPUT_STATUS.hpp"
+#include "streams/AVS_STATUS.hpp"
 #include "streams/ALTITUDE.hpp"
 #include "streams/ATTITUDE.hpp"
 #include "streams/ATTITUDE_QUATERNION.hpp"

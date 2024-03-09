@@ -86,19 +86,16 @@ public:
 		float deltav = gnsspos.m_fVerticalAccuracy;
 		uint32_t node = receive.metadata.remote_node_id;
 
-		PX4_INFO("node:%lu, lat: %.9f, lon: %.9f, alt: %.2f m, (+- h: %.2f m, v: %.2f m)",
-			  node, lat, lon, (double)alt, (double)deltah, (double)deltav);
-
 		report.timestamp = hrt_absolute_time();
 		//report.time_utc_usec = utc_us;
 		report.device_id = node;
 		report.fix_type = gnsspos.m_u8FixType;
-		report.latitude_deg = lat;
-		report.longitude_deg = lon;
-		report.altitude_msl_m = alt;
-		report.altitude_ellipsoid_m = gnsspos.m_fAltitudeEllipsoid;
-		report.eph = deltah;
-		report.epv = deltav;
+		report.latitude_deg = 0.5 * lat + 0.5 * lat_last;	// average the positions from both antennas
+		report.longitude_deg = 0.5 * lon + 0.5 * lon_last;
+		report.altitude_msl_m = 0.5f * alt + 0.5f * hgt_last;
+		report.altitude_ellipsoid_m = 0.5f * gnsspos.m_fAltitudeEllipsoid + 0.5f * alt_last;
+		report.eph = 0.5f * deltah + 0.5f * sigx_last;
+		report.epv = 0.5f * deltav + 0.5f * sigv_last;
 		report.hdop = gnsspos.m_fPDOP;		// uBlox PVT message only has PDOP
 		report.vdop = gnsspos.m_fPDOP * deltav/deltah;		// FIX
 		report.cog_rad = gnsspos.m_fHeading * (float)M_PI/180;
@@ -110,8 +107,25 @@ public:
 		report.satellites_used = gnsspos.m_u8SIV;
 		report.vel_ned_valid = true;
 
+		// PX4_INFO("node:%lu, lat: %.9f, lon: %.9f, alt: %.2f m, (+- h: %.2f m, v: %.2f m)",
+		// 	  node, report.latitude_deg, report.longitude_deg, (double)report.altitude_msl_m, (double)report.eph, (double)report.epv);
+
+		lat_last = report.latitude_deg;
+		lon_last = report.longitude_deg;
+		hgt_last = report.altitude_msl_m;
+		alt_last = report.altitude_ellipsoid_m;
+		sigx_last = report.eph;
+		sigv_last = report.epv;
+
+
 		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
 	};
 private:
 	CanardPortID _portID;
+	double lat_last = 47.5894;	// initialized to allow fast position convergence, probably not necessary
+	double lon_last = -122.29315;
+	float hgt_last = 70.7;
+	float alt_last = 70.7;
+	float sigx_last = 1.6;
+	float sigv_last = 1.9;
 };
