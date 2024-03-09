@@ -77,7 +77,7 @@ public:
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		PX4_INFO("AdcFrameCallback");
+		//PX4_INFO("AdcFrameCallback");
 
 		ares_AdcFrame_0_1 adcframe {};
 		size_t msg_size_in_bits = receive.payload_size;
@@ -96,8 +96,8 @@ public:
 		uint32_t node = receive.metadata.remote_node_id;
 		uint32_t tID = receive.metadata.remote_node_id;
 
-		PX4_INFO("node:%lu,id:%lu,usec:%llu,lat:%f,lon:%f,alt:%f,dh:%f,dv:%f,pitch:%f,roll:%f,yaw:%f",
-		  	  node,tID,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian );
+		//PX4_INFO("node:%lu,id:%lu,usec:%llu,lat:%f,lon:%f,alt:%f,dh:%f,dv:%f,pitch:%f,roll:%f,yaw:%f",
+		//  	  node,tID,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian );
 
 		timedata.timestamp = hrt_absolute_time();
 		timedata.device_id = node;

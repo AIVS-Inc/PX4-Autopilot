@@ -71,7 +71,7 @@ public:
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		PX4_INFO("GnssPositionCallback");
+		//PX4_INFO("GnssPositionCallback");
 
 		ares_GnssPos_0_1 gnsspos {};
 		size_t msg_size_in_bits = receive.payload_size;

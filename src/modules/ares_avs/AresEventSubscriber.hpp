@@ -78,7 +78,7 @@ public:
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		PX4_INFO("AresEventCallback");
+		//PX4_INFO("AresEventCallback");
 
 		ares_Bearings_0_1 aresevent {};
 		size_t msg_size_in_bits = receive.payload_size;
@@ -102,8 +102,8 @@ public:
 		uint32_t idx = aresevent.m_iSourceIndex;
 		uint32_t node = receive.metadata.remote_node_id;
 
-		PX4_INFO("node:%lu,idx:%lu,usec:%llu,lat:%.9f,lon:%.9f,alt:%.2f,dh:%.2f,dv:%.2f,pitch:%.2f,roll:%.2f,yaw:%.2f,spl:%.2f,sil:%.2f,acti:%.2f,az:%.2f,el:%.2f",
-		  	  node,idx,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian,spl,sil,acti,azim,elev );
+		//PX4_INFO("node:%lu,idx:%lu,usec:%llu,lat:%.9f,lon:%.9f,alt:%.2f,dh:%.2f,dv:%.2f,pitch:%.2f,roll:%.2f,yaw:%.2f,spl:%.2f,sil:%.2f,acti:%.2f,az:%.2f,el:%.2f",
+		//  	  node,idx,utc_us,lat,lon,alt,(double)dh.meter,(double)dv.meter,(double)pitch.radian,(double)roll.radian,(double)yaw.radian,spl,sil,acti,azim,elev );
 
 		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;
