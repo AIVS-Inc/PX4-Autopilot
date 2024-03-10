@@ -132,3 +132,4 @@ src/examples/ares_drone/ares/EventParams.0.1.dsdl
 src/examples/ares_drone/ares_drone_main.cpp
 src/examples/ares_drone/ares_drone.h
 src/examples/ares_drone/Kconfig
+platforms/nuttx/NuttX/nuttx
