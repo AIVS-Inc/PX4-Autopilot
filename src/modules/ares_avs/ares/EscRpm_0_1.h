@@ -8,11 +8,11 @@
 // are named with an underscore at the end, like foo_bar_().
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
-// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl
-// Generated at:  2024-03-20 04:18:07.015109 UTC
+// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl
+// Generated at:  2024-03-20 04:18:06.987156 UTC
 // Is deprecated: no
 // Fixed port-ID: None
-// Full name:     ares.SDcontrol
+// Full name:     ares.EscRpm
 // Version:       0.1
 //
 // Platform
@@ -32,8 +32,8 @@
 //     enable_override_variable_array_capacity:  False
 //     cast_format:  (({type}) {value})
 
-#ifndef ARES_S_DCONTROL_0_1_INCLUDED_
-#define ARES_S_DCONTROL_0_1_INCLUDED_
+#ifndef ARES_ESC_RPM_0_1_INCLUDED_
+#define ARES_ESC_RPM_0_1_INCLUDED_
 
 #include <nunavut/support/serialization.h>
 #include <stdint.h>
@@ -41,19 +41,19 @@
 #include <string.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_OMIT_FLOAT_SERIALIZATION_SUPPORT == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_SERIALIZATION_ASSERTS == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_OVERRIDE_VARIABLE_ARRAY_CAPACITY == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_CAST_FORMAT == 2368206204,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SDcontrol.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 
 #ifdef __cplusplus
@@ -61,10 +61,10 @@ extern "C" {
 #endif
 
 /// This type does not have a fixed port-ID. See https://forum.opencyphal.org/t/choosing-message-and-service-ids/889
-#define ares_SDcontrol_0_1_HAS_FIXED_PORT_ID_ false
+#define ares_EscRpm_0_1_HAS_FIXED_PORT_ID_ false
 
-#define ares_SDcontrol_0_1_FULL_NAME_             "ares.SDcontrol"
-#define ares_SDcontrol_0_1_FULL_NAME_AND_VERSION_ "ares.SDcontrol.0.1"
+#define ares_EscRpm_0_1_FULL_NAME_             "ares.EscRpm"
+#define ares_EscRpm_0_1_FULL_NAME_AND_VERSION_ "ares.EscRpm.0.1"
 
 /// Extent is the minimum amount of memory required to hold any serialized representation of any compatible
 /// version of the data type; or, on other words, it is the the maximum possible size of received objects of this type.
@@ -73,26 +73,35 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_SDcontrol_0_1_EXTENT_BYTES_                    20UL
-#define ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 20UL
-static_assert(ares_SDcontrol_0_1_EXTENT_BYTES_ >= ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
+#define ares_EscRpm_0_1_EXTENT_BYTES_                    43UL
+#define ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 43UL
+static_assert(ares_EscRpm_0_1_EXTENT_BYTES_ >= ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
-/// Array metadata for: saturated uint8[16] m_u8Command
-#define ares_SDcontrol_0_1_m_u8Command_ARRAY_CAPACITY_           16U
-#define ares_SDcontrol_0_1_m_u8Command_ARRAY_IS_VARIABLE_LENGTH_ false
+/// Array metadata for: saturated float32[4] m_rps
+#define ares_EscRpm_0_1_m_rps_ARRAY_CAPACITY_           4U
+#define ares_EscRpm_0_1_m_rps_ARRAY_IS_VARIABLE_LENGTH_ false
+/// Array metadata for: saturated float32[4] m_var
+#define ares_EscRpm_0_1_m_var_ARRAY_CAPACITY_           4U
+#define ares_EscRpm_0_1_m_var_ARRAY_IS_VARIABLE_LENGTH_ false
 
 typedef struct
 {
-    /// saturated uint16 m_u16ControlId
-    uint16_t m_u16ControlId;
+    /// saturated uint8 m_motorMask
+    uint8_t m_motorMask;
 
-    /// saturated uint16 m_u16Length
-    uint16_t m_u16Length;
+    /// saturated uint16 m_period
+    uint16_t m_period;
 
-    /// saturated uint8[16] m_u8Command
-    uint8_t m_u8Command[16];
-} ares_SDcontrol_0_1;
+    /// saturated uint64 m_timeUtcUsec
+    uint64_t m_timeUtcUsec;
+
+    /// saturated float32[4] m_rps
+    float m_rps[4];
+
+    /// saturated float32[4] m_var
+    float m_var[4];
+} ares_EscRpm_0_1;
 
 /// Serialize an instance into the provided buffer.
 /// The lifetime of the resulting serialized representation is independent of the original instance.
@@ -102,7 +111,7 @@ typedef struct
 /// @param obj      The object to serialize.
 ///
 /// @param buffer   The destination buffer. There are no alignment requirements.
-///                 @see ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
+///                 @see ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
 ///
 /// @param inout_buffer_size_bytes  When calling, this is a pointer to the size of the buffer in bytes.
 ///                                 Upon return this value will be updated with the size of the constructed serialized
@@ -110,8 +119,8 @@ typedef struct
 ///                                 layer. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_SDcontrol_0_1_serialize_(
-    const ares_SDcontrol_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_EscRpm_0_1_serialize_(
+    const ares_EscRpm_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
 {
     if ((obj == NULL) || (buffer == NULL) || (inout_buffer_size_bytes == NULL))
     {
@@ -120,7 +129,7 @@ static inline int8_t ares_SDcontrol_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 160UL)
+    if ((8U * (size_t) capacity_bytes) < 344UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -132,9 +141,18 @@ static inline int8_t ares_SDcontrol_0_1_serialize_(
 
 
 
-    {   // saturated uint16 m_u16ControlId
+    {   // saturated uint8 m_motorMask
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u16ControlId, 16U);
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_motorMask);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
+    {   // saturated uint16 m_period
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_period, 16U);
         if (_err0_ < 0)
         {
             return _err0_;
@@ -145,39 +163,64 @@ static inline int8_t ares_SDcontrol_0_1_serialize_(
 
 
 
-    {   // saturated uint16 m_u16Length
+    {   // saturated uint64 m_timeUtcUsec
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err1_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u16Length, 16U);
+        const int8_t _err1_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_timeUtcUsec, 64U);
         if (_err1_ < 0)
         {
             return _err1_;
         }
-        offset_bits += 16U;
+        offset_bits += 64U;
     }
 
 
 
 
-    {   // saturated uint8[16] m_u8Command
+    {   // saturated float32[4] m_rps
         const size_t _origin0_ = offset_bits;
-        for (size_t _index0_ = 0U; _index0_ < 16UL; ++_index0_)
+        for (size_t _index0_ = 0U; _index0_ < 4UL; ++_index0_)
         {
-            // Saturation code not emitted -- native representation matches the serialized representation.
-            buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8Command[_index0_]);  // C std, 6.3.1.3 Signed and unsigned integers
-            offset_bits += 8U;
+            // Saturation code not emitted -- assume the native representation of float32 is conformant.
+            static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+            const int8_t _err2_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_rps[_index0_]);
+            if (_err2_ < 0)
+            {
+                return _err2_;
+            }
+            offset_bits += 32U;
         }
         // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
         (void) _origin0_;
     }
 
 
+
+
+    {   // saturated float32[4] m_var
+        const size_t _origin1_ = offset_bits;
+        for (size_t _index1_ = 0U; _index1_ < 4UL; ++_index1_)
+        {
+            // Saturation code not emitted -- assume the native representation of float32 is conformant.
+            static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+            const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_var[_index1_]);
+            if (_err3_ < 0)
+            {
+                return _err3_;
+            }
+            offset_bits += 32U;
+        }
+        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
+        (void) _origin1_;
+    }
+
+
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err2_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err2_ < 0)
+        const int8_t _err4_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err4_ < 0)
         {
-            return _err2_;
+            return _err4_;
         }
         offset_bits += _pad0_;
     }
@@ -210,8 +253,8 @@ static inline int8_t ares_SDcontrol_0_1_serialize_(
 ///                                 was activated. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_SDcontrol_0_1_deserialize_(
-    ares_SDcontrol_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_EscRpm_0_1_deserialize_(
+    ares_EscRpm_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
 {
     if ((out_obj == NULL) || (inout_buffer_size_bytes == NULL) || ((buffer == NULL) && (0 != *inout_buffer_size_bytes)))
     {
@@ -231,32 +274,49 @@ static inline int8_t ares_SDcontrol_0_1_deserialize_(
 
 
 
-    // saturated uint16 m_u16ControlId
-    out_obj->m_u16ControlId = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
-
-
-
-
-    // saturated uint16 m_u16Length
-    out_obj->m_u16Length = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
-
-
-
-
-    // saturated uint8[16] m_u8Command
-    for (size_t _index1_ = 0U; _index1_ < 16UL; ++_index1_)
+    // saturated uint8 m_motorMask
+    if ((offset_bits + 8U) <= capacity_bits)
     {
-        if ((offset_bits + 8U) <= capacity_bits)
-        {
-            out_obj->m_u8Command[_index1_] = buffer[offset_bits / 8U] & 255U;
-        }
-        else
-        {
-            out_obj->m_u8Command[_index1_] = 0U;
-        }
-        offset_bits += 8U;
+        out_obj->m_motorMask = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_motorMask = 0U;
+    }
+    offset_bits += 8U;
+
+
+
+
+    // saturated uint16 m_period
+    out_obj->m_period = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
+
+
+
+
+    // saturated uint64 m_timeUtcUsec
+    out_obj->m_timeUtcUsec = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
+    offset_bits += 64U;
+
+
+
+
+    // saturated float32[4] m_rps
+    for (size_t _index2_ = 0U; _index2_ < 4UL; ++_index2_)
+    {
+        out_obj->m_rps[_index2_] = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+        offset_bits += 32U;
+    }
+
+
+
+
+    // saturated float32[4] m_var
+    for (size_t _index3_ = 0U; _index3_ < 4UL; ++_index3_)
+    {
+        out_obj->m_var[_index3_] = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+        offset_bits += 32U;
     }
 
 
@@ -272,13 +332,13 @@ static inline int8_t ares_SDcontrol_0_1_deserialize_(
 /// This function intentionally leaves inactive elements uninitialized; for example, members of a variable-length
 /// array beyond its length are left uninitialized; aliased union memory that is not used by the first union field
 /// is left uninitialized, etc. If full zero-initialization is desired, just use memset(&obj, 0, sizeof(obj)).
-static inline void ares_SDcontrol_0_1_initialize_(ares_SDcontrol_0_1* const out_obj)
+static inline void ares_EscRpm_0_1_initialize_(ares_EscRpm_0_1* const out_obj)
 {
     if (out_obj != NULL)
     {
         size_t size_bytes = 0;
         const uint8_t buf = 0;
-        const int8_t err = ares_SDcontrol_0_1_deserialize_(out_obj, &buf, &size_bytes);
+        const int8_t err = ares_EscRpm_0_1_deserialize_(out_obj, &buf, &size_bytes);
 
         (void) err;
     }
@@ -289,4 +349,4 @@ static inline void ares_SDcontrol_0_1_initialize_(ares_SDcontrol_0_1* const out_
 #ifdef __cplusplus
 }
 #endif
-#endif // ARES_S_DCONTROL_0_1_INCLUDED_
+#endif // ARES_ESC_RPM_0_1_INCLUDED_

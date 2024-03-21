@@ -65,12 +65,14 @@ public:
 			uint8_t cmd_payload_buffer[ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
 			ares_EventParams_0_1 cmd {};
 
-			cmd.m_paramId = ares_fft_ParamId_EventParam;
+			cmd.m_paramId = ares_fft_ParamId_EventDetector;
 			cmd.m_relativeDb = (float) evt.relative_db;
-			cmd.m_numSources = (uint32_t) evt.num_sources;
-			cmd.m_angularRes = (float) evt.angular_resln;
-			cmd.m_bkgndSILtc = (float) evt.bg_timeconst;
-			cmd.m_eventWindow = (float) evt.event_window;
+			cmd.m_numSources = (uint16_t) evt.num_sources;
+			cmd.m_angularRes = (uint8_t) evt.angular_resln;
+			cmd.m_bkgndSILtc = (uint16_t) evt.bg_timeconst;
+			cmd.m_eventWindow = (uint8_t) evt.event_window;
+			cmd.m_selfMeasureBg = (bool) evt.self_measure_bg;
+			cmd.m_bgDbThreshold = (float) evt.bg_db_threshold;
 
 			if (evt.fft_enable == false && evt.node_top > 0) {
 

@@ -448,6 +448,8 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 	param_get(param_find("EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
 	param_get(param_find("EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
 	param_get(param_find("EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
+	param_get(param_find("EVT_SELF_BGSIL"), &val); evt.self_measure_bg = (bool)val;
+	param_get(param_find("EVT_BGSIL_DB"), &val); evt.bg_db_threshold = (uint8_t)val;
 	evt.node_top = aresNodeId_top;
 	evt.node_bot = aresNodeId_bot;
 	evt.fft_enable = fftEnable;

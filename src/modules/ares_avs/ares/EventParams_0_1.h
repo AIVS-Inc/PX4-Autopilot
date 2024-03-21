@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl
-// Generated at:  2024-03-04 21:50:46.497514 UTC
+// Generated at:  2024-03-20 04:18:06.990318 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.EventParams
@@ -23,7 +23,7 @@
 //     python_compiler:  GCC 11.4.0
 //     python_revision:
 //     python_xoptions:  {}
-//     runtime_platform:  Linux-5.15.133.1-microsoft-standard-WSL2-x86_64-with-glibc2.35
+//     runtime_platform:  Linux-5.15.146.1-microsoft-standard-WSL2-x86_64-with-glibc2.35
 //
 // Language Options
 //     target_endianness:  any
@@ -36,6 +36,7 @@
 #define ARES_EVENT_PARAMS_0_1_INCLUDED_
 
 #include <nunavut/support/serialization.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -72,8 +73,8 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_EventParams_0_1_EXTENT_BYTES_                    22UL
-#define ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 22UL
+#define ares_EventParams_0_1_EXTENT_BYTES_                    17UL
+#define ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 17UL
 static_assert(ares_EventParams_0_1_EXTENT_BYTES_ >= ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
@@ -85,17 +86,23 @@ typedef struct
     /// saturated float32 m_relativeDb
     float m_relativeDb;
 
-    /// saturated uint32 m_numSources
-    uint32_t m_numSources;
+    /// saturated uint16 m_numSources
+    uint16_t m_numSources;
 
-    /// saturated float32 m_angularRes
-    float m_angularRes;
+    /// saturated uint8 m_angularRes
+    uint8_t m_angularRes;
 
-    /// saturated float32 m_bkgndSILtc
-    float m_bkgndSILtc;
+    /// saturated uint16 m_bkgndSILtc
+    uint16_t m_bkgndSILtc;
 
-    /// saturated float32 m_eventWindow
-    float m_eventWindow;
+    /// saturated uint8 m_eventWindow
+    uint8_t m_eventWindow;
+
+    /// saturated bool m_selfMeasureBg
+    bool m_selfMeasureBg;
+
+    /// saturated float32 m_bgDbThreshold
+    float m_bgDbThreshold;
 } ares_EventParams_0_1;
 
 /// Serialize an instance into the provided buffer.
@@ -124,7 +131,7 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 176UL)
+    if ((8U * (size_t) capacity_bytes) < 136UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -163,37 +170,62 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 
 
 
-    {   // saturated uint32 m_numSources
+    {   // saturated uint16 m_numSources
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err2_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_numSources, 32U);
+        const int8_t _err2_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_numSources, 16U);
         if (_err2_ < 0)
         {
             return _err2_;
         }
-        offset_bits += 32U;
+        offset_bits += 16U;
     }
 
 
 
 
-    {   // saturated float32 m_angularRes
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_angularRes);
+    {   // saturated uint8 m_angularRes
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_angularRes);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
+    {   // saturated uint16 m_bkgndSILtc
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        const int8_t _err3_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_bkgndSILtc, 16U);
         if (_err3_ < 0)
         {
             return _err3_;
         }
-        offset_bits += 32U;
+        offset_bits += 16U;
     }
 
 
 
 
-    {   // saturated float32 m_bkgndSILtc
+    {   // saturated uint8 m_eventWindow
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_eventWindow);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
+    {   // saturated bool m_selfMeasureBg
+        buffer[offset_bits / 8U] = obj->m_selfMeasureBg ? 1U : 0U;
+        offset_bits += 1U;
+    }
+
+
+
+
+    {   // saturated float32 m_bgDbThreshold
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_bkgndSILtc);
+        const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_bgDbThreshold);
         if (_err4_ < 0)
         {
             return _err4_;
@@ -202,27 +234,13 @@ static inline int8_t ares_EventParams_0_1_serialize_(
     }
 
 
-
-
-    {   // saturated float32 m_eventWindow
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err5_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_eventWindow);
-        if (_err5_ < 0)
-        {
-            return _err5_;
-        }
-        offset_bits += 32U;
-    }
-
-
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err6_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err6_ < 0)
+        const int8_t _err5_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err5_ < 0)
         {
-            return _err6_;
+            return _err5_;
         }
         offset_bits += _pad0_;
     }
@@ -290,29 +308,64 @@ static inline int8_t ares_EventParams_0_1_deserialize_(
 
 
 
-    // saturated uint32 m_numSources
-    out_obj->m_numSources = nunavutGetU32(&buffer[0], capacity_bytes, offset_bits, 32);
-    offset_bits += 32U;
+    // saturated uint16 m_numSources
+    out_obj->m_numSources = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
 
 
 
-    // saturated float32 m_angularRes
-    out_obj->m_angularRes = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
+    // saturated uint8 m_angularRes
+    if ((offset_bits + 8U) <= capacity_bits)
+    {
+        out_obj->m_angularRes = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_angularRes = 0U;
+    }
+    offset_bits += 8U;
 
 
 
 
-    // saturated float32 m_bkgndSILtc
-    out_obj->m_bkgndSILtc = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
+    // saturated uint16 m_bkgndSILtc
+    out_obj->m_bkgndSILtc = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
 
 
 
-    // saturated float32 m_eventWindow
-    out_obj->m_eventWindow = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    // saturated uint8 m_eventWindow
+    if ((offset_bits + 8U) <= capacity_bits)
+    {
+        out_obj->m_eventWindow = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_eventWindow = 0U;
+    }
+    offset_bits += 8U;
+
+
+
+
+    // saturated bool m_selfMeasureBg
+    if (offset_bits < capacity_bits)
+    {
+        out_obj->m_selfMeasureBg = (buffer[offset_bits / 8U] & 1U) != 0U;
+    }
+    else
+    {
+        out_obj->m_selfMeasureBg = false;
+    }
+    offset_bits += 1U;
+
+
+
+
+    // saturated float32 m_bgDbThreshold
+    out_obj->m_bgDbThreshold = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
 
 

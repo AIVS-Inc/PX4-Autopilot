@@ -50,9 +50,33 @@ parameters:
         max: 200
         increment: 1
         default: 10
+      EVT_SELF_BGSIL:
+        description:
+          short: Background SIL meas flag
+          long: Flag to set self measurement of background SIL
+        type: boolean
+        default: true
+      EVT_BGSIL_DB:
+        description:
+          short: Background SIL threshold dB
+          long: Background SIL threshold when self-measurement is false
+        type: int32
+        min: 30
+        max: 100
+        increment: 1
+        default: 70
 
   - group: AVS
     definitions:
+      AVS_RPM_AVG_LEN:
+        description:
+          short: RPM average length
+          long: RPM average length in terms of ESC_STATUS updates
+        type: int32
+        min: 1
+        max: 50
+        increment: 1
+        default: 10
       AVS_ANT_DX:
         description:
           short: GNSS antenna delta-X

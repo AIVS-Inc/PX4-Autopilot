@@ -104,13 +104,14 @@ private:
 	bool captureActive = false;
 
 	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::SYS_AUTOSTART>) 	_param_sys_autostart,   /**< example parameter */
-		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig,  /**< another parameter */
 		(ParamInt<px4::params::EVT_REL_DB>) 	_evt_rel_dB,
 		(ParamInt<px4::params::EVT_NUM_SRC>) 	_evt_num_src,
 		(ParamInt<px4::params::EVT_ANG_RES>) 	_evt_ang_res,
 		(ParamInt<px4::params::EVT_BG_TC>) 	_evt_bg_tc,
-		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win
+		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win,
+		(ParamInt<px4::params::EVT_SELF_BGSIL>) _evt_self_bgsil,
+		(ParamInt<px4::params::EVT_BGSIL_DB>) 	_evt_bgsil_db,
+		(ParamInt<px4::params::AVS_RPM_AVG_LEN>) _avs_rpm_avg_len
 	)
 
 	// Subscriptions

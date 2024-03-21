@@ -2,9 +2,11 @@
 
 uint16	    m_paramId	      # FFT parameter Id as specified in UavCanId.h (=7 for Event Params)
 float32     m_relativeDb      # relative intensity level change to define an event (low: -10, high: 20, nom: 20)
-uint32      m_numSources      # number of to detect (low: 1, high: 360, nom: 2)
-float32     m_angularRes      # histogram resolution (low: 1, high: 45, nom: 10)
-float32     m_bkgndSILtc      # background SIL time constant (low: 1, high: 10000, nom: 500)
-float32     m_eventWindow     # number of updates to the histogram per event, in delta-t steps (low: 1, high: 200, nom: 2)
+uint16      m_numSources      # number of to detect (low: 1, high: 360, nom: 2)
+uint8       m_angularRes      # histogram resolution (low: 1, high: 45, nom: 10)
+uint16      m_bkgndSILtc      # background SIL time constant (low: 1, high: 10000, nom: 500)
+uint8       m_eventWindow     # number of updates to the histogram per event, in delta-t steps (low: 1, high: 200, nom: 2)
+bool 	    m_selfMeasureBg   # flag if true, background SIL is measured, else is externally set by m_fBgDbThreshold
+float32     m_bgDbThreshold   # user set value in dB that defines the SIL threshold
 
 @sealed

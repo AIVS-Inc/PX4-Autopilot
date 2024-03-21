@@ -10,3 +10,6 @@ uint16 num_sources
 uint8 angular_resln
 uint16 bg_timeconst
 uint8 event_window
+bool self_measure_bg
+uint8 bg_db_threshold
+
