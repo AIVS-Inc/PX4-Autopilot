@@ -424,15 +424,17 @@ static int timer_set_rate(unsigned timer, unsigned rate)
 	int channels = get_timer_channels(timer);
 
 	irqstate_t flags = px4_enter_critical_section();
+
 	for (uint32_t channel = 0; channel < DIRECT_PWM_OUTPUT_CHANNELS; ++channel) {
 		if ((1 << channel) & channels) {
 			rMCTRL(channels_timer(channel)) |= (timer_io_channels[channel].sub_module_bits >> MCTRL_LDOK_SHIFT) << MCTRL_CLDOK_SHIFT
-							;
+							   ;
 			rVAL1(channels_timer(channel), timer_io_channels[channel].sub_module) = (BOARD_PWM_FREQ / rate) - 1;
 			rMCTRL(channels_timer(channel)) |= timer_io_channels[channel].sub_module_bits;
 
 		}
 	}
+
 	px4_leave_critical_section(flags);
 	return 0;
 }
@@ -442,17 +444,19 @@ static inline void io_timer_set_oneshot_mode(unsigned timer)
 	int channels = get_timer_channels(timer);
 
 	irqstate_t flags = px4_enter_critical_section();
+
 	for (uint32_t channel = 0; channel < DIRECT_PWM_OUTPUT_CHANNELS; ++channel) {
 		if ((1 << channel) & channels) {
 			uint16_t rvalue = rCTRL(channels_timer(channel), timer_io_channels[channel].sub_module);
 			rvalue &= ~SMCTRL_PRSC_MASK;
 			rvalue |= SMCTRL_PRSC_DIV2 | SMCTRL_LDMOD;
 			rMCTRL(channels_timer(channel)) |= (timer_io_channels[channel].sub_module_bits >> MCTRL_LDOK_SHIFT) << MCTRL_CLDOK_SHIFT
-							;
+							   ;
 			rCTRL(channels_timer(channel), timer_io_channels[channel].sub_module)  = rvalue;
 			rMCTRL(channels_timer(channel)) |= timer_io_channels[channel].sub_module_bits;
 		}
 	}
+
 	px4_leave_critical_section(flags);
 
 }
@@ -462,17 +466,19 @@ static inline void io_timer_set_PWM_mode(unsigned timer)
 	int channels = get_timer_channels(timer);
 
 	irqstate_t flags = px4_enter_critical_section();
+
 	for (uint32_t channel = 0; channel < DIRECT_PWM_OUTPUT_CHANNELS; ++channel) {
 		if ((1 << channel) & channels) {
 			uint16_t rvalue = rCTRL(channels_timer(channel), timer_io_channels[channel].sub_module);
 			rvalue &= ~(SMCTRL_PRSC_MASK | SMCTRL_LDMOD);
 			rvalue |= SMCTRL_PRSC_DIV16;
 			rMCTRL(channels_timer(channel)) |= (timer_io_channels[channel].sub_module_bits >> MCTRL_LDOK_SHIFT) << MCTRL_CLDOK_SHIFT
-							;
+							   ;
 			rCTRL(channels_timer(channel), timer_io_channels[channel].sub_module)  = rvalue;
 			rMCTRL(channels_timer(channel)) |= timer_io_channels[channel].sub_module_bits;
 		}
 	}
+
 	px4_leave_critical_section(flags);
 }
 
@@ -596,7 +602,7 @@ int io_timer_init_timer(unsigned timer, io_timer_channel_mode_t mode)
 				rDISMAP0(timer, timer_io_channels[chan].sub_module) = 0xf000;
 				rDISMAP1(timer, timer_io_channels[chan].sub_module) = 0xf000;
 				rOUTEN(timer) |= timer_io_channels[chan].val_offset == PWMA_VAL ? OUTEN_PWMA_EN(1 << timer_io_channels[chan].sub_module)
-						: OUTEN_PWMB_EN(1 << timer_io_channels[chan].sub_module);
+						 : OUTEN_PWMB_EN(1 << timer_io_channels[chan].sub_module);
 				rDTSRCSEL(timer) = 0;
 				rMCTRL(timer) = MCTRL_LDOK(1 << timer_io_channels[chan].sub_module);
 				rMCTRL(timer) = timer_io_channels[chan].sub_module_bits;
