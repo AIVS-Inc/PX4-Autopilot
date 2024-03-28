@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EscRpm.0.1.dsdl
-// Generated at:  2024-03-20 04:18:06.987156 UTC
+// Generated at:  2024-03-27 21:46:28.300226 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.EscRpm
@@ -73,8 +73,8 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_EscRpm_0_1_EXTENT_BYTES_                    43UL
-#define ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 43UL
+#define ares_EscRpm_0_1_EXTENT_BYTES_                    44UL
+#define ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 44UL
 static_assert(ares_EscRpm_0_1_EXTENT_BYTES_ >= ares_EscRpm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
@@ -87,8 +87,8 @@ static_assert(ares_EscRpm_0_1_EXTENT_BYTES_ >= ares_EscRpm_0_1_SERIALIZATION_BUF
 
 typedef struct
 {
-    /// saturated uint8 m_motorMask
-    uint8_t m_motorMask;
+    /// saturated uint16 m_motorMask
+    uint16_t m_motorMask;
 
     /// saturated uint16 m_period
     uint16_t m_period;
@@ -129,7 +129,7 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 344UL)
+    if ((8U * (size_t) capacity_bytes) < 352UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -141,18 +141,9 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
 
 
 
-    {   // saturated uint8 m_motorMask
+    {   // saturated uint16 m_motorMask
         // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->m_motorMask);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
-    }
-
-
-
-
-    {   // saturated uint16 m_period
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_period, 16U);
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_motorMask, 16U);
         if (_err0_ < 0)
         {
             return _err0_;
@@ -163,12 +154,25 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
 
 
 
-    {   // saturated uint64 m_timeUtcUsec
+    {   // saturated uint16 m_period
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err1_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_timeUtcUsec, 64U);
+        const int8_t _err1_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_period, 16U);
         if (_err1_ < 0)
         {
             return _err1_;
+        }
+        offset_bits += 16U;
+    }
+
+
+
+
+    {   // saturated uint64 m_timeUtcUsec
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        const int8_t _err2_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_timeUtcUsec, 64U);
+        if (_err2_ < 0)
+        {
+            return _err2_;
         }
         offset_bits += 64U;
     }
@@ -182,10 +186,10 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
         {
             // Saturation code not emitted -- assume the native representation of float32 is conformant.
             static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-            const int8_t _err2_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_rps[_index0_]);
-            if (_err2_ < 0)
+            const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_rps[_index0_]);
+            if (_err3_ < 0)
             {
-                return _err2_;
+                return _err3_;
             }
             offset_bits += 32U;
         }
@@ -202,10 +206,10 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
         {
             // Saturation code not emitted -- assume the native representation of float32 is conformant.
             static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-            const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_var[_index1_]);
-            if (_err3_ < 0)
+            const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_var[_index1_]);
+            if (_err4_ < 0)
             {
-                return _err3_;
+                return _err4_;
             }
             offset_bits += 32U;
         }
@@ -217,10 +221,10 @@ static inline int8_t ares_EscRpm_0_1_serialize_(
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err4_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err4_ < 0)
+        const int8_t _err5_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err5_ < 0)
         {
-            return _err4_;
+            return _err5_;
         }
         offset_bits += _pad0_;
     }
@@ -274,16 +278,9 @@ static inline int8_t ares_EscRpm_0_1_deserialize_(
 
 
 
-    // saturated uint8 m_motorMask
-    if ((offset_bits + 8U) <= capacity_bits)
-    {
-        out_obj->m_motorMask = buffer[offset_bits / 8U] & 255U;
-    }
-    else
-    {
-        out_obj->m_motorMask = 0U;
-    }
-    offset_bits += 8U;
+    // saturated uint16 m_motorMask
+    out_obj->m_motorMask = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
 
 

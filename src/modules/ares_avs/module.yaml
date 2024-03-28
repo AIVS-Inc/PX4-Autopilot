@@ -68,13 +68,13 @@ parameters:
 
   - group: AVS
     definitions:
-      AVS_RPM_AVG_LEN:
+      AVS_RPM_AVG_MSEC:
         description:
-          short: RPM average length
-          long: RPM average length in terms of ESC_STATUS updates
+          short: RPM average time
+          long:  Desired RPM average time in milliseconds
         type: int32
         min: 1
-        max: 50
+        max: 500
         increment: 1
         default: 10
       AVS_ANT_DX:

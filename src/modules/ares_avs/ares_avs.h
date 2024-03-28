@@ -111,7 +111,7 @@ private:
 		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win,
 		(ParamInt<px4::params::EVT_SELF_BGSIL>) _evt_self_bgsil,
 		(ParamInt<px4::params::EVT_BGSIL_DB>) 	_evt_bgsil_db,
-		(ParamInt<px4::params::AVS_RPM_AVG_LEN>) _avs_rpm_avg_len
+		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>) _avs_rpm_avg_len
 	)
 
 	// Subscriptions

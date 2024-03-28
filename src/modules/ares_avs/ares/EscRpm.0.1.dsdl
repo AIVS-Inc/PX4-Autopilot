@@ -1,6 +1,6 @@
 # AIVS Inc RPM and other measurements from ESC (up to 4 for each CAN message)
 
-uint8	    	m_motorMask   # one bit set for each active motor (0-7, up to 4 motor in message)
+uint16	    	m_motorMask   # one bit set for each active motor (0-7, up to 4 motor in message)
 uint16 	    	m_period      # RPM measurement period in microseconds
 uint64	    	m_timeUtcUsec # current time in UTC microseconds (at end of measurement period)
 float32[4]	m_rps	      # revs per second
