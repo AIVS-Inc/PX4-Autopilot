@@ -90,12 +90,13 @@ public:
 		uint8_t relPosQuality = relposned.m_relPosQuality;
 		uint32_t node = receive.metadata.remote_node_id;
 
-		PX4_INFO("node:%lu, fix: %s, hd: %.2f (+- %.2f) deg, len: %.2f (+- %.2f) m, N: %.3f, E: %.3f, D: %.3f m, (+- n: %.3f, e: %.3f, d: %.3f m)\r\n", node,
-					( GnssCarrierPhaseStatus_Floating == (relPosQuality & 0x03) ) ? "float" :
-					( GnssCarrierPhaseStatus_Fixed == (relPosQuality & 0x03) ) ? "fixed" : "none",
-					(double)relPosHeading, (double)accH, (double)relPosLength, (double)accL, (double)relPosN,
-					(double)relPosE, (double)relPosD, (double)accN, (double)accE, (double)accD);
+		// PX4_INFO("node:%lu, fix: %s, hd: %.2f (+- %.2f) deg, len: %.2f (+- %.2f) m, N: %.3f, E: %.3f, D: %.3f m, (+- n: %.3f, e: %.3f, d: %.3f m)\r\n", node,
+		// 			( GnssCarrierPhaseStatus_Floating == (relPosQuality & 0x03) ) ? "float" :
+		// 			( GnssCarrierPhaseStatus_Fixed == (relPosQuality & 0x03) ) ? "fixed" : "none",
+		// 			(double)relPosHeading, (double)accH, (double)relPosLength, (double)accL, (double)relPosN,
+		// 			(double)relPosE, (double)relPosD, (double)accN, (double)accE, (double)accD);
 
+		report.time_utc_usec = relposned.m_u64utcUsec;
 		report.timestamp = hrt_absolute_time();
 		report.device_id = node;
 		report.position[0] = relPosN;

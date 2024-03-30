@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/GnssPos.0.1.dsdl
-// Generated at:  2024-03-27 21:46:28.320816 UTC
+// Generated at:  2024-03-29 00:35:07.483726 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.GnssPos
@@ -72,21 +72,21 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_GnssPos_0_1_EXTENT_BYTES_                    58UL
-#define ares_GnssPos_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 58UL
+#define ares_GnssPos_0_1_EXTENT_BYTES_                    55UL
+#define ares_GnssPos_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 55UL
 static_assert(ares_GnssPos_0_1_EXTENT_BYTES_ >= ares_GnssPos_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
 typedef struct
 {
+    /// saturated uint64 m_u64utcUsec
+    uint64_t m_u64utcUsec;
+
     /// saturated float64 m_dLatitude
     double m_dLatitude;
 
     /// saturated float64 m_dLongitude
     double m_dLongitude;
-
-    /// saturated float32 m_dAltitudeMsl
-    float m_dAltitudeMsl;
 
     /// saturated float32 m_fHorizontalAccuracy
     float m_fHorizontalAccuracy;
@@ -94,23 +94,11 @@ typedef struct
     /// saturated float32 m_fVerticalAccuracy
     float m_fVerticalAccuracy;
 
-    /// saturated uint8 m_u8FixType
-    uint8_t m_u8FixType;
-
-    /// saturated uint8 m_u8SIV
-    uint8_t m_u8SIV;
-
-    /// saturated float32 m_fHeading
-    float m_fHeading;
-
     /// saturated float32 m_fGroundSpeed
     float m_fGroundSpeed;
 
     /// saturated float32 m_fAltitudeEllipsoid
     float m_fAltitudeEllipsoid;
-
-    /// saturated float32 m_fPDOP
-    float m_fPDOP;
 
     /// saturated float32 m_fNorthVel
     float m_fNorthVel;
@@ -120,6 +108,15 @@ typedef struct
 
     /// saturated float32 m_fDownVel
     float m_fDownVel;
+
+    /// saturated uint8 m_u8PDOP
+    uint8_t m_u8PDOP;
+
+    /// saturated uint8 m_u8FixType
+    uint8_t m_u8FixType;
+
+    /// saturated uint8 m_u8SIV
+    uint8_t m_u8SIV;
 } ares_GnssPos_0_1;
 
 /// Serialize an instance into the provided buffer.
@@ -148,7 +145,7 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 464UL)
+    if ((8U * (size_t) capacity_bytes) < 440UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -160,10 +157,9 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
 
 
 
-    {   // saturated float64 m_dLatitude
-        // Saturation code not emitted -- assume the native representation of float64 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_DOUBLE, "Native IEEE754 binary64 required. TODO: relax constraint");
-        const int8_t _err0_ = nunavutSetF64(&buffer[0], capacity_bytes, offset_bits, obj->m_dLatitude);
+    {   // saturated uint64 m_u64utcUsec
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u64utcUsec, 64U);
         if (_err0_ < 0)
         {
             return _err0_;
@@ -174,10 +170,10 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
 
 
 
-    {   // saturated float64 m_dLongitude
+    {   // saturated float64 m_dLatitude
         // Saturation code not emitted -- assume the native representation of float64 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_DOUBLE, "Native IEEE754 binary64 required. TODO: relax constraint");
-        const int8_t _err1_ = nunavutSetF64(&buffer[0], capacity_bytes, offset_bits, obj->m_dLongitude);
+        const int8_t _err1_ = nunavutSetF64(&buffer[0], capacity_bytes, offset_bits, obj->m_dLatitude);
         if (_err1_ < 0)
         {
             return _err1_;
@@ -188,15 +184,15 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
 
 
 
-    {   // saturated float32 m_dAltitudeMsl
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err2_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_dAltitudeMsl);
+    {   // saturated float64 m_dLongitude
+        // Saturation code not emitted -- assume the native representation of float64 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_DOUBLE, "Native IEEE754 binary64 required. TODO: relax constraint");
+        const int8_t _err2_ = nunavutSetF64(&buffer[0], capacity_bytes, offset_bits, obj->m_dLongitude);
         if (_err2_ < 0)
         {
             return _err2_;
         }
-        offset_bits += 32U;
+        offset_bits += 64U;
     }
 
 
@@ -230,6 +226,85 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
 
 
 
+    {   // saturated float32 m_fGroundSpeed
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err5_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fGroundSpeed);
+        if (_err5_ < 0)
+        {
+            return _err5_;
+        }
+        offset_bits += 32U;
+    }
+
+
+
+
+    {   // saturated float32 m_fAltitudeEllipsoid
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err6_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fAltitudeEllipsoid);
+        if (_err6_ < 0)
+        {
+            return _err6_;
+        }
+        offset_bits += 32U;
+    }
+
+
+
+
+    {   // saturated float32 m_fNorthVel
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err7_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fNorthVel);
+        if (_err7_ < 0)
+        {
+            return _err7_;
+        }
+        offset_bits += 32U;
+    }
+
+
+
+
+    {   // saturated float32 m_fEastVel
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err8_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fEastVel);
+        if (_err8_ < 0)
+        {
+            return _err8_;
+        }
+        offset_bits += 32U;
+    }
+
+
+
+
+    {   // saturated float32 m_fDownVel
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err9_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fDownVel);
+        if (_err9_ < 0)
+        {
+            return _err9_;
+        }
+        offset_bits += 32U;
+    }
+
+
+
+
+    {   // saturated uint8 m_u8PDOP
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8PDOP);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
     {   // saturated uint8 m_u8FixType
         // Saturation code not emitted -- native representation matches the serialized representation.
         buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8FixType);  // C std, 6.3.1.3 Signed and unsigned integers
@@ -246,111 +321,13 @@ static inline int8_t ares_GnssPos_0_1_serialize_(
     }
 
 
-
-
-    {   // saturated float32 m_fHeading
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err5_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fHeading);
-        if (_err5_ < 0)
-        {
-            return _err5_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fGroundSpeed
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err6_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fGroundSpeed);
-        if (_err6_ < 0)
-        {
-            return _err6_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fAltitudeEllipsoid
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err7_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fAltitudeEllipsoid);
-        if (_err7_ < 0)
-        {
-            return _err7_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fPDOP
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err8_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fPDOP);
-        if (_err8_ < 0)
-        {
-            return _err8_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fNorthVel
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err9_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fNorthVel);
-        if (_err9_ < 0)
-        {
-            return _err9_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fEastVel
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err10_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fEastVel);
-        if (_err10_ < 0)
-        {
-            return _err10_;
-        }
-        offset_bits += 32U;
-    }
-
-
-
-
-    {   // saturated float32 m_fDownVel
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err11_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fDownVel);
-        if (_err11_ < 0)
-        {
-            return _err11_;
-        }
-        offset_bits += 32U;
-    }
-
-
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err12_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err12_ < 0)
+        const int8_t _err10_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err10_ < 0)
         {
-            return _err12_;
+            return _err10_;
         }
         offset_bits += _pad0_;
     }
@@ -404,6 +381,13 @@ static inline int8_t ares_GnssPos_0_1_deserialize_(
 
 
 
+    // saturated uint64 m_u64utcUsec
+    out_obj->m_u64utcUsec = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
+    offset_bits += 64U;
+
+
+
+
     // saturated float64 m_dLatitude
     out_obj->m_dLatitude = nunavutGetF64(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 64U;
@@ -418,13 +402,6 @@ static inline int8_t ares_GnssPos_0_1_deserialize_(
 
 
 
-    // saturated float32 m_dAltitudeMsl
-    out_obj->m_dAltitudeMsl = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
     // saturated float32 m_fHorizontalAccuracy
     out_obj->m_fHorizontalAccuracy = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
@@ -435,6 +412,55 @@ static inline int8_t ares_GnssPos_0_1_deserialize_(
     // saturated float32 m_fVerticalAccuracy
     out_obj->m_fVerticalAccuracy = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fGroundSpeed
+    out_obj->m_fGroundSpeed = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fAltitudeEllipsoid
+    out_obj->m_fAltitudeEllipsoid = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fNorthVel
+    out_obj->m_fNorthVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fEastVel
+    out_obj->m_fEastVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fDownVel
+    out_obj->m_fDownVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated uint8 m_u8PDOP
+    if ((offset_bits + 8U) <= capacity_bits)
+    {
+        out_obj->m_u8PDOP = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_u8PDOP = 0U;
+    }
+    offset_bits += 8U;
 
 
 
@@ -463,55 +489,6 @@ static inline int8_t ares_GnssPos_0_1_deserialize_(
         out_obj->m_u8SIV = 0U;
     }
     offset_bits += 8U;
-
-
-
-
-    // saturated float32 m_fHeading
-    out_obj->m_fHeading = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fGroundSpeed
-    out_obj->m_fGroundSpeed = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fAltitudeEllipsoid
-    out_obj->m_fAltitudeEllipsoid = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fPDOP
-    out_obj->m_fPDOP = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fNorthVel
-    out_obj->m_fNorthVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fEastVel
-    out_obj->m_fEastVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fDownVel
-    out_obj->m_fDownVel = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
 
 
     offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.

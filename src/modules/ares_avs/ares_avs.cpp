@@ -288,13 +288,14 @@ void AresAvs::run()
 		else if (fds[0].revents & POLLIN) {
 			struct sensor_avs_s sensor_avs;
 			orb_copy(ORB_ID(sensor_avs), sensor_avs_sub, &sensor_avs);
-			PX4_INFO("got sensor_avs, node: %lu, time: %llu", sensor_avs.device_id, sensor_avs.time_utc_usec);
+			//PX4_INFO("got sensor_avs, node: %lu, time: %llu", sensor_avs.device_id, sensor_avs.time_utc_usec);
 
 			if ((sensor_avs.device_id > 0) && ((clock_set == false) || (sync_done == false))) {
 
 				if (clock_set == false)	{
 					// convert node UTC time to date time
 					char buf[80];
+					struct timespec ts = {};
 					struct tm date_time;
 					time_t time_s = (time_t)(sensor_avs.time_utc_usec / 1000000);
 					long time_ns = (sensor_avs.time_utc_usec - (uint64_t)(time_s * 1000000)) * 1000;
@@ -304,25 +305,30 @@ void AresAvs::run()
 					// get time since boot
 					hrt_abstime since_boot_sec = hrt_absolute_time() / 1000000;
 
+					// get current system time to check if it is valid
+					px4_clock_gettime(CLOCK_REALTIME, &ts);
+
 					PX4_INFO("Unix epoch time: %ld", (long)time_s);
-					PX4_INFO("System time: %s", buf);
+					PX4_INFO("System time: %ld", ts.tv_sec);
+					PX4_INFO("Date-time: %s", buf);
 					PX4_INFO("Uptime (since boot): %" PRIu64 " s", since_boot_sec);
 
-					//set system time from GPS time
-					struct timespec ts = {};
-					ts.tv_sec = time_s;
-					ts.tv_nsec = time_ns;
-					int res = px4_clock_settime(CLOCK_REALTIME, &ts);
+					if (abs(ts.tv_sec - (uint32_t)time_s) > 1) {
+						// set system time from GPS time
+						ts.tv_sec = time_s;
+						ts.tv_nsec = time_ns;
+						int res = px4_clock_settime(CLOCK_REALTIME, &ts);
 
-					if (res == 0) {
-						PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
-					} else {
-						PX4_ERR("Failed to set system time (%i)", res);
+						if (res == 0) {
+							PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
+						} else {
+							PX4_ERR("Failed to set system time (%i)", res);
+						}
 					}
 					clock_set = true;
 				}
 				if (sync_done == false) {
-					// need both nodes to report AVS event msg before we can sync
+					// need both nodes to report AVS event msg before we can sync, to ensure both have reached PPS lock
 					if (sensor_avs.device_id == aresNodeId_top) {
 						top_node_reported = true;
 					}

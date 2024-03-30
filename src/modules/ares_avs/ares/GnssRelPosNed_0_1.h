@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/GnssRelPosNed.0.1.dsdl
-// Generated at:  2024-03-27 21:46:28.329365 UTC
+// Generated at:  2024-03-29 00:35:07.490681 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.GnssRelPosNed
@@ -72,15 +72,15 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_GnssRelPosNed_0_1_EXTENT_BYTES_                    43UL
-#define ares_GnssRelPosNed_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 43UL
+#define ares_GnssRelPosNed_0_1_EXTENT_BYTES_                    51UL
+#define ares_GnssRelPosNed_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 51UL
 static_assert(ares_GnssRelPosNed_0_1_EXTENT_BYTES_ >= ares_GnssRelPosNed_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
 typedef struct
 {
-    /// saturated uint16 m_refStationID
-    uint16_t m_refStationID;
+    /// saturated uint64 m_u64utcUsec
+    uint64_t m_u64utcUsec;
 
     /// saturated float32 m_relPosN
     float m_relPosN;
@@ -112,6 +112,9 @@ typedef struct
     /// saturated float32 m_accH
     float m_accH;
 
+    /// saturated uint16 m_refStationID
+    uint16_t m_refStationID;
+
     /// saturated uint8 m_relPosQuality
     uint8_t m_relPosQuality;
 } ares_GnssRelPosNed_0_1;
@@ -142,7 +145,7 @@ static inline int8_t ares_GnssRelPosNed_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 344UL)
+    if ((8U * (size_t) capacity_bytes) < 408UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -154,14 +157,14 @@ static inline int8_t ares_GnssRelPosNed_0_1_serialize_(
 
 
 
-    {   // saturated uint16 m_refStationID
+    {   // saturated uint64 m_u64utcUsec
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_refStationID, 16U);
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u64utcUsec, 64U);
         if (_err0_ < 0)
         {
             return _err0_;
         }
-        offset_bits += 16U;
+        offset_bits += 64U;
     }
 
 
@@ -307,6 +310,19 @@ static inline int8_t ares_GnssRelPosNed_0_1_serialize_(
 
 
 
+    {   // saturated uint16 m_refStationID
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        const int8_t _err11_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_refStationID, 16U);
+        if (_err11_ < 0)
+        {
+            return _err11_;
+        }
+        offset_bits += 16U;
+    }
+
+
+
+
     {   // saturated uint8 m_relPosQuality
         // Saturation code not emitted -- native representation matches the serialized representation.
         buffer[offset_bits / 8U] = (uint8_t)(obj->m_relPosQuality);  // C std, 6.3.1.3 Signed and unsigned integers
@@ -317,10 +333,10 @@ static inline int8_t ares_GnssRelPosNed_0_1_serialize_(
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err11_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err11_ < 0)
+        const int8_t _err12_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err12_ < 0)
         {
-            return _err11_;
+            return _err12_;
         }
         offset_bits += _pad0_;
     }
@@ -374,9 +390,9 @@ static inline int8_t ares_GnssRelPosNed_0_1_deserialize_(
 
 
 
-    // saturated uint16 m_refStationID
-    out_obj->m_refStationID = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
+    // saturated uint64 m_u64utcUsec
+    out_obj->m_u64utcUsec = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
+    offset_bits += 64U;
 
 
 
@@ -447,6 +463,13 @@ static inline int8_t ares_GnssRelPosNed_0_1_deserialize_(
     // saturated float32 m_accH
     out_obj->m_accH = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
+
+
+
+
+    // saturated uint16 m_refStationID
+    out_obj->m_refStationID = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
+    offset_bits += 16U;
 
 
 

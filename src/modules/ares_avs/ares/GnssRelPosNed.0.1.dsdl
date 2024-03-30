@@ -1,6 +1,6 @@
 # AIVS Inc ARES GNSS relative position
 
-uint16  m_refStationID
+uint64  m_u64utcUsec
 
 float32 m_relPosN
 float32 m_relPosE
@@ -14,6 +14,7 @@ float32 m_accD
 float32 m_accL
 float32 m_accH
 
+uint16  m_refStationID
 uint8   m_relPosQuality
 
 @sealed

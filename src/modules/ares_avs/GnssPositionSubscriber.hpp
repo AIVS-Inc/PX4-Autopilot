@@ -41,6 +41,7 @@
 
 #pragma once
 
+#include <px4_platform_common/posix.h>
 #include <uORB/uORB.h>
 #include <uORB/topics/sensor_gps.h>
 #include "ares/GnssPos_0_1.h"
@@ -77,33 +78,30 @@ public:
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_GnssPos_0_1_deserialize_(&gnsspos, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
-		//uint64_t utc_us = gnsspos.m_u32JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
-		//uint32_t tow = gnsspos.m_u32Itow;
 		double lat = gnsspos.m_dLatitude;
 		double lon = gnsspos.m_dLongitude;
-		float alt = gnsspos.m_dAltitudeMsl;
+		float alt = gnsspos.m_fAltitudeEllipsoid;
 		float deltah = gnsspos.m_fHorizontalAccuracy;
 		float deltav = gnsspos.m_fVerticalAccuracy;
 		uint32_t node = receive.metadata.remote_node_id;
 
 		report.timestamp = hrt_absolute_time();
-		//report.time_utc_usec = utc_us;
+		report.time_utc_usec = gnsspos.m_u64utcUsec;
 		report.device_id = node;
 		report.fix_type = gnsspos.m_u8FixType;
 		report.latitude_deg = 0.5 * lat + 0.5 * lat_last;	// average the positions from both antennas
 		report.longitude_deg = 0.5 * lon + 0.5 * lon_last;
-		report.altitude_msl_m = 0.5f * alt + 0.5f * hgt_last;
-		report.altitude_ellipsoid_m = 0.5f * gnsspos.m_fAltitudeEllipsoid + 0.5f * alt_last;
+		report.altitude_msl_m = 0.5f * alt + 0.5f * alt_last;	// ARES seems to duplicate MSL and ALT
+		report.altitude_ellipsoid_m = 0.5f * alt + 0.5f * alt_last;
 		report.eph = 0.5f * deltah + 0.5f * sigx_last;
 		report.epv = 0.5f * deltav + 0.5f * sigv_last;
-		report.hdop = gnsspos.m_fPDOP;		// uBlox PVT message only has PDOP
-		report.vdop = gnsspos.m_fPDOP * deltav/deltah;		// FIX
-		report.cog_rad = gnsspos.m_fHeading * (float)M_PI/180;
+		report.hdop = (float) gnsspos.m_u8PDOP / 10.0f;		// uBlox PVT message only has PDOP
+		report.vdop = report.hdop * deltav/deltah;		// FIX
+		report.cog_rad = (float) NAN;					// heading shall come from the RTK system
 		report.vel_m_s = gnsspos.m_fGroundSpeed;
 		report.vel_n_m_s = gnsspos.m_fNorthVel;
 		report.vel_e_m_s = gnsspos.m_fEastVel;
 		report.vel_d_m_s = gnsspos.m_fDownVel;
-		report.heading = gnsspos.m_fHeading;
 		report.satellites_used = gnsspos.m_u8SIV;
 		report.vel_ned_valid = true;
 
@@ -112,19 +110,35 @@ public:
 
 		lat_last = report.latitude_deg;
 		lon_last = report.longitude_deg;
-		hgt_last = report.altitude_msl_m;
 		alt_last = report.altitude_ellipsoid_m;
 		sigx_last = report.eph;
 		sigv_last = report.epv;
 
-
 		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
+
+		if ((report.timestamp/1000000 > 120) && (report.fix_type >= 3)) {
+			// get current system time to check if it is valid (after 120 sec uptime)
+			struct timespec ts = {};
+			px4_clock_gettime(CLOCK_REALTIME, &ts);
+			time_t time_s = (time_t) (gnsspos.m_u64utcUsec/1000000);
+			if (abs(ts.tv_sec - (uint32_t)time_s) > 1) {
+				// set system time from GPS time
+				ts.tv_sec = time_s;
+				ts.tv_nsec = (gnsspos.m_u64utcUsec - (uint64_t)(time_s * 1000000)) * 1000;
+				int res = px4_clock_settime(CLOCK_REALTIME, &ts);
+
+				if (res == 0) {
+					PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
+				} else {
+					PX4_ERR("Failed to set system time (%i)", res);
+				}
+			}
+		}
 	};
 private:
 	CanardPortID _portID;
 	double lat_last = 47.5894;	// initialized to allow fast position convergence, probably not necessary
 	double lon_last = -122.29315;
-	float hgt_last = 70.7;
 	float alt_last = 70.7;
 	float sigx_last = 1.6;
 	float sigv_last = 1.9;
