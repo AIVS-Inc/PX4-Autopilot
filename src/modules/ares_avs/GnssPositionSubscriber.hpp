@@ -78,23 +78,38 @@ public:
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_GnssPos_0_1_deserialize_(&gnsspos, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
+		if (node[active_node] == 0) {
+			node[active_node] = receive.metadata.remote_node_id;
+			msg_cnt = 1;
+		}
+		else if (node[active_node] == receive.metadata.remote_node_id) {
+			msg_cnt = 0;	// this node is still alive, so reset msg_cnt
+		}
+		else {	// message received from the other non-active node
+			msg_cnt++;		// increment count of how many missed
+			if (msg_cnt > 3) {
+				active_node = (active_node == 0) ? 1 : 0;
+				node[active_node] = receive.metadata.remote_node_id;
+				msg_cnt = 1;
+			}
+		}
+
 		double lat = gnsspos.m_dLatitude;
 		double lon = gnsspos.m_dLongitude;
 		float alt = gnsspos.m_fAltitudeEllipsoid;
 		float deltah = gnsspos.m_fHorizontalAccuracy;
 		float deltav = gnsspos.m_fVerticalAccuracy;
-		uint32_t node = receive.metadata.remote_node_id;
 
 		report.timestamp = hrt_absolute_time();
 		report.time_utc_usec = gnsspos.m_u64utcUsec;
-		report.device_id = node;
+		report.device_id = node[active_node];
 		report.fix_type = gnsspos.m_u8FixType;
-		report.latitude_deg = 0.5 * lat + 0.5 * lat_last;	// average the positions from both antennas
-		report.longitude_deg = 0.5 * lon + 0.5 * lon_last;
-		report.altitude_msl_m = 0.5f * alt + 0.5f * alt_last;	// ARES seems to duplicate MSL and ALT
-		report.altitude_ellipsoid_m = 0.5f * alt + 0.5f * alt_last;
-		report.eph = 0.5f * deltah + 0.5f * sigx_last;
-		report.epv = 0.5f * deltav + 0.5f * sigv_last;
+		report.latitude_deg = lat;	// average the positions from both antennas
+		report.longitude_deg = lon;
+		report.altitude_msl_m = alt;	// ARES seems to duplicate MSL and ALT
+		report.altitude_ellipsoid_m = alt;	// FIX: are both msl and alt in PVT?
+		report.eph = deltah;
+		report.epv = deltav;
 		report.hdop = (float) gnsspos.m_u8PDOP / 10.0f;		// uBlox PVT message only has PDOP
 		report.vdop = report.hdop * deltav/deltah;		// FIX
 		report.cog_rad = (float) NAN;					// heading shall come from the RTK system
@@ -106,13 +121,7 @@ public:
 		report.vel_ned_valid = true;
 
 		// PX4_INFO("node:%lu, lat: %.9f, lon: %.9f, alt: %.2f m, (+- h: %.2f m, v: %.2f m)",
-		// 	  node, report.latitude_deg, report.longitude_deg, (double)report.altitude_msl_m, (double)report.eph, (double)report.epv);
-
-		lat_last = report.latitude_deg;
-		lon_last = report.longitude_deg;
-		alt_last = report.altitude_ellipsoid_m;
-		sigx_last = report.eph;
-		sigv_last = report.epv;
+		// 	  node[active_node], report.latitude_deg, report.longitude_deg, (double)report.altitude_msl_m, (double)report.eph, (double)report.epv);
 
 		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
 
@@ -137,9 +146,7 @@ public:
 	};
 private:
 	CanardPortID _portID;
-	double lat_last = 47.5894;	// initialized to allow fast position convergence, probably not necessary
-	double lon_last = -122.29315;
-	float alt_last = 70.7;
-	float sigx_last = 1.6;
-	float sigv_last = 1.9;
-};
+	uint32_t node[2] = {0};		// two reporting nodes max
+	uint8_t msg_cnt = 0;		// allows redundant switchover in case one node GNSS fails to arrive
+	uint8_t active_node = 0;
+ };

@@ -260,7 +260,6 @@ void AresAvs::run()
 	parameters_update(true);
 
 	// time and clock synchronization
-	bool sync_done = false;	// for system sync if there are two nodes
 	bool clock_set = false; // update local FMU clock to GPS time
 	bool top_node_reported = (aresNodeId_top > 0) ? false : true;
 	bool bot_node_reported = (aresNodeId_bot > 0) ? false : true;
@@ -499,6 +498,11 @@ int AresAvs::sync_command( time_t time_s)	// send an ADC sync to ARES at a speci
 	PX4_INFO("Send SYNC to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_sync_control), sync_pub, &sync);
 
+	/* Record for logging purposes */
+	int32_t sync_secs = (int32_t)sync.sync_utc_sec;
+	param_set(param_find("AVS_TARGET_SYNC"), &sync_secs);	// FIX, wraps in year 2038
+
+	sync_done = true;
 	return 0;
 }
 

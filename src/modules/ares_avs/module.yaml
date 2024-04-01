@@ -77,6 +77,15 @@ parameters:
         max: 500
         increment: 1
         default: 10
+      AVS_TARGET_SYNC:
+        description:
+          short: AVS sync time (UTC sec)
+          long:  Specified sync time for AVS nodes in UTC sec
+        type: int32
+        min: 1711000000
+        default: 1721000000
+        max: 2147483647
+        increment: 1
       AVS_ANT_DX:
         description:
           short: GNSS antenna delta-X

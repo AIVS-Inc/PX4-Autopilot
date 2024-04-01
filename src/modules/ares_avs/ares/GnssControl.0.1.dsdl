@@ -1,7 +1,7 @@
 # AIVS Inc GNSS measurement control parameters
 
 uint16      m_u16ParamId     # see below
-uint8	    m_u8Command      # see UavCanId.h
+uint8[16]   m_u8Command      # see UavCanId.h
 
 @sealed
 

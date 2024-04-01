@@ -111,11 +111,13 @@ private:
 		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win,
 		(ParamInt<px4::params::EVT_SELF_BGSIL>) _evt_self_bgsil,
 		(ParamInt<px4::params::EVT_BGSIL_DB>) 	_evt_bgsil_db,
-		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>) _avs_rpm_avg_len
+		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>) _avs_rpm_avg_len,
+		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync
 	)
 
 	// Subscriptions
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
+	bool sync_done = false;	// for system sync if there are two nodes
 
 };
 

@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/GnssControl.0.1.dsdl
-// Generated at:  2024-03-29 00:35:07.475473 UTC
+// Generated at:  2024-03-30 17:54:10.784648 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.GnssControl
@@ -38,6 +38,7 @@
 #include <nunavut/support/serialization.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
               "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/GnssControl.0.1.dsdl is trying to use a serialization library that was compiled with "
@@ -72,18 +73,22 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_GnssControl_0_1_EXTENT_BYTES_                    3UL
-#define ares_GnssControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 3UL
+#define ares_GnssControl_0_1_EXTENT_BYTES_                    18UL
+#define ares_GnssControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 18UL
 static_assert(ares_GnssControl_0_1_EXTENT_BYTES_ >= ares_GnssControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
+
+/// Array metadata for: saturated uint8[16] m_u8Command
+#define ares_GnssControl_0_1_m_u8Command_ARRAY_CAPACITY_           16U
+#define ares_GnssControl_0_1_m_u8Command_ARRAY_IS_VARIABLE_LENGTH_ false
 
 typedef struct
 {
     /// saturated uint16 m_u16ParamId
     uint16_t m_u16ParamId;
 
-    /// saturated uint8 m_u8Command
-    uint8_t m_u8Command;
+    /// saturated uint8[16] m_u8Command
+    uint8_t m_u8Command[16];
 } ares_GnssControl_0_1;
 
 /// Serialize an instance into the provided buffer.
@@ -112,7 +117,7 @@ static inline int8_t ares_GnssControl_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 24UL)
+    if ((8U * (size_t) capacity_bytes) < 144UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -137,10 +142,16 @@ static inline int8_t ares_GnssControl_0_1_serialize_(
 
 
 
-    {   // saturated uint8 m_u8Command
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8Command);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
+    {   // saturated uint8[16] m_u8Command
+        const size_t _origin0_ = offset_bits;
+        for (size_t _index0_ = 0U; _index0_ < 16UL; ++_index0_)
+        {
+            // Saturation code not emitted -- native representation matches the serialized representation.
+            buffer[offset_bits / 8U] = (uint8_t)(obj->m_u8Command[_index0_]);  // C std, 6.3.1.3 Signed and unsigned integers
+            offset_bits += 8U;
+        }
+        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
+        (void) _origin0_;
     }
 
 
@@ -211,16 +222,19 @@ static inline int8_t ares_GnssControl_0_1_deserialize_(
 
 
 
-    // saturated uint8 m_u8Command
-    if ((offset_bits + 8U) <= capacity_bits)
+    // saturated uint8[16] m_u8Command
+    for (size_t _index1_ = 0U; _index1_ < 16UL; ++_index1_)
     {
-        out_obj->m_u8Command = buffer[offset_bits / 8U] & 255U;
+        if ((offset_bits + 8U) <= capacity_bits)
+        {
+            out_obj->m_u8Command[_index1_] = buffer[offset_bits / 8U] & 255U;
+        }
+        else
+        {
+            out_obj->m_u8Command[_index1_] = 0U;
+        }
+        offset_bits += 8U;
     }
-    else
-    {
-        out_obj->m_u8Command = 0U;
-    }
-    offset_bits += 8U;
 
 
     offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.

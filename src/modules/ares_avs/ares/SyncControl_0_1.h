@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/SyncControl.0.1.dsdl
-// Generated at:  2024-03-29 00:35:07.508746 UTC
+// Generated at:  2024-03-30 17:54:10.805336 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.SyncControl

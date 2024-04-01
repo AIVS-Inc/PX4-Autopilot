@@ -66,8 +66,8 @@ public:
 			ares_GnssControl_0_1 gnss {};
 
 			gnss.m_u16ParamId = GnssParamId_RtcmMode;
-			uint16_t rtcm_mode_top = GnssRtcmMode_None;
-			uint16_t rtcm_mode_bot = GnssRtcmMode_None;
+			uint8_t rtcm_mode_top = GnssRtcmMode_None;
+			uint8_t rtcm_mode_bot = GnssRtcmMode_None;
 
 			if ((gnssctl.rtcm_mode == GnssRtcmMode_Rover) || (gnssctl.rtcm_mode == GnssRtcmMode_Base)) {
 				// If both nodeIds are valid, top node will be annoited Base, bottom is Rover
@@ -83,7 +83,7 @@ public:
 				.remote_node_id = gnssctl.node_top,
 				.transfer_id    = _transfer_id_gnss_cap_top,
 			};
-			gnss.m_u8Command = rtcm_mode_top;
+			gnss.m_u8Command[0] = rtcm_mode_top;
 			result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
 
 			if (result == 0) {
@@ -93,7 +93,7 @@ public:
 							gnss_payload_size,
 							&gnss_payload_buffer);	// no response handler
 			}
-			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_top, gnss.m_u8Command);
+			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_top, gnss.m_u8Command[0]);
 
 			const CanardTransferMetadata gnss_transfer_metadata_bot = {
 				.priority       = CanardPriorityNominal,
@@ -102,7 +102,7 @@ public:
 				.remote_node_id = gnssctl.node_bot,
 				.transfer_id    = _transfer_id_gnss_cap_bot,
 			};
-			gnss.m_u8Command = rtcm_mode_bot;
+			gnss.m_u8Command[0] = rtcm_mode_bot;
 			result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
 
 			if (result == 0) {
@@ -112,7 +112,7 @@ public:
 							gnss_payload_size,
 							&gnss_payload_buffer);	// no response handler
 			}
-			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_bot, gnss.m_u8Command);
+			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_bot, gnss.m_u8Command[0]);
 		}
 	}
 

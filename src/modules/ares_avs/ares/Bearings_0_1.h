@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/Bearings.0.1.dsdl
-// Generated at:  2024-03-29 00:35:07.454841 UTC
+// Generated at:  2024-03-30 17:54:10.771020 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.Bearings
@@ -36,11 +36,8 @@
 #define ARES_BEARINGS_0_1_INCLUDED_
 
 #include <nunavut/support/serialization.h>
-#include <reg/udral/physics/kinematics/geodetic/Point_0_1.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <uavcan/si/unit/angle/Scalar_1_0.h>
-#include <uavcan/si/unit/length/Scalar_1_0.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
               "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/Bearings.0.1.dsdl is trying to use a serialization library that was compiled with "
@@ -75,8 +72,8 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_Bearings_0_1_EXTENT_BYTES_                    80UL
-#define ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 80UL
+#define ares_Bearings_0_1_EXTENT_BYTES_                    40UL
+#define ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 40UL
 static_assert(ares_Bearings_0_1_EXTENT_BYTES_ >= ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
@@ -91,32 +88,17 @@ typedef struct
     /// saturated uint32 m_iSourceIndex
     uint32_t m_iSourceIndex;
 
-    /// saturated float32 m_fSilDb
-    float m_fSilDb;
-
-    /// saturated float32 m_fActiveI
-    float m_fActiveI;
-
     /// saturated float32 m_fSplDb
     float m_fSplDb;
 
-    /// uavcan.si.unit.angle.Scalar.1.0 m_fPitch
-    uavcan_si_unit_angle_Scalar_1_0 m_fPitch;
+    /// saturated float32 m_fSilDb
+    float m_fSilDb;
 
-    /// uavcan.si.unit.angle.Scalar.1.0 m_fRoll
-    uavcan_si_unit_angle_Scalar_1_0 m_fRoll;
+    /// saturated float32 m_fSilBgDb
+    float m_fSilBgDb;
 
-    /// uavcan.si.unit.angle.Scalar.1.0 m_fYaw
-    uavcan_si_unit_angle_Scalar_1_0 m_fYaw;
-
-    /// reg.udral.physics.kinematics.geodetic.Point.0.1 m_glGnssLlh
-    reg_udral_physics_kinematics_geodetic_Point_0_1 m_glGnssLlh;
-
-    /// uavcan.si.unit.length.Scalar.1.0 m_fHorizontalAccuracy
-    uavcan_si_unit_length_Scalar_1_0 m_fHorizontalAccuracy;
-
-    /// uavcan.si.unit.length.Scalar.1.0 m_fVerticalAccuracy
-    uavcan_si_unit_length_Scalar_1_0 m_fVerticalAccuracy;
+    /// saturated float32 m_fActiveI
+    float m_fActiveI;
 
     /// saturated float32 m_fAzimuth
     float m_fAzimuth;
@@ -151,7 +133,7 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 640UL)
+    if ((8U * (size_t) capacity_bytes) < 320UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -202,10 +184,10 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
 
 
-    {   // saturated float32 m_fSilDb
+    {   // saturated float32 m_fSplDb
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fSilDb);
+        const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fSplDb);
         if (_err3_ < 0)
         {
             return _err3_;
@@ -216,10 +198,10 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
 
 
-    {   // saturated float32 m_fActiveI
+    {   // saturated float32 m_fSilDb
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fActiveI);
+        const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fSilDb);
         if (_err4_ < 0)
         {
             return _err4_;
@@ -230,10 +212,10 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
 
 
-    {   // saturated float32 m_fSplDb
+    {   // saturated float32 m_fSilBgDb
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err5_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fSplDb);
+        const int8_t _err5_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fSilBgDb);
         if (_err5_ < 0)
         {
             return _err5_;
@@ -242,147 +224,17 @@ static inline int8_t ares_Bearings_0_1_serialize_(
     }
 
 
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err6_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+
+
+    {   // saturated float32 m_fActiveI
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err6_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fActiveI);
         if (_err6_ < 0)
         {
             return _err6_;
         }
-        offset_bits += _pad0_;
-    }
-
-    {   // uavcan.si.unit.angle.Scalar.1.0 m_fPitch
-        size_t _size_bytes0_ = 4UL;  // Nested object (max) size, in bytes.
-        int8_t _err7_ = uavcan_si_unit_angle_Scalar_1_0_serialize_(
-            &obj->m_fPitch, &buffer[offset_bits / 8U], &_size_bytes0_);
-        if (_err7_ < 0)
-        {
-            return _err7_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes0_ * 8U;  // Advance by the size of the nested object.
-    }
-
-
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad1_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err8_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad1_);  // Optimize?
-        if (_err8_ < 0)
-        {
-            return _err8_;
-        }
-        offset_bits += _pad1_;
-    }
-
-    {   // uavcan.si.unit.angle.Scalar.1.0 m_fRoll
-        size_t _size_bytes1_ = 4UL;  // Nested object (max) size, in bytes.
-        int8_t _err9_ = uavcan_si_unit_angle_Scalar_1_0_serialize_(
-            &obj->m_fRoll, &buffer[offset_bits / 8U], &_size_bytes1_);
-        if (_err9_ < 0)
-        {
-            return _err9_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes1_ * 8U;  // Advance by the size of the nested object.
-    }
-
-
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad2_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err10_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad2_);  // Optimize?
-        if (_err10_ < 0)
-        {
-            return _err10_;
-        }
-        offset_bits += _pad2_;
-    }
-
-    {   // uavcan.si.unit.angle.Scalar.1.0 m_fYaw
-        size_t _size_bytes2_ = 4UL;  // Nested object (max) size, in bytes.
-        int8_t _err11_ = uavcan_si_unit_angle_Scalar_1_0_serialize_(
-            &obj->m_fYaw, &buffer[offset_bits / 8U], &_size_bytes2_);
-        if (_err11_ < 0)
-        {
-            return _err11_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes2_ * 8U;  // Advance by the size of the nested object.
-    }
-
-
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad3_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err12_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad3_);  // Optimize?
-        if (_err12_ < 0)
-        {
-            return _err12_;
-        }
-        offset_bits += _pad3_;
-    }
-
-    {   // reg.udral.physics.kinematics.geodetic.Point.0.1 m_glGnssLlh
-        size_t _size_bytes3_ = 24UL;  // Nested object (max) size, in bytes.
-        int8_t _err13_ = reg_udral_physics_kinematics_geodetic_Point_0_1_serialize_(
-            &obj->m_glGnssLlh, &buffer[offset_bits / 8U], &_size_bytes3_);
-        if (_err13_ < 0)
-        {
-            return _err13_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes3_ * 8U;  // Advance by the size of the nested object.
-    }
-
-
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad4_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err14_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad4_);  // Optimize?
-        if (_err14_ < 0)
-        {
-            return _err14_;
-        }
-        offset_bits += _pad4_;
-    }
-
-    {   // uavcan.si.unit.length.Scalar.1.0 m_fHorizontalAccuracy
-        size_t _size_bytes4_ = 4UL;  // Nested object (max) size, in bytes.
-        int8_t _err15_ = uavcan_si_unit_length_Scalar_1_0_serialize_(
-            &obj->m_fHorizontalAccuracy, &buffer[offset_bits / 8U], &_size_bytes4_);
-        if (_err15_ < 0)
-        {
-            return _err15_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes4_ * 8U;  // Advance by the size of the nested object.
-    }
-
-
-    if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
-    {
-        const uint8_t _pad5_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err16_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad5_);  // Optimize?
-        if (_err16_ < 0)
-        {
-            return _err16_;
-        }
-        offset_bits += _pad5_;
-    }
-
-    {   // uavcan.si.unit.length.Scalar.1.0 m_fVerticalAccuracy
-        size_t _size_bytes5_ = 4UL;  // Nested object (max) size, in bytes.
-        int8_t _err17_ = uavcan_si_unit_length_Scalar_1_0_serialize_(
-            &obj->m_fVerticalAccuracy, &buffer[offset_bits / 8U], &_size_bytes5_);
-        if (_err17_ < 0)
-        {
-            return _err17_;
-        }
-        // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
-        offset_bits += _size_bytes5_ * 8U;  // Advance by the size of the nested object.
+        offset_bits += 32U;
     }
 
 
@@ -391,10 +243,10 @@ static inline int8_t ares_Bearings_0_1_serialize_(
     {   // saturated float32 m_fAzimuth
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err18_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fAzimuth);
-        if (_err18_ < 0)
+        const int8_t _err7_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fAzimuth);
+        if (_err7_ < 0)
         {
-            return _err18_;
+            return _err7_;
         }
         offset_bits += 32U;
     }
@@ -405,10 +257,10 @@ static inline int8_t ares_Bearings_0_1_serialize_(
     {   // saturated float32 m_fElevation
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err19_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fElevation);
-        if (_err19_ < 0)
+        const int8_t _err8_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fElevation);
+        if (_err8_ < 0)
         {
-            return _err19_;
+            return _err8_;
         }
         offset_bits += 32U;
     }
@@ -416,13 +268,13 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
-        const uint8_t _pad6_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err20_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad6_);  // Optimize?
-        if (_err20_ < 0)
+        const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
+        const int8_t _err9_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err9_ < 0)
         {
-            return _err20_;
+            return _err9_;
         }
-        offset_bits += _pad6_;
+        offset_bits += _pad0_;
     }
     // It is assumed that we know the exact type of the serialized entity, hence we expect the size to match.
 
@@ -495,8 +347,22 @@ static inline int8_t ares_Bearings_0_1_deserialize_(
 
 
 
+    // saturated float32 m_fSplDb
+    out_obj->m_fSplDb = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
     // saturated float32 m_fSilDb
     out_obj->m_fSilDb = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
+
+
+
+
+    // saturated float32 m_fSilBgDb
+    out_obj->m_fSilBgDb = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
 
 
@@ -505,103 +371,6 @@ static inline int8_t ares_Bearings_0_1_deserialize_(
     // saturated float32 m_fActiveI
     out_obj->m_fActiveI = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
-
-
-
-
-    // saturated float32 m_fSplDb
-    out_obj->m_fSplDb = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
-    offset_bits += 32U;
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // uavcan.si.unit.angle.Scalar.1.0 m_fPitch
-    {
-        size_t _size_bytes6_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err21_ = uavcan_si_unit_angle_Scalar_1_0_deserialize_(
-            &out_obj->m_fPitch, &buffer[offset_bits / 8U], &_size_bytes6_);
-        if (_err21_ < 0)
-        {
-            return _err21_;
-        }
-        offset_bits += _size_bytes6_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // uavcan.si.unit.angle.Scalar.1.0 m_fRoll
-    {
-        size_t _size_bytes7_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err22_ = uavcan_si_unit_angle_Scalar_1_0_deserialize_(
-            &out_obj->m_fRoll, &buffer[offset_bits / 8U], &_size_bytes7_);
-        if (_err22_ < 0)
-        {
-            return _err22_;
-        }
-        offset_bits += _size_bytes7_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // uavcan.si.unit.angle.Scalar.1.0 m_fYaw
-    {
-        size_t _size_bytes8_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err23_ = uavcan_si_unit_angle_Scalar_1_0_deserialize_(
-            &out_obj->m_fYaw, &buffer[offset_bits / 8U], &_size_bytes8_);
-        if (_err23_ < 0)
-        {
-            return _err23_;
-        }
-        offset_bits += _size_bytes8_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // reg.udral.physics.kinematics.geodetic.Point.0.1 m_glGnssLlh
-    {
-        size_t _size_bytes9_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err24_ = reg_udral_physics_kinematics_geodetic_Point_0_1_deserialize_(
-            &out_obj->m_glGnssLlh, &buffer[offset_bits / 8U], &_size_bytes9_);
-        if (_err24_ < 0)
-        {
-            return _err24_;
-        }
-        offset_bits += _size_bytes9_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // uavcan.si.unit.length.Scalar.1.0 m_fHorizontalAccuracy
-    {
-        size_t _size_bytes10_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err25_ = uavcan_si_unit_length_Scalar_1_0_deserialize_(
-            &out_obj->m_fHorizontalAccuracy, &buffer[offset_bits / 8U], &_size_bytes10_);
-        if (_err25_ < 0)
-        {
-            return _err25_;
-        }
-        offset_bits += _size_bytes10_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
-
-
-    offset_bits = (offset_bits + 7U) & ~(size_t) 7U;  // Align on 8 bits.
-
-    // uavcan.si.unit.length.Scalar.1.0 m_fVerticalAccuracy
-    {
-        size_t _size_bytes11_ = (size_t)(capacity_bytes - nunavutChooseMin((offset_bits / 8U), capacity_bytes));
-        const int8_t _err26_ = uavcan_si_unit_length_Scalar_1_0_deserialize_(
-            &out_obj->m_fVerticalAccuracy, &buffer[offset_bits / 8U], &_size_bytes11_);
-        if (_err26_ < 0)
-        {
-            return _err26_;
-        }
-        offset_bits += _size_bytes11_ * 8U;  // Advance by the size of the nested serialized representation.
-    }
 
 
 
