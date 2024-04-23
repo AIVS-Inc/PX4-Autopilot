@@ -66,6 +66,7 @@
 #define CONFIG_CYPHAL_ARES_POSITION 1
 #define CONFIG_CYPHAL_ARES_RELPOSNED 1
 #define CONFIG_CYPHAL_ARES_EVENT 1
+#define CONFIG_CYPHAL_ARES_MEL 1
 #define CONFIG_CYPHAL_ARES_ADC_FRAME 1
 
 /* Preprocessor calculation of Subscribers count */
@@ -80,6 +81,7 @@
 	CONFIG_CYPHAL_ARES_POSITION + \
 	CONFIG_CYPHAL_ARES_RELPOSNED + \
 	CONFIG_CYPHAL_ARES_EVENT + \
+	CONFIG_CYPHAL_ARES_MEL + \
 	CONFIG_CYPHAL_ARES_ADC_FRAME
 
 #include <px4_platform_common/defines.h>
@@ -98,6 +100,7 @@
 #include "Subscribers/legacy/LegacyBatteryInfo.hpp"
 #include "Subscribers/uORB/uorb_subscriber.hpp"
 #include "../../modules/ares_avs/AresEventSubscriber.hpp"
+#include "../../modules/ares_avs/MelIntensitySubscriber.hpp"
 #include "../../modules/ares_avs/AdcFrameSubscriber.hpp"
 #include "../../modules/ares_avs/GnssPositionSubscriber.hpp"
 #include "../../modules/ares_avs/GnssRelPosNedSubscriber.hpp"
@@ -241,6 +244,16 @@ private:
 				return new AresEventSubscriber(handle, ARES_SUBJECT_ID_FFT_BEARING_ANGLES, 0);
 			},
 			"ares.bearings",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_ARES_MEL
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new MelIntensitySubscriber(handle, ARES_SUBJECT_ID_FFT_MEL_INTENSITY, 0);
+			},
+			"ares.melintensity",
 			0
 		},
 #endif

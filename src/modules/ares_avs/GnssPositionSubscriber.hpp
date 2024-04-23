@@ -87,7 +87,7 @@ public:
 		}
 		else {	// message received from the other non-active node
 			msg_cnt++;		// increment count of how many missed
-			if (msg_cnt > 3) {
+			if (msg_cnt > 10) {
 				active_node = (active_node == 0) ? 1 : 0;
 				node[active_node] = receive.metadata.remote_node_id;
 				msg_cnt = 1;
@@ -148,5 +148,5 @@ private:
 	CanardPortID _portID;
 	uint32_t node[2] = {0};		// two reporting nodes max
 	uint8_t msg_cnt = 0;		// allows redundant switchover in case one node GNSS fails to arrive
-	uint8_t active_node = 0;
+	uint8_t active_node = 0;	// which of up to two nodes is active
  };

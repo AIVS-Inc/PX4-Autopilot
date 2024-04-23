@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/Bearings.0.1.dsdl
-// Generated at:  2024-03-30 17:54:10.771020 UTC
+// Generated at:  2024-04-15 19:21:31.872076 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.Bearings
@@ -79,8 +79,8 @@ static_assert(ares_Bearings_0_1_EXTENT_BYTES_ >= ares_Bearings_0_1_SERIALIZATION
 
 typedef struct
 {
-    /// saturated uint64 m_u32JulianMicrosecond
-    uint64_t m_u32JulianMicrosecond;
+    /// saturated uint64 m_u64JulianMicrosecond
+    uint64_t m_u64JulianMicrosecond;
 
     /// saturated uint32 m_u32SampleIndex
     uint32_t m_u32SampleIndex;
@@ -145,9 +145,9 @@ static inline int8_t ares_Bearings_0_1_serialize_(
 
 
 
-    {   // saturated uint64 m_u32JulianMicrosecond
+    {   // saturated uint64 m_u64JulianMicrosecond
         // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u32JulianMicrosecond, 64U);
+        const int8_t _err0_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_u64JulianMicrosecond, 64U);
         if (_err0_ < 0)
         {
             return _err0_;
@@ -326,8 +326,8 @@ static inline int8_t ares_Bearings_0_1_deserialize_(
 
 
 
-    // saturated uint64 m_u32JulianMicrosecond
-    out_obj->m_u32JulianMicrosecond = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
+    // saturated uint64 m_u64JulianMicrosecond
+    out_obj->m_u64JulianMicrosecond = nunavutGetU64(&buffer[0], capacity_bytes, offset_bits, 64);
     offset_bits += 64U;
 
 

@@ -1,0 +1,7 @@
+# AIVS Inc ARES Mel Intensity data payload
+
+uint64  	m_u64JulianMicrosecond		    # modified Julian timestamp, not uavcan.time.SynchronizedTimestamp.1.0
+uint32  	m_u32SampleIndex                    # sample index of this bearing measurement
+float32[15]    	m_f32ActiveI
+
+@sealed

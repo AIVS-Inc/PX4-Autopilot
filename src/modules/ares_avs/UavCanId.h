@@ -37,6 +37,7 @@
 #define ARES_SUBJECT_ID_FFT_ADC_FRAME				1244
 #define ARES_SUBJECT_ID_CONSOLE_OUTPUT				1245
 #define ARES_SUBJECT_ID_FFT_RPM					1246
+#define ARES_SUBJECT_ID_FFT_MEL_INTENSITY			1247
 
 ////////////////////////
 // ARES FFT Parameters

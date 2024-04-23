@@ -32,9 +32,9 @@
  ****************************************************************************/
 
 /**
- * @file AresEventSubscriber.hpp
+ * @file MelIntensitySubscriber.hpp
  *
- * Defines functionality of ARES Cyphal GNSS-IMU message subscription
+ * Defines functionality of ARES Cyphal Mel Intensity message subscription
  *
  * @author Jim Waite <jim.waite@aivs.us>
  */
@@ -42,68 +42,52 @@
 #pragma once
 
 #include <uORB/uORB.h>
-#include <uORB/topics/sensor_avs.h>
-#include "ares/Bearings_0_1.h"
+#include <uORB/topics/sensor_avs_mel.h>
+#include "ares/MelIntensity_0_1.h"
 #include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 
-class AresEventSubscriber : public UavcanBaseSubscriber
+class MelIntensitySubscriber : public UavcanBaseSubscriber
 {
-	struct sensor_avs_s bearings;
+	struct sensor_avs_mel_s mel;
 	orb_advert_t avs_pub;
 public:
-	AresEventSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, "ares.", "bearings", instance), _portID(portID) { };
+	MelIntensitySubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
+		UavcanBaseSubscriber(handle, "ares.", "melintensity", instance), _portID(portID) { };
 
 	void subscribe() override
 	{
 		// Subscribe to CAN message
 		_canard_handle.RxSubscribe(CanardTransferKindMessage,
 					   _portID,
-					   ares_Bearings_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
+					   ares_MelIntensity_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
 
-		/* advertise bearings topic */
-		memset(&this->bearings, 0, sizeof(this->bearings));
-		this->avs_pub = orb_advertise(ORB_ID(sensor_avs), &this->bearings);
-		PX4_INFO("subscribed to BearingAngles, port %d", _portID);
+		/* advertise mel topic */
+		memset(&this->mel, 0, sizeof(this->mel));
+		this->avs_pub = orb_advertise(ORB_ID(sensor_avs_mel), &this->mel);
+		PX4_INFO("subscribed to MelIntensity, port %d", _portID);
 	};
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		//PX4_INFO("AresEventCallback");
+		//PX4_INFO("MelIntensityCallback");
 
-		ares_Bearings_0_1 aresevent {};
+		ares_MelIntensity_0_1 mel_intensity {};
 		size_t msg_size_in_bits = receive.payload_size;
-		ares_Bearings_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
+		ares_MelIntensity_0_1_deserialize_(&mel_intensity, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
-		uint64_t utc_us = aresevent.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
-		uint32_t idx = aresevent.m_iSourceIndex;
-		double spl = aresevent.m_fSplDb;
-		double sil = aresevent.m_fSilDb;
-		double bgsil = aresevent.m_fSilBgDb;
-		double acti = aresevent.m_fActiveI;
-		double azim = aresevent.m_fAzimuth;
-		double elev = aresevent.m_fElevation;
-		uint32_t node = receive.metadata.remote_node_id;
+		uint64_t utc_us = mel_intensity.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
+		mel.timestamp = hrt_absolute_time();
+		mel.device_id = receive.metadata.remote_node_id;
+		mel.time_utc_usec = utc_us;
 
-		//PX4_INFO("node:%lu,idx:%lu,usec:%llu,spl:%.2f,sil:%.2f,bgsil:%.2f,acti:%.2f,az:%.2f,el:%.2f",
-		//  	  node,idx,utc_us,spl,sil,bgsil,acti,azim,elev );
+		for (unsigned int i = 0; i < ares_MelIntensity_0_1_m_f32ActiveI_ARRAY_CAPACITY_; i++) {
+			mel.active_intensity[i] = mel_intensity.m_f32ActiveI[i];
+		}
 
-		bearings.timestamp = hrt_absolute_time();
-		bearings.device_id = node;
-		bearings.time_utc_usec = utc_us;
-		bearings.spl = spl;
-		bearings.sil = sil;
-		bearings.bkgrnd_sil = bgsil;
-		bearings.active_intensity = acti;
-		bearings.azimuth_deg = azim;
-		bearings.elevation_deg = elev;
-		bearings.timestamp_sample = aresevent.m_u32SampleIndex;
-		bearings.source_index = idx;
-
-		orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
+		orb_publish( ORB_ID(sensor_avs_mel), this->avs_pub, &this->mel);	///< uORB pub for AVS events
 	};
 private:
 	CanardPortID _portID;

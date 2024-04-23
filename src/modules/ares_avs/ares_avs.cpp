@@ -39,6 +39,7 @@
 
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/sensor_avs.h>
+#include <uORB/topics/sensor_avs_mel.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include <uORB/topics/sensor_gps.h>
 //#include <uORB/topics/sensor_avs_adc.h>
@@ -245,12 +246,14 @@ void AresAvs::run()
 {
 	// run the loop synchronized to topic publications
 	int sensor_avs_sub = orb_subscribe(ORB_ID(sensor_avs));
+	int sensor_avs_mel_sub = orb_subscribe(ORB_ID(sensor_avs_mel));
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gps));
 	//int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
 
 	px4_pollfd_struct_t fds[] = {
 		{.fd = sensor_avs_sub, 		 .events = POLLIN},
+		{.fd = sensor_avs_mel_sub, 	 .events = POLLIN},
 		{.fd = sensor_gnss_relative_sub, .events = POLLIN},
 		{.fd = sensor_gps_sub, 		 .events = POLLIN}
 		//{.fd = sensor_avs_adc_sub, 	 .events = POLLIN}
@@ -344,16 +347,21 @@ void AresAvs::run()
 			}
 		}
 		else if (fds[1].revents & POLLIN) {
+			struct sensor_avs_mel_s sensor_avs_mel;
+			orb_copy(ORB_ID(sensor_avs_mel), sensor_avs_mel_sub, &sensor_avs_mel);
+			//PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
+		}
+		else if (fds[2].revents & POLLIN) {
 			struct sensor_gnss_relative_s sensor_gnss_relative;
 			orb_copy(ORB_ID(sensor_gnss_relative), sensor_gnss_relative_sub, &sensor_gnss_relative);
 			//PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
 		}
-		else if (fds[2].revents & POLLIN) {
+		else if (fds[3].revents & POLLIN) {
 			struct sensor_gps_s sensor_gps;
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
 			//PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
 		}
-		// else if (fds[3].revents & POLLIN) {
+		// else if (fds[4].revents & POLLIN) {
 		// 	struct sensor_avs_adc_s sensor_avs_adc;
 		// 	orb_copy(ORB_ID(sensor_avs_adc), sensor_avs_adc_sub, &sensor_avs_adc);
 		// 	// TODO: do something with the data...
@@ -362,6 +370,7 @@ void AresAvs::run()
 		parameters_update();
 	}
 	orb_unsubscribe(sensor_avs_sub);
+	orb_unsubscribe(sensor_avs_mel_sub);
 	orb_unsubscribe(sensor_gnss_relative_sub);
 	orb_unsubscribe(sensor_gps_sub);
 	//orb_unsubscribe(sensor_avs_adc_sub);

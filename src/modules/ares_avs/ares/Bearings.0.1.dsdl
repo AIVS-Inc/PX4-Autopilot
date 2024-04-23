@@ -1,6 +1,6 @@
 # AIVS Inc ARES bearing data description
 
-uint64  m_u32JulianMicrosecond		    # modified Julian timestamp, not uavcan.time.SynchronizedTimestamp.1.0
+uint64  m_u64JulianMicrosecond		    # modified Julian timestamp, not uavcan.time.SynchronizedTimestamp.1.0
 uint32  m_u32SampleIndex                    # sample index of this bearing measurement
 uint32  m_iSourceIndex                      # index of the detected acoustic source
 float32 m_fSplDb                            # sound pressure level in dB, re: 20 uP

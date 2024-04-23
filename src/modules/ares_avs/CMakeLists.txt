@@ -55,6 +55,7 @@ px4_add_module(
 		ares/SDcontrol.0.1.dsdl
 		ares/GnssControl.0.1.dsdl
 		AresEventSubscriber.hpp
+		MelIntensitySubscriber.hpp
 		GnssRelPosNedSubscriber.hpp
 		GnssPositionSubscriber.hpp
 		AdcFrameSubscriber.hpp
