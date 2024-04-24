@@ -8,11 +8,11 @@
 // are named with an underscore at the end, like foo_bar_().
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
-// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl
-// Generated at:  2024-04-23 13:56:10.948936 UTC
+// Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl
+// Generated at:  2024-04-23 13:56:10.971608 UTC
 // Is deprecated: no
 // Fixed port-ID: None
-// Full name:     ares.EventParams
+// Full name:     ares.PeakParams
 // Version:       0.1
 //
 // Platform
@@ -32,28 +32,27 @@
 //     enable_override_variable_array_capacity:  False
 //     cast_format:  (({type}) {value})
 
-#ifndef ARES_EVENT_PARAMS_0_1_INCLUDED_
-#define ARES_EVENT_PARAMS_0_1_INCLUDED_
+#ifndef ARES_PEAK_PARAMS_0_1_INCLUDED_
+#define ARES_PEAK_PARAMS_0_1_INCLUDED_
 
 #include <nunavut/support/serialization.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_TARGET_ENDIANNESS == 1693710260,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_OMIT_FLOAT_SERIALIZATION_SUPPORT == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_SERIALIZATION_ASSERTS == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_ENABLE_OVERRIDE_VARIABLE_ARRAY_CAPACITY == 0,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 static_assert( NUNAVUT_SUPPORT_LANGUAGE_OPTION_CAST_FORMAT == 2368206204,
-              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/EventParams.0.1.dsdl is trying to use a serialization library that was compiled with "
+              "/home/ares/PX4-Autopilot/src/modules/ares_avs/ares/PeakParams.0.1.dsdl is trying to use a serialization library that was compiled with "
               "different language options. This is dangerous and therefore not allowed." );
 
 #ifdef __cplusplus
@@ -61,10 +60,10 @@ extern "C" {
 #endif
 
 /// This type does not have a fixed port-ID. See https://forum.opencyphal.org/t/choosing-message-and-service-ids/889
-#define ares_EventParams_0_1_HAS_FIXED_PORT_ID_ false
+#define ares_PeakParams_0_1_HAS_FIXED_PORT_ID_ false
 
-#define ares_EventParams_0_1_FULL_NAME_             "ares.EventParams"
-#define ares_EventParams_0_1_FULL_NAME_AND_VERSION_ "ares.EventParams.0.1"
+#define ares_PeakParams_0_1_FULL_NAME_             "ares.PeakParams"
+#define ares_PeakParams_0_1_FULL_NAME_AND_VERSION_ "ares.PeakParams.0.1"
 
 /// Extent is the minimum amount of memory required to hold any serialized representation of any compatible
 /// version of the data type; or, on other words, it is the the maximum possible size of received objects of this type.
@@ -73,9 +72,9 @@ extern "C" {
 /// When allocating a serialization (TX) buffer, it is safe to use the size of the largest serialized representation
 /// instead of the extent because it provides a tighter bound of the object size; it is safe because the concrete type
 /// is always known during serialization (unlike deserialization). If not sure, use extent everywhere.
-#define ares_EventParams_0_1_EXTENT_BYTES_                    17UL
-#define ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 17UL
-static_assert(ares_EventParams_0_1_EXTENT_BYTES_ >= ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
+#define ares_PeakParams_0_1_EXTENT_BYTES_                    16UL
+#define ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_ 16UL
+static_assert(ares_PeakParams_0_1_EXTENT_BYTES_ >= ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_,
               "Internal constraint violation");
 
 typedef struct
@@ -83,27 +82,21 @@ typedef struct
     /// saturated uint16 m_paramId
     uint16_t m_paramId;
 
-    /// saturated float32 m_relativeDb
-    float m_relativeDb;
+    /// saturated uint8 m_iMaxHarmonics
+    uint8_t m_iMaxHarmonics;
 
-    /// saturated uint16 m_numSources
-    uint16_t m_numSources;
+    /// saturated uint8 m_iNumberOfPeaks
+    uint8_t m_iNumberOfPeaks;
 
-    /// saturated uint8 m_angularRes
-    uint8_t m_angularRes;
+    /// saturated float32 m_fMinimumPeakHeight
+    float m_fMinimumPeakHeight;
 
-    /// saturated uint16 m_bkgndSILtc
-    uint16_t m_bkgndSILtc;
+    /// saturated float32 m_fMinimumPeakChange
+    float m_fMinimumPeakChange;
 
-    /// saturated uint8 m_eventWindow
-    uint8_t m_eventWindow;
-
-    /// saturated bool m_selfMeasureBg
-    bool m_selfMeasureBg;
-
-    /// saturated float32 m_bgDbThreshold
-    float m_bgDbThreshold;
-} ares_EventParams_0_1;
+    /// saturated float32 m_fMinimumPeakBlanking
+    float m_fMinimumPeakBlanking;
+} ares_PeakParams_0_1;
 
 /// Serialize an instance into the provided buffer.
 /// The lifetime of the resulting serialized representation is independent of the original instance.
@@ -113,7 +106,7 @@ typedef struct
 /// @param obj      The object to serialize.
 ///
 /// @param buffer   The destination buffer. There are no alignment requirements.
-///                 @see ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
+///                 @see ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_
 ///
 /// @param inout_buffer_size_bytes  When calling, this is a pointer to the size of the buffer in bytes.
 ///                                 Upon return this value will be updated with the size of the constructed serialized
@@ -121,8 +114,8 @@ typedef struct
 ///                                 layer. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_EventParams_0_1_serialize_(
-    const ares_EventParams_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_PeakParams_0_1_serialize_(
+    const ares_PeakParams_0_1* const obj, uint8_t* const buffer,  size_t* const inout_buffer_size_bytes)
 {
     if ((obj == NULL) || (buffer == NULL) || (inout_buffer_size_bytes == NULL))
     {
@@ -131,7 +124,7 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 
 
     const size_t capacity_bytes = *inout_buffer_size_bytes;
-    if ((8U * (size_t) capacity_bytes) < 136UL)
+    if ((8U * (size_t) capacity_bytes) < 128UL)
     {
         return -NUNAVUT_ERROR_SERIALIZATION_BUFFER_TOO_SMALL;
     }
@@ -156,10 +149,28 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 
 
 
-    {   // saturated float32 m_relativeDb
+    {   // saturated uint8 m_iMaxHarmonics
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_iMaxHarmonics);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
+    {   // saturated uint8 m_iNumberOfPeaks
+        // Saturation code not emitted -- native representation matches the serialized representation.
+        buffer[offset_bits / 8U] = (uint8_t)(obj->m_iNumberOfPeaks);  // C std, 6.3.1.3 Signed and unsigned integers
+        offset_bits += 8U;
+    }
+
+
+
+
+    {   // saturated float32 m_fMinimumPeakHeight
         // Saturation code not emitted -- assume the native representation of float32 is conformant.
         static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err1_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_relativeDb);
+        const int8_t _err1_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fMinimumPeakHeight);
         if (_err1_ < 0)
         {
             return _err1_;
@@ -170,65 +181,27 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 
 
 
-    {   // saturated uint16 m_numSources
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err2_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_numSources, 16U);
+    {   // saturated float32 m_fMinimumPeakChange
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err2_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fMinimumPeakChange);
         if (_err2_ < 0)
         {
             return _err2_;
         }
-        offset_bits += 16U;
+        offset_bits += 32U;
     }
 
 
 
 
-    {   // saturated uint8 m_angularRes
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->m_angularRes);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
-    }
-
-
-
-
-    {   // saturated uint16 m_bkgndSILtc
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        const int8_t _err3_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, obj->m_bkgndSILtc, 16U);
+    {   // saturated float32 m_fMinimumPeakBlanking
+        // Saturation code not emitted -- assume the native representation of float32 is conformant.
+        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
+        const int8_t _err3_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_fMinimumPeakBlanking);
         if (_err3_ < 0)
         {
             return _err3_;
-        }
-        offset_bits += 16U;
-    }
-
-
-
-
-    {   // saturated uint8 m_eventWindow
-        // Saturation code not emitted -- native representation matches the serialized representation.
-        buffer[offset_bits / 8U] = (uint8_t)(obj->m_eventWindow);  // C std, 6.3.1.3 Signed and unsigned integers
-        offset_bits += 8U;
-    }
-
-
-
-
-    {   // saturated bool m_selfMeasureBg
-        buffer[offset_bits / 8U] = obj->m_selfMeasureBg ? 1U : 0U;
-        offset_bits += 1U;
-    }
-
-
-
-
-    {   // saturated float32 m_bgDbThreshold
-        // Saturation code not emitted -- assume the native representation of float32 is conformant.
-        static_assert(NUNAVUT_PLATFORM_IEEE754_FLOAT, "Native IEEE754 binary32 required. TODO: relax constraint");
-        const int8_t _err4_ = nunavutSetF32(&buffer[0], capacity_bytes, offset_bits, obj->m_bgDbThreshold);
-        if (_err4_ < 0)
-        {
-            return _err4_;
         }
         offset_bits += 32U;
     }
@@ -237,10 +210,10 @@ static inline int8_t ares_EventParams_0_1_serialize_(
     if (offset_bits % 8U != 0U)  // Pad to 8 bits. TODO: Eliminate redundant padding checks.
     {
         const uint8_t _pad0_ = (uint8_t)(8U - offset_bits % 8U);
-        const int8_t _err5_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
-        if (_err5_ < 0)
+        const int8_t _err4_ = nunavutSetUxx(&buffer[0], capacity_bytes, offset_bits, 0U, _pad0_);  // Optimize?
+        if (_err4_ < 0)
         {
-            return _err5_;
+            return _err4_;
         }
         offset_bits += _pad0_;
     }
@@ -273,8 +246,8 @@ static inline int8_t ares_EventParams_0_1_serialize_(
 ///                                 was activated. In case of error this value is undefined.
 ///
 /// @returns Negative on error, zero on success.
-static inline int8_t ares_EventParams_0_1_deserialize_(
-    ares_EventParams_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
+static inline int8_t ares_PeakParams_0_1_deserialize_(
+    ares_PeakParams_0_1* const out_obj, const uint8_t* buffer, size_t* const inout_buffer_size_bytes)
 {
     if ((out_obj == NULL) || (inout_buffer_size_bytes == NULL) || ((buffer == NULL) && (0 != *inout_buffer_size_bytes)))
     {
@@ -301,71 +274,50 @@ static inline int8_t ares_EventParams_0_1_deserialize_(
 
 
 
-    // saturated float32 m_relativeDb
-    out_obj->m_relativeDb = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    // saturated uint8 m_iMaxHarmonics
+    if ((offset_bits + 8U) <= capacity_bits)
+    {
+        out_obj->m_iMaxHarmonics = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_iMaxHarmonics = 0U;
+    }
+    offset_bits += 8U;
+
+
+
+
+    // saturated uint8 m_iNumberOfPeaks
+    if ((offset_bits + 8U) <= capacity_bits)
+    {
+        out_obj->m_iNumberOfPeaks = buffer[offset_bits / 8U] & 255U;
+    }
+    else
+    {
+        out_obj->m_iNumberOfPeaks = 0U;
+    }
+    offset_bits += 8U;
+
+
+
+
+    // saturated float32 m_fMinimumPeakHeight
+    out_obj->m_fMinimumPeakHeight = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
 
 
 
 
-    // saturated uint16 m_numSources
-    out_obj->m_numSources = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
+    // saturated float32 m_fMinimumPeakChange
+    out_obj->m_fMinimumPeakChange = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    offset_bits += 32U;
 
 
 
 
-    // saturated uint8 m_angularRes
-    if ((offset_bits + 8U) <= capacity_bits)
-    {
-        out_obj->m_angularRes = buffer[offset_bits / 8U] & 255U;
-    }
-    else
-    {
-        out_obj->m_angularRes = 0U;
-    }
-    offset_bits += 8U;
-
-
-
-
-    // saturated uint16 m_bkgndSILtc
-    out_obj->m_bkgndSILtc = nunavutGetU16(&buffer[0], capacity_bytes, offset_bits, 16);
-    offset_bits += 16U;
-
-
-
-
-    // saturated uint8 m_eventWindow
-    if ((offset_bits + 8U) <= capacity_bits)
-    {
-        out_obj->m_eventWindow = buffer[offset_bits / 8U] & 255U;
-    }
-    else
-    {
-        out_obj->m_eventWindow = 0U;
-    }
-    offset_bits += 8U;
-
-
-
-
-    // saturated bool m_selfMeasureBg
-    if (offset_bits < capacity_bits)
-    {
-        out_obj->m_selfMeasureBg = (buffer[offset_bits / 8U] & 1U) != 0U;
-    }
-    else
-    {
-        out_obj->m_selfMeasureBg = false;
-    }
-    offset_bits += 1U;
-
-
-
-
-    // saturated float32 m_bgDbThreshold
-    out_obj->m_bgDbThreshold = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
+    // saturated float32 m_fMinimumPeakBlanking
+    out_obj->m_fMinimumPeakBlanking = nunavutGetF32(&buffer[0], capacity_bytes, offset_bits);
     offset_bits += 32U;
 
 
@@ -381,13 +333,13 @@ static inline int8_t ares_EventParams_0_1_deserialize_(
 /// This function intentionally leaves inactive elements uninitialized; for example, members of a variable-length
 /// array beyond its length are left uninitialized; aliased union memory that is not used by the first union field
 /// is left uninitialized, etc. If full zero-initialization is desired, just use memset(&obj, 0, sizeof(obj)).
-static inline void ares_EventParams_0_1_initialize_(ares_EventParams_0_1* const out_obj)
+static inline void ares_PeakParams_0_1_initialize_(ares_PeakParams_0_1* const out_obj)
 {
     if (out_obj != NULL)
     {
         size_t size_bytes = 0;
         const uint8_t buf = 0;
-        const int8_t err = ares_EventParams_0_1_deserialize_(out_obj, &buf, &size_bytes);
+        const int8_t err = ares_PeakParams_0_1_deserialize_(out_obj, &buf, &size_bytes);
 
         (void) err;
     }
@@ -398,4 +350,4 @@ static inline void ares_EventParams_0_1_initialize_(ares_EventParams_0_1* const 
 #ifdef __cplusplus
 }
 #endif
-#endif // ARES_EVENT_PARAMS_0_1_INCLUDED_
+#endif // ARES_PEAK_PARAMS_0_1_INCLUDED_

@@ -86,6 +86,51 @@ parameters:
         default: 1721000000
         max: 2147483647
         increment: 1
+      AVS_PK_NUM_HARM:
+        description:
+          short: RPM harmonics
+          long:  Number of RPM harmonics to blank
+        type: int32
+        min: 1
+        max: 20
+        increment: 1
+        default: 4
+      AVS_PK_NUM_PEAK:
+        description:
+          short: Max no of peaks in angle histogram
+          long:  Max no of peaks in angle histogram
+        type: int32
+        min: 1
+        max: 5
+        increment: 1
+        default: 5
+      AVS_PK_MIN_HGHT:
+        description:
+          short: Minimum peak height in dB
+          long:  Minimum peak height in dB
+        type: int32
+        min: 0
+        max: 100
+        increment: 1
+        default: 10
+      AVS_PK_MIN_D_DB:
+        description:
+          short: Minimum peak change in dB
+          long:  Minimum peak change in dB
+        type: int32
+        min: 0
+        max: 100
+        increment: 1
+        default: 6
+      AVS_PK_MIN_BLNK:
+        description:
+          short: Minimum angle change in degrees
+          long:  Minimum angle change in degrees
+        type: int32
+        min: 3
+        max: 90
+        increment: 1
+        default: 45
       AVS_ANT_DX:
         description:
           short: GNSS antenna delta-X

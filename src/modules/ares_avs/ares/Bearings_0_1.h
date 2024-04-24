@@ -9,7 +9,7 @@
 //
 // Generator:     nunavut-1.9.0 (serialization was enabled)
 // Source file:   /home/ares/PX4-Autopilot/src/modules/ares_avs/ares/Bearings.0.1.dsdl
-// Generated at:  2024-04-15 19:21:31.872076 UTC
+// Generated at:  2024-04-23 13:56:10.941496 UTC
 // Is deprecated: no
 // Fixed port-ID: None
 // Full name:     ares.Bearings

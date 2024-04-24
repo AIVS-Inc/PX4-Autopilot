@@ -44,6 +44,7 @@
 #include <uORB/topics/sensor_gps.h>
 //#include <uORB/topics/sensor_avs_adc.h>
 #include <uORB/topics/sensor_avs_evt_control.h>
+#include <uORB/topics/sensor_avs_peak_control.h>
 #include <uORB/topics/sensor_avs_fft_control.h>
 #include <uORB/topics/sensor_avs_sd_control.h>
 #include <uORB/topics/sensor_avs_gnss_control.h>
@@ -66,14 +67,27 @@ int AresAvs::custom_command(int argc, char *argv[])
 		return 1;
 	}
 
-	if (!strcmp(argv[0], "send")) {
+	if (!strcmp(argv[0], "event")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
-				return object->send_command();	// update event params
+				return object->event_command();	// update event params
 			} else {
-				PX4_INFO("send: task not running");
+				PX4_INFO("event: task not running");
+				return 1;
+			}
+		}
+	}
+
+	else if (!strcmp(argv[0], "peak")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->peak_command();	// update peak params
+			} else {
+				PX4_INFO("peak: task not running");
 				return 1;
 			}
 		}
@@ -414,7 +428,8 @@ $ ares_avs help		// display this help
 	   cap0		// disable SD raw data capture
 	   rtcm1	// enable rtcm data for base and rover
 	   rtcm0	// disable rtcm data for base and rover
-	   send		// send event parameters to ARES
+	   event	// send event parameters to ARES
+	   peak 	// send peak parameters to ARES
 	   sync		// sync ARES ADCs
 	   ena1		// enable event detection
 	   ena0		// disable event detection
@@ -432,7 +447,8 @@ $ ares_avs start -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("cap0");	// SD capture off
 	PRINT_MODULE_USAGE_COMMAND("rtcm1");	// RTCM on
 	PRINT_MODULE_USAGE_COMMAND("rtcm0");	// RTCM off
-	PRINT_MODULE_USAGE_COMMAND("send");	// send event params to all node_ids
+	PRINT_MODULE_USAGE_COMMAND("event");	// send event params to all node_ids
+	PRINT_MODULE_USAGE_COMMAND("peak");	// send peak params to all node_ids
 	PRINT_MODULE_USAGE_COMMAND("sync");	// sync ARES ADCs
 	PRINT_MODULE_USAGE_COMMAND("ena1");  	// enable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
@@ -444,7 +460,7 @@ $ ares_avs start -t 6 -b 24
 	return 0;
 }
 
-int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
+int AresAvs::event_command()		// update event params in ARES, enable/disable FFT
 {
 	int32_t val;
 
@@ -470,6 +486,34 @@ int AresAvs::send_command()		// update event params in ARES, enable/disable FFT
 
 	PX4_INFO("Send event parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_evt_control), evt_pub, &evt);
+
+	return 0;
+}
+
+int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
+{
+	int32_t val;
+
+	if (fftEnable == true){
+		ena_command( false);
+	}
+
+	/* advertise avs_peak_control topic */
+	struct sensor_avs_peak_control_s peak;
+	memset(&peak, 0, sizeof(peak));
+	orb_advert_t peak_pub = orb_advertise(ORB_ID(sensor_avs_peak_control), &peak);
+
+	param_get(param_find("AVS_PK_NUM_HARM"), &val); peak.max_harmonics = (uint8_t)val;
+	param_get(param_find("AVS_PK_NUM_PEAK"), &val); peak.num_peaks = (uint8_t)val;
+	param_get(param_find("AVS_PK_MIN_HGHT"), &val); peak.min_peak_height = (float)val;
+	param_get(param_find("AVS_PK_MIN_D_DB"), &val); peak.min_peak_change = (float)val;
+	param_get(param_find("AVS_PK_MIN_BLNK"), &val); peak.min_blanking = (float)val;
+	peak.node_top = aresNodeId_top;
+	peak.node_bot = aresNodeId_bot;
+	peak.fft_enable = fftEnable;
+
+	PX4_INFO("Send event parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	orb_publish(ORB_ID(sensor_avs_peak_control), peak_pub, &peak);
 
 	return 0;
 }

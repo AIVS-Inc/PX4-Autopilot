@@ -78,7 +78,9 @@ public:
 	/** @see ModuleBase::print_status() */
 	int print_status() override;
 
-	int send_command();
+	int event_command();
+
+	int peak_command();
 
 	int sync_command_now();
 
@@ -111,6 +113,11 @@ private:
 		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win,
 		(ParamInt<px4::params::EVT_SELF_BGSIL>) _evt_self_bgsil,
 		(ParamInt<px4::params::EVT_BGSIL_DB>) 	_evt_bgsil_db,
+		(ParamInt<px4::params::AVS_PK_NUM_HARM>) _avs_pk_num_harm,
+		(ParamInt<px4::params::AVS_PK_NUM_PEAK>) _avs_pk_num_peak,
+		(ParamInt<px4::params::AVS_PK_MIN_HGHT>) _avs_pk_min_height,
+		(ParamInt<px4::params::AVS_PK_MIN_D_DB>) _avs_pk_min_chg_db,
+		(ParamInt<px4::params::AVS_PK_MIN_BLNK>) _avs_pk_min_blanking,
 		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>) _avs_rpm_avg_len,
 		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync
 	)
