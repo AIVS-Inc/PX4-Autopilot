@@ -361,8 +361,10 @@ int up_dshot_init(uint32_t channel_mask, unsigned dshot_pwm_freq, bool enable_bi
 void up_bdshot_erpm(void)
 {
 	uint32_t value;
-	uint32_t erpm;
+	uint32_t data;
 	uint32_t csum_data;
+	uint8_t exponent;
+	uint16_t period;
 
 	bdshot_parsed_recv_mask = 0;
 
@@ -377,13 +379,13 @@ void up_bdshot_erpm(void)
 				value = (value ^ (value >> 1));
 
 				/* Decode GCR */
-				erpm = gcr_decode[value & 0x1fU];
-				erpm |= gcr_decode[(value >> 5U) & 0x1fU] << 4U;
-				erpm |= gcr_decode[(value >> 10U) & 0x1fU] << 8U;
-				erpm |= gcr_decode[(value >> 15U) & 0x1fU] << 12U;
+				data = gcr_decode[value & 0x1fU];
+				data |= gcr_decode[(value >> 5U) & 0x1fU] << 4U;
+				data |= gcr_decode[(value >> 10U) & 0x1fU] << 8U;
+				data |= gcr_decode[(value >> 15U) & 0x1fU] << 12U;
 
 				/* Calculate checksum */
-				csum_data = erpm;
+				csum_data = data;
 				csum_data = csum_data ^ (csum_data >> 8U);
 				csum_data = csum_data ^ (csum_data >> NIBBLES_SIZE);
 
@@ -391,7 +393,10 @@ void up_bdshot_erpm(void)
 					dshot_inst[channel].crc_error_cnt++;
 
 				} else {
-					dshot_inst[channel].erpm = ~(erpm >> 4) & 0xFFF;
+					data = ~(data >> 4) & 0xFFF;
+					exponent = ((data >> 9U) & 0x7U); /* 3 bit: exponent */
+					period = (data & 0x1ffU); /* 9 bit: period base */
+					dshot_inst[channel].erpm = period << exponent;
 					bdshot_parsed_recv_mask |= (1 << channel);
 					dshot_inst[channel].last_no_response_cnt = dshot_inst[channel].no_response_cnt;
 				}
