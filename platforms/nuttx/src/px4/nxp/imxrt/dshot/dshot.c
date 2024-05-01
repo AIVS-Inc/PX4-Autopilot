@@ -365,6 +365,7 @@ void up_bdshot_erpm(void)
 	uint32_t csum_data;
 	uint8_t exponent;
 	uint16_t period;
+	uint16_t erpm;
 
 	bdshot_parsed_recv_mask = 0;
 
@@ -393,10 +394,19 @@ void up_bdshot_erpm(void)
 					dshot_inst[channel].crc_error_cnt++;
 
 				} else {
-					data = ~(data >> 4) & 0xFFF;
-					exponent = ((data >> 9U) & 0x7U); /* 3 bit: exponent */
-					period = (data & 0x1ffU); /* 9 bit: period base */
-					dshot_inst[channel].erpm = period << exponent;
+					data = (data >> 4) & 0xFFF;
+
+					if (data == 0xFFF) {
+						erpm = 0;
+
+					} else {
+						exponent = ((data >> 9U) & 0x7U); /* 3 bit: exponent */
+						period = (data & 0x1ffU); /* 9 bit: period base */
+						period = period << exponent; /* Period in usec */
+						erpm = ((1000000U * 60U / 100U + period / 2U) / period);
+					}
+
+					dshot_inst[channel].erpm = erpm;
 					bdshot_parsed_recv_mask |= (1 << channel);
 					dshot_inst[channel].last_no_response_cnt = dshot_inst[channel].no_response_cnt;
 				}
@@ -413,7 +423,7 @@ void up_bdshot_erpm(void)
 int up_bdshot_get_erpm(uint8_t channel, int *erpm)
 {
 	if (bdshot_parsed_recv_mask & (1 << channel)) {
-		*erpm = dshot_inst[channel].erpm;
+		*erpm = (int)dshot_inst[channel].erpm;
 		return 0;
 	}
 
