@@ -13,7 +13,7 @@ param set-default MAV_2_REMOTE_PRT 14550
 param set-default MAV_2_UDP_PRT 14550
 
 param set-default SENS_EN_INA238 0
-param set-default SENS_EN_INA228 0
+param set-default SENS_EN_INA228 1
 param set-default SENS_EN_INA226 1
 
 # Add defaults for analog power measurement using ADS1115

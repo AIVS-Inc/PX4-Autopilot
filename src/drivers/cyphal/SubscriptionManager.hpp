@@ -63,11 +63,25 @@
 #endif
 
 // Base Subscribers
-#define CONFIG_CYPHAL_ARES_POSITION 1
-#define CONFIG_CYPHAL_ARES_RELPOSNED 1
-#define CONFIG_CYPHAL_ARES_EVENT 1
-#define CONFIG_CYPHAL_ARES_MEL 1
-#define CONFIG_CYPHAL_ARES_ADC_FRAME 1
+#ifndef CONFIG_CYPHAL_ARES_POSITION
+#define CONFIG_CYPHAL_ARES_POSITION 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_RELPOSNED
+#define CONFIG_CYPHAL_ARES_RELPOSNED 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_EVENT
+#define CONFIG_CYPHAL_ARES_EVENT 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_MEL_INTENSITY
+#define CONFIG_CYPHAL_ARES_MEL_INTENSITY 0
+#endif
+
+#ifndef CONFIG_CYPHAL_ARES_ADC_FRAME
+#define CONFIG_CYPHAL_ARES_ADC_FRAME 0
+#endif
 
 /* Preprocessor calculation of Subscribers count */
 
@@ -81,7 +95,7 @@
 	CONFIG_CYPHAL_ARES_POSITION + \
 	CONFIG_CYPHAL_ARES_RELPOSNED + \
 	CONFIG_CYPHAL_ARES_EVENT + \
-	CONFIG_CYPHAL_ARES_MEL + \
+	CONFIG_CYPHAL_ARES_MEL_INTENSITY + \
 	CONFIG_CYPHAL_ARES_ADC_FRAME
 
 #include <px4_platform_common/defines.h>
@@ -247,7 +261,7 @@ private:
 			0
 		},
 #endif
-#if CONFIG_CYPHAL_ARES_MEL
+#if CONFIG_CYPHAL_ARES_MEL_INTENSITY
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
 			{

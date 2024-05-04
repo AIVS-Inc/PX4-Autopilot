@@ -18,42 +18,42 @@ else
 fi
 
 
-if param compare SENS_EN_INA226 1
-then
-	# Start Digital power monitors
-	ina226 -X -b 1 -t 1 -k start
+# if param compare SENS_EN_INA226 1
+# then
+# 	# Start Digital power monitors
+# 	ina226 -X -b 1 -t 1 -k start
 
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina226 -X -b 2 -t 2 -k start
-	fi
+# 	if [ $HAVE_PM2 = yes ]
+# 	then
+# 		ina226 -X -b 2 -t 2 -k start
+# 	fi
 
-	set INA_CONFIGURED yes
-fi
+# 	set INA_CONFIGURED yes
+# fi
 
-if param compare SENS_EN_INA228 1
-then
+# if param compare SENS_EN_INA228 1
+# then
 	# Start Digital power monitors
 	ina228 -X -b 1 -t 1 -k start
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina228 -X -b 2 -t 2 -k start
-	fi
+# 	if [ $HAVE_PM2 = yes ]
+# 	then
+# 		ina228 -X -b 2 -t 2 -k start
+# 	fi
 
-	set INA_CONFIGURED yes
-fi
+# 	set INA_CONFIGURED yes
+# fi
 
-if param compare SENS_EN_INA238 1
-then
-	# Start Digital power monitors
-	ina238 -X -b 1 -t 1 -k start
-	if [ $HAVE_PM2 = yes ]
-	then
-		ina238 -X -b 2 -t 2 -k start
-	fi
+# if param compare SENS_EN_INA238 1
+# then
+# 	# Start Digital power monitors
+# 	ina238 -X -b 1 -t 1 -k start
+# 	if [ $HAVE_PM2 = yes ]
+# 	then
+# 		ina238 -X -b 2 -t 2 -k start
+# 	fi
 
-	set INA_CONFIGURED yes
-fi
+# 	set INA_CONFIGURED yes
+# fi
 
 #Start Auterion Power Module selector for Skynode boards
 if ver hwbasecmp 009 010 011

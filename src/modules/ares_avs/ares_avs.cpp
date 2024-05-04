@@ -416,7 +416,7 @@ ares_avs is a background task with start/stop/send/status functionality.
 
 ### Implementation
 Reads uORB messages send in response to received ARES CAN data.
-Also allows "send"ing of ARES event parameters when given the node IDs on the CAN bus
+Also allows sending of ARES event parameters when given the node IDs on the CAN bus
 Event parameters must be set as desired prior to invocation of the send command
 
 ### Examples
