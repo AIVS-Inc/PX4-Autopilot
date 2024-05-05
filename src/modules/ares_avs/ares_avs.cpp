@@ -552,6 +552,8 @@ int AresAvs::event_command()		// update event params in ARES, enable/disable FFT
 	param_get(param_find("AVS_EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
 	param_get(param_find("AVS_EVT_BGSIL"),   &val); evt.self_measure_bg = (bool)val;
 	param_get(param_find("AVS_EVT_BGSIL_DB"),&val); evt.bg_db_threshold = (uint8_t)val;
+
+	evt.fft_param_id = ares_fft_ParamId_EventDetector;
 	evt.node_top = aresNodeId_top;
 	evt.node_bot = aresNodeId_bot;
 	evt.fft_enable = fftEnable;
@@ -580,6 +582,8 @@ int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
 	param_get(param_find("AVS_PK_MIN_HGHT"), &val); peak.min_peak_height = (float)val;
 	param_get(param_find("AVS_PK_MIN_D_DB"), &val); peak.min_peak_change = (float)val;
 	param_get(param_find("AVS_PK_MIN_BLNK"), &val); peak.min_blanking = (float)val;
+
+	peak.fft_param_id = ares_fft_ParamId_PeakDetector;
 	peak.node_top = aresNodeId_top;
 	peak.node_bot = aresNodeId_bot;
 	peak.fft_enable = fftEnable;
@@ -603,6 +607,7 @@ int AresAvs::send_fft_params( ares_fft_ParamId param_id)
 	orb_advert_t params_pub = orb_advertise(ORB_ID(sensor_avs_fft_params), &params);
 
 	param_get(param_find("AVS_FFT_DEC"), &val); params.fft_dec = (uint8_t)val;
+	param_get(param_find("AVS_SPATIAL_FILT"), &val); params.fft_spatial = (uint8_t)val;
 	param_get(param_find("AVS_FFT_LONG"), &val);
 	if (val == 1){	// true
 		params.fft_max_bins = FFT_LONG_NUM_BINS;
