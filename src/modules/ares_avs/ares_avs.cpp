@@ -473,13 +473,13 @@ int AresAvs::event_command()		// update event params in ARES, enable/disable FFT
 	memset(&evt, 0, sizeof(evt));
 	orb_advert_t evt_pub = orb_advertise(ORB_ID(sensor_avs_evt_control), &evt);
 
-	param_get(param_find("EVT_NUM_SRC"), &val); evt.num_sources = (uint16_t)val;
-	param_get(param_find("EVT_BG_TC"),   &val); evt.bg_timeconst = (uint16_t)val;
-	param_get(param_find("EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
-	param_get(param_find("EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
-	param_get(param_find("EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
-	param_get(param_find("EVT_SELF_BGSIL"), &val); evt.self_measure_bg = (bool)val;
-	param_get(param_find("EVT_BGSIL_DB"), &val); evt.bg_db_threshold = (uint8_t)val;
+	param_get(param_find("AVS_EVT_NUM_SRC"), &val); evt.num_sources = (uint16_t)val;
+	param_get(param_find("AVS_EVT_BG_TC"),   &val); evt.bg_timeconst = (uint16_t)val;
+	param_get(param_find("AVS_EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
+	param_get(param_find("AVS_EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
+	param_get(param_find("AVS_EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
+	param_get(param_find("AVS_EVT_BGSIL"), &val); evt.self_measure_bg = (bool)val;
+	param_get(param_find("AVS_EVT_BGSIL_DB"), &val); evt.bg_db_threshold = (uint8_t)val;
 	evt.node_top = aresNodeId_top;
 	evt.node_bot = aresNodeId_bot;
 	evt.fft_enable = fftEnable;

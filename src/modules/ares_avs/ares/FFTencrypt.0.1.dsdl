@@ -1,0 +1,7 @@
+# AIVS Inc FFT measurement parameters
+
+uint16	    m_FftParamId      # Specify what parameter is to be changed
+
+uint8       m_FftEncrypt      # Flag to select data encryption for ARES data in motion or at rest
+
+@sealed

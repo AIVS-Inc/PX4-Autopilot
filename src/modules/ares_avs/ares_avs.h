@@ -106,20 +106,32 @@ private:
 	bool captureActive = false;
 
 	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::EVT_REL_DB>) 	_evt_rel_dB,
-		(ParamInt<px4::params::EVT_NUM_SRC>) 	_evt_num_src,
-		(ParamInt<px4::params::EVT_ANG_RES>) 	_evt_ang_res,
-		(ParamInt<px4::params::EVT_BG_TC>) 	_evt_bg_tc,
-		(ParamInt<px4::params::EVT_EVT_WIN>) 	_evt_evt_win,
-		(ParamInt<px4::params::EVT_SELF_BGSIL>) _evt_self_bgsil,
-		(ParamInt<px4::params::EVT_BGSIL_DB>) 	_evt_bgsil_db,
+
+		(ParamInt<px4::params::AVS_FFT_DEC>)  	 _fft_dec,
+		(ParamInt<px4::params::AVS_FFT_LONG>)  	 _fft_long,
+		(ParamInt<px4::params::AVS_FFT_ENCRYPT>) _fft_encrypt,
+		(ParamInt<px4::params::AVS_FFT_STRT_BIN>)_fft_start_bin,
+		(ParamInt<px4::params::AVS_FFT_NUM_BINS>)_fft_num_bins,
+		(ParamInt<px4::params::AVS_FFT_WINDOW>)	 _fft_window,
+
+		(ParamInt<px4::params::AVS_EVT_REL_DB>)  _evt_rel_dB,
+		(ParamInt<px4::params::AVS_EVT_NUM_SRC>) _evt_num_src,
+		(ParamInt<px4::params::AVS_EVT_ANG_RES>) _evt_ang_res,
+		(ParamInt<px4::params::AVS_EVT_BG_TC>) 	 _evt_bg_tc,
+		(ParamInt<px4::params::AVS_EVT_EVT_WIN>) _evt_evt_win,
+		(ParamInt<px4::params::AVS_EVT_BGSIL>)   _evt_self_bgsil,
+		(ParamInt<px4::params::AVS_EVT_BGSIL_DB>)_evt_bgsil_db,
+
 		(ParamInt<px4::params::AVS_PK_NUM_HARM>) _avs_pk_num_harm,
 		(ParamInt<px4::params::AVS_PK_NUM_PEAK>) _avs_pk_num_peak,
 		(ParamInt<px4::params::AVS_PK_MIN_HGHT>) _avs_pk_min_height,
 		(ParamInt<px4::params::AVS_PK_MIN_D_DB>) _avs_pk_min_chg_db,
 		(ParamInt<px4::params::AVS_PK_MIN_BLNK>) _avs_pk_min_blanking,
-		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>) _avs_rpm_avg_len,
-		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync
+
+		(ParamInt<px4::params::AVS_SPATIAL_FILT>)_avs_spatial_filt,
+		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync,
+		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>)_avs_rpm_avg_len
+
 	)
 
 	// Subscriptions
