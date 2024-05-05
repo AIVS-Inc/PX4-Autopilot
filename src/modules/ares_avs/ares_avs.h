@@ -48,6 +48,8 @@
 #include "ares/EventParams_0_1.h"
 #include "ares/Rtcm_0_1.h"
 
+#include "UavCanId.h"
+
 using namespace time_literals;
 
 extern "C" __EXPORT int ares_avs_main(int argc, char *argv[]);
@@ -78,9 +80,21 @@ public:
 	/** @see ModuleBase::print_status() */
 	int print_status() override;
 
+	int send_fft_params( ares_fft_ParamId param_id);
+
 	int event_command();
 
 	int peak_command();
+
+	int dec_command();
+
+	int len_command();
+
+	int lin_command();
+
+	int win_command();
+
+	int enc_command();
 
 	int sync_command_now();
 

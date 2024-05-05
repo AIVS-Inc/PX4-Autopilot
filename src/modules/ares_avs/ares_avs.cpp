@@ -49,6 +49,7 @@
 #include <uORB/topics/sensor_avs_sd_control.h>
 #include <uORB/topics/sensor_avs_gnss_control.h>
 #include <uORB/topics/sensor_avs_sync_control.h>
+#include <uORB/topics/sensor_avs_fft_params.h>
 
 int AresAvs::print_status()
 {
@@ -88,6 +89,66 @@ int AresAvs::custom_command(int argc, char *argv[])
 				return object->peak_command();	// update peak params
 			} else {
 				PX4_INFO("peak: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "dec")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->dec_command();	// update FFT dec params
+			} else {
+				PX4_INFO("dec: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "len")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->len_command();	// send FFT length
+			} else {
+				PX4_INFO("len: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "lin")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->lin_command();	// send FFT linear bin start, number bins
+			} else {
+				PX4_INFO("lin: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "win")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->win_command();	// send Hann window on/off
+			} else {
+				PX4_INFO("win: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "enc")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->enc_command();	// send data encryption on/off
+			} else {
+				PX4_INFO("enc: task not running");
 				return 1;
 			}
 		}
@@ -430,9 +491,15 @@ $ ares_avs help		// display this help
 	   rtcm0	// disable rtcm data for base and rover
 	   event	// send event parameters to ARES
 	   peak 	// send peak parameters to ARES
+	   dec		// send decimation and spatial filter params
+	   len		// send FFT length
+	   lin		// set FFT linear bin start, number bins
+	   win		// set Hann window on/off
+	   enc		// set data encryption on/off
 	   sync		// sync ARES ADCs
 	   ena1		// enable event detection
 	   ena0		// disable event detection
+	   cal		// generate FFT correction values
 	   stop		// stop the ARES application
 
 With optional arguments:
@@ -449,6 +516,11 @@ $ ares_avs start -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("rtcm0");	// RTCM off
 	PRINT_MODULE_USAGE_COMMAND("event");	// send event params to all node_ids
 	PRINT_MODULE_USAGE_COMMAND("peak");	// send peak params to all node_ids
+	PRINT_MODULE_USAGE_COMMAND("dec");	// send FFT decimation (overlap)
+	PRINT_MODULE_USAGE_COMMAND("len");	// send FFT length
+	PRINT_MODULE_USAGE_COMMAND("lin");	// send FFT linear bin start, number bins
+	PRINT_MODULE_USAGE_COMMAND("win");	// send Hann window on/off
+	PRINT_MODULE_USAGE_COMMAND("enc");	// send data encryption on/off
 	PRINT_MODULE_USAGE_COMMAND("sync");	// sync ARES ADCs
 	PRINT_MODULE_USAGE_COMMAND("ena1");  	// enable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
@@ -478,8 +550,8 @@ int AresAvs::event_command()		// update event params in ARES, enable/disable FFT
 	param_get(param_find("AVS_EVT_REL_DB"),  &val); evt.relative_db = (int8_t)val;
 	param_get(param_find("AVS_EVT_ANG_RES"), &val); evt.angular_resln = (uint8_t)val;
 	param_get(param_find("AVS_EVT_EVT_WIN"), &val); evt.event_window = (uint8_t)val;
-	param_get(param_find("AVS_EVT_BGSIL"), &val); evt.self_measure_bg = (bool)val;
-	param_get(param_find("AVS_EVT_BGSIL_DB"), &val); evt.bg_db_threshold = (uint8_t)val;
+	param_get(param_find("AVS_EVT_BGSIL"),   &val); evt.self_measure_bg = (bool)val;
+	param_get(param_find("AVS_EVT_BGSIL_DB"),&val); evt.bg_db_threshold = (uint8_t)val;
 	evt.node_top = aresNodeId_top;
 	evt.node_bot = aresNodeId_bot;
 	evt.fft_enable = fftEnable;
@@ -516,6 +588,68 @@ int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
 	orb_publish(ORB_ID(sensor_avs_peak_control), peak_pub, &peak);
 
 	return 0;
+}
+
+int AresAvs::send_fft_params( ares_fft_ParamId param_id)
+{
+	int32_t val;
+
+	if (fftEnable == true){
+		ena_command( false);	// FFT must be diabled to make these changes
+	}
+	/* advertise avs_fft_params topic */
+	struct sensor_avs_fft_params_s params;
+	memset(&params, 0, sizeof(params));
+	orb_advert_t params_pub = orb_advertise(ORB_ID(sensor_avs_fft_params), &params);
+
+	param_get(param_find("AVS_FFT_DEC"), &val); params.fft_dec = (uint8_t)val;
+	param_get(param_find("AVS_FFT_LONG"), &val);
+	if (val == 1){	// true
+		params.fft_max_bins = FFT_LONG_NUM_BINS;
+		params.fft_num_blocks = FFT_LONG_NUM_BUFFERS;
+	} else {
+		params.fft_max_bins = FFT_SHORT_NUM_BINS;
+		params.fft_num_blocks = FFT_SHORT_NUM_BUFFERS;
+	}
+	param_get(param_find("AVS_FFT_ENCRYPT"), &val); params.fft_encrypt = (float)val;
+	param_get(param_find("AVS_FFT_STRT_BIN"), &val); params.fft_start_bin = (float)val;
+	param_get(param_find("AVS_FFT_NUM_BINS"), &val); params.fft_num_bins = (float)val;
+	param_get(param_find("AVS_FFT_WINDOW"), &val); params.fft_window = (float)val;
+
+	params.fft_param_id = param_id;
+	params.node_top = aresNodeId_top;
+	params.node_bot = aresNodeId_bot;
+	params.fft_enable = fftEnable;
+
+	PX4_INFO("Send FFT parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	orb_publish(ORB_ID(sensor_avs_fft_params), params_pub, &params);
+
+	return 0;
+}
+
+int AresAvs::dec_command()		// send FFT decimation
+{
+	return send_fft_params(ares_fft_ParamId_OutputDecimator);
+}
+
+int AresAvs::len_command()		// sendo FFT length
+{
+	return send_fft_params(ares_fft_ParamId_Length);
+}
+
+int AresAvs::lin_command()		// send FFT linear bin start, num_bins
+{
+	return send_fft_params(ares_fft_ParamId_Linear);
+}
+
+int AresAvs::win_command()		// send FFT win on/off
+{
+	return send_fft_params(ares_fft_ParamId_HannWindow);
+}
+
+int AresAvs::enc_command()		// send FFT encryption on/off
+{
+	return send_fft_params(ares_fft_ParamId_EncryptOutput);
 }
 
 int AresAvs::sync_command_now()

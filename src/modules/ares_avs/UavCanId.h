@@ -42,7 +42,14 @@
 ////////////////////////
 // ARES FFT Parameters
 ////////////////////////
-#define ARES_FFT_PARAMS_EXTENT	32
+#define ARES_FFT_PARAMS_EXTENT		32
+
+#define FFT_SHORT_NUM_BINS		96
+#define FFT_SHORT_NUM_BUFFERS		2
+
+#define FFT_LONG_NUM_BINS		576
+#define FFT_LONG_NUM_BUFFERS		12
+
 typedef enum	// ares_fft_ParamId
 {
 	ares_fft_ParamId_Min = 0,

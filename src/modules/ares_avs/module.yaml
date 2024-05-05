@@ -46,7 +46,7 @@ parameters:
         min: 1
         max: 575
         increment: 1
-        default: 561
+        default: 560
 
       AVS_FFT_WINDOW:
         description:
