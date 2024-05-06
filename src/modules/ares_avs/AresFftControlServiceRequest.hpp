@@ -65,44 +65,91 @@ public:
 			uint8_t fft_payload_buffer[ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
 			ares_FFTcontrol_0_1 fft {};
 
-			fft.m_u16ControlId = FftControlId_Enable;
-			fft.m_u16Length = 1;
-			fft.m_u8Command[0] = fftctl.fft_enable;
+			fft.m_u16ControlId = fftctl.fft_param_id;
 
-			if (fftctl.node_top > 0) {
-				const CanardTransferMetadata fft_transfer_metadata_0 = {
-					.priority       = CanardPriorityNominal,
-					.transfer_kind  = CanardTransferKindRequest,
-					.port_id        = _portID,
-					.remote_node_id = fftctl.node_top,
-					.transfer_id    = _transfer_id_fft_en_top,
-				};
-				result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+			if (fftctl.fft_param_id == FftControlId_Enable) {
+				fft.m_u16Length = 1;
+				fft.m_u8Command[0] = fftctl.fft_enable;
 
-				if (result == 0) {
-					++_transfer_id_fft_en_top;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&fft_transfer_metadata_0,
-								fft_payload_size,
-								&fft_payload_buffer);	// no response handler
+				if (fftctl.node_top > 0) {
+					const CanardTransferMetadata fft_transfer_metadata_0 = {
+						.priority       = CanardPriorityNominal,
+						.transfer_kind  = CanardTransferKindRequest,
+						.port_id        = _portID,
+						.remote_node_id = fftctl.node_top,
+						.transfer_id    = _transfer_id_top,
+					};
+					result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+
+					if (result == 0) {
+						++_transfer_id_top;
+						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+									&fft_transfer_metadata_0,
+									fft_payload_size,
+									&fft_payload_buffer);	// no response handler
+					}
+				}
+				if (fftctl.node_bot > 0) {
+					const CanardTransferMetadata fft_transfer_metadata_0 = {
+						.priority       = CanardPriorityNominal,
+						.transfer_kind  = CanardTransferKindRequest,
+						.port_id        = _portID,
+						.remote_node_id = fftctl.node_bot,
+						.transfer_id    = _transfer_id_bot,
+					};
+					result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+
+					if (result == 0) {
+						++_transfer_id_bot;
+						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+									&fft_transfer_metadata_0,
+									fft_payload_size,
+									&fft_payload_buffer);	// no response handler
+					}
 				}
 			}
-			if (fftctl.node_bot > 0) {
-				const CanardTransferMetadata fft_transfer_metadata_0 = {
-					.priority       = CanardPriorityNominal,
-					.transfer_kind  = CanardTransferKindRequest,
-					.port_id        = _portID,
-					.remote_node_id = fftctl.node_bot,
-					.transfer_id    = _transfer_id_fft_en_bot,
-				};
-				result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+			else if (fftctl.fft_param_id == FftControlId_CalibrateFromFile) {
+				if (fftctl.node_top > 0) {
+					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN%02d.json", fftctl.node_top);
+					fft.m_u16Length = strlen((char *)fft.m_u8Command);
 
-				if (result == 0) {
-					++_transfer_id_fft_en_bot;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&fft_transfer_metadata_0,
-								fft_payload_size,
-								&fft_payload_buffer);	// no response handler
+					const CanardTransferMetadata fft_transfer_metadata_0 = {
+						.priority       = CanardPriorityNominal,
+						.transfer_kind  = CanardTransferKindRequest,
+						.port_id        = _portID,
+						.remote_node_id = fftctl.node_top,
+						.transfer_id    = _transfer_id_top,
+					};
+					result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+
+					if (result == 0) {
+						++_transfer_id_top;
+						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+									&fft_transfer_metadata_0,
+									fft_payload_size,
+									&fft_payload_buffer);	// no response handler
+					}
+				}
+				if (fftctl.node_bot > 0) {
+					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN%02d.json", fftctl.node_bot);
+					fft.m_u16Length = strlen((char *)fft.m_u8Command);
+
+					const CanardTransferMetadata fft_transfer_metadata_0 = {
+						.priority       = CanardPriorityNominal,
+						.transfer_kind  = CanardTransferKindRequest,
+						.port_id        = _portID,
+						.remote_node_id = fftctl.node_bot,
+						.transfer_id    = _transfer_id_bot,
+					};
+					result = ares_FFTcontrol_0_1_serialize_(&fft, fft_payload_buffer, &fft_payload_size);
+
+					if (result == 0) {
+						++_transfer_id_bot;
+						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+									&fft_transfer_metadata_0,
+									fft_payload_size,
+									&fft_payload_buffer);	// no response handler
+					}
 				}
 			}
 		}
@@ -110,8 +157,8 @@ public:
 
 protected:
 	uORB::Subscription _fft_sub{ORB_ID(sensor_avs_fft_control)};
-	CanardTransferID _transfer_id_fft_en_top {0};
-	CanardTransferID _transfer_id_fft_en_bot {0};
+	CanardTransferID _transfer_id_top {0};
+	CanardTransferID _transfer_id_bot {0};
 	CanardPortID _portID;
 
 	//UavcanServiceRequestInterface *_response_callback = nullptr;

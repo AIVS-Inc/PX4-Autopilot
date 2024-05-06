@@ -96,6 +96,8 @@ public:
 
 	int enc_command();
 
+	int cal_command();
+
 	int sync_command_now();
 
 	int sync_command( time_t time_sec);
@@ -144,8 +146,10 @@ private:
 
 		(ParamInt<px4::params::AVS_SPATIAL_FILT>)_avs_spatial_filt,
 		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync,
-		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>)_avs_rpm_avg_len
+		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>)_avs_rpm_avg_len,
 
+		(ParamFloat<px4::params::AVS_ANT_DX>)	 _avs_antenna_dx,
+		(ParamFloat<px4::params::AVS_ANT_DY>)	 _avs_antenna_dy
 	)
 
 	// Subscriptions

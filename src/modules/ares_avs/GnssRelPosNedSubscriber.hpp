@@ -42,6 +42,8 @@
 #pragma once
 
 #include <uORB/uORB.h>
+#include <math.h>
+#include <uORB/topics/parameter_update.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include "ares/GnssRelPosNed_0_1.h"
 #include "UavCanId.h"
@@ -53,7 +55,14 @@ class GnssRelPosNedSubscriber : public UavcanBaseSubscriber
 	orb_advert_t gnss_relative_pub;
 public:
 	GnssRelPosNedSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		UavcanBaseSubscriber(handle, "ares.", "gnssrelposned", instance), _portID(portID) { };
+		UavcanBaseSubscriber(handle, "ares.", "gnssrelposned", instance), _portID(portID) {
+
+			float val;
+			param_get(param_find("AVS_ANT_DX"), &val); _antenna_dx = val;
+			param_get(param_find("AVS_ANT_DY"), &val); _antenna_dy = val;
+			_moving_baseline = sqrt(_antenna_dx*_antenna_dx + _antenna_dy*_antenna_dy);
+			_heading_correction = atan2(_antenna_dy,_antenna_dx) * 180.0 / M_PI;
+		};
 
 	void subscribe() override
 	{
@@ -105,15 +114,21 @@ public:
 		report.position_accuracy[0] = accN;
 		report.position_accuracy[1] = accE;
 		report.position_accuracy[2] = accD;
-		report.heading = relPosHeading;
+		report.heading = fmodf( relPosHeading - _heading_correction + (float)180, (float)(2*M_PI) ) - (float)180;
 		report.heading_accuracy = accH;
 		report.position_length = relPosLength;
 		report.accuracy_length = accL;
 		report.moving_base_mode = true;
 		report.carrier_solution_floating = (relPosQuality & 0x01) ? true: false;
 		report.carrier_solution_fixed = (relPosQuality & 0x02) ? true: false;
-		report.heading_valid = (relPosQuality & 0x03) ? true: false;
 		report.gnss_fix_ok = (relPosQuality & 0x02) ? true: false;
+
+		if ((relPosLength < _moving_baseline*1.1f) && (relPosLength > _moving_baseline*0.9f)) {
+			report.heading_valid = (relPosQuality & 0x03) ? true: false;
+		} else {
+			report.heading_valid = false;
+			report.gnss_fix_ok = false;
+		}
 		report.relative_position_valid = report.gnss_fix_ok;
 		report.differential_solution = report.gnss_fix_ok;
 
@@ -121,4 +136,8 @@ public:
 	};
 private:
 	CanardPortID _portID;
+	float _antenna_dx;
+	float _antenna_dy;
+	float _moving_baseline;
+	float _heading_correction;
 };

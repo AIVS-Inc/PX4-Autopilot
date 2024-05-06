@@ -54,15 +54,21 @@ px4_add_module(
 		ares/FFTcontrol.0.1.dsdl
 		ares/SDcontrol.0.1.dsdl
 		ares/GnssControl.0.1.dsdl
+		ares/FFTlength.0.1.dsdl
+		ares/FFTlinear.0.1.dsdl
+		ares/FFTspatial.0.1.dsdl
+		ares/FFTwindow.0.1.dsdl
+		ares/FFTencrypt.0.1.dsdl
 		AresEventSubscriber.hpp
 		MelIntensitySubscriber.hpp
 		GnssRelPosNedSubscriber.hpp
 		GnssPositionSubscriber.hpp
 		AdcFrameSubscriber.hpp
-		AresEventServiceRequest.hpp
+		AresFftParamServiceRequest.hpp
 		AresFftControlServiceRequest.hpp
 		AresSdCapControlServiceRequest.hpp
 		AresGnssControlServiceRequest.hpp
+		AresSyncControlServiceRequest.hpp
 		UavCanId.h
 	MODULE_CONFIG
 		module.yaml

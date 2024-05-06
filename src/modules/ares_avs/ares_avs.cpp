@@ -189,6 +189,18 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
+	else if (!strcmp(argv[0], "cal")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				return object->cal_command();	// enable FFT
+			} else {
+				PX4_INFO("cal: task not running");
+				return 1;
+			}
+		}
+	}
 	else if (!strcmp(argv[0], "cap1")) {
 		if (is_running()) {
 			object = _object.load();
@@ -499,7 +511,7 @@ $ ares_avs help		// display this help
 	   sync		// sync ARES ADCs
 	   ena1		// enable event detection
 	   ena0		// disable event detection
-	   cal		// generate FFT correction values
+	   cal		// recalculate FFT corrections on all node_ids
 	   stop		// stop the ARES application
 
 With optional arguments:
@@ -524,6 +536,7 @@ $ ares_avs start -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("sync");	// sync ARES ADCs
 	PRINT_MODULE_USAGE_COMMAND("ena1");  	// enable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("cal");	// recalculate FFT corrections on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
 	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
 	PRINT_MODULE_USAGE_PARAM_INT('b', 24, 1, 127, "AVS node ID (bottom)", true);
@@ -707,6 +720,7 @@ int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/dis
 
 	fft.node_top = aresNodeId_top;
 	fft.node_bot = aresNodeId_bot;
+	fft.fft_param_id = FftControlId_Enable;
 	fftEnable = flag;
 	fft.fft_enable = flag;
 
@@ -714,6 +728,25 @@ int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/dis
 		PX4_INFO("Enable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	else
 		PX4_INFO("Disable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+
+	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
+
+	return 0;
+}
+
+int AresAvs::cal_command()			// recompute FFT correction vectors
+{
+	/* advertise avs_fft_control topic */
+	struct sensor_avs_fft_control_s fft;
+	memset(&fft, 0, sizeof(fft));
+	orb_advert_t fft_pub = orb_advertise(ORB_ID(sensor_avs_fft_control), &fft);
+
+	fft.node_top = aresNodeId_top;
+	fft.node_bot = aresNodeId_bot;
+	fft.fft_param_id = FftControlId_CalibrateFromFile;
+	fft.fft_enable = fftEnable;
+
+	PX4_INFO("Recalculate FFT correction vectors on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
