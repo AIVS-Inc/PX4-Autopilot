@@ -80,7 +80,6 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-
 	else if (!strcmp(argv[0], "peak")) {
 		if (is_running()) {
 			object = _object.load();
@@ -736,6 +735,9 @@ int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/dis
 
 int AresAvs::cal_command()			// recompute FFT correction vectors
 {
+	if (fftEnable == true){
+		ena_command( false);	// FFT must be diabled to make these changes
+	}
 	/* advertise avs_fft_control topic */
 	struct sensor_avs_fft_control_s fft;
 	memset(&fft, 0, sizeof(fft));

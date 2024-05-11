@@ -69,6 +69,10 @@
 #define CONFIG_CYPHAL_ARES_RPM_PUBLISHER 0
 #endif
 
+#ifndef CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER
+#define CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER 0
+#endif
+
 #ifndef CONFIG_CYPHAL_ARES_FFT_PARAM_PUBLISHER
 #define CONFIG_CYPHAL_ARES_FFT_PARAM_PUBLISHER 0
 #endif
@@ -100,6 +104,7 @@
 
 #define UAVCAN_BASE_PUB_COUNT \
 	CONFIG_CYPHAL_ARES_RPM_PUBLISHER + \
+	CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER + \
 	CONFIG_CYPHAL_ARES_FFT_PARAM_PUBLISHER + \
 	CONFIG_CYPHAL_ARES_FFT_CONTROL_PUBLISHER + \
 	CONFIG_CYPHAL_ARES_SD_CONTROL_PUBLISHER + \
@@ -114,13 +119,13 @@
 
 #include <uORB/topics/actuator_outputs.h>
 #include <uORB/topics/sensor_gps.h>
-#include <uORB/topics/sensor_avs_evt_control.h>
 
 #include "Actuators/EscClient.hpp"
 #include "Publishers/udral/Readiness.hpp"
 #include "Publishers/udral/Gnss.hpp"
 #include "Publishers/uORB/uorb_publisher.hpp"
 #include "../../modules/ares_avs/AresEventPublisher.hpp"
+#include "../../modules/ares_avs/GnssRtcmPublisher.hpp"
 #include "../../modules/ares_avs/AresFftParamServiceRequest.hpp"
 #include "../../modules/ares_avs/AresFftControlServiceRequest.hpp"
 #include "../../modules/ares_avs/AresSdCapControlServiceRequest.hpp"
@@ -224,6 +229,16 @@ private:
 				return new AresEventPublisher(handle, 0);
 			},
 			"ares.esc",
+			0
+		},
+#endif
+#if CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER
+		{
+			[](CanardHandle & handle) -> BasePublisher *
+			{
+				return new GnssRtcmPublisher(handle, 0);
+			},
+			"ares.rtcm",
 			0
 		},
 #endif

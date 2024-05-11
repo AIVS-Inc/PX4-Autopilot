@@ -68,6 +68,10 @@ if DRIVERS_CYPHAL
             bool "Ares RPM publisher"
             default y
 
+        config CYPHAL_ARES_RTCM_PUBLISHER
+            bool "Ares RTCM publisher"
+            default y
+
         config CYPHAL_ARES_FFT_PARAM_PUBLISHER
             bool "Ares FFT parameters publisher"
             default y

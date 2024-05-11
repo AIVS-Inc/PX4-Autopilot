@@ -59,6 +59,8 @@ px4_add_module(
 		ares/FFTspatial.0.1.dsdl
 		ares/FFTwindow.0.1.dsdl
 		ares/FFTencrypt.0.1.dsdl
+		AresEventPublisher.hpp
+		GnssRtcmPublisher.hpp
 		AresEventSubscriber.hpp
 		MelIntensitySubscriber.hpp
 		GnssRelPosNedSubscriber.hpp

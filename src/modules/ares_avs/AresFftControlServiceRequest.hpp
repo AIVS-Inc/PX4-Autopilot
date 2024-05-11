@@ -110,7 +110,7 @@ public:
 			}
 			else if (fftctl.fft_param_id == FftControlId_CalibrateFromFile) {
 				if (fftctl.node_top > 0) {
-					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN%02d.json", fftctl.node_top);
+					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN11%02d.json", fftctl.node_top);
 					fft.m_u16Length = strlen((char *)fft.m_u8Command);
 
 					const CanardTransferMetadata fft_transfer_metadata_0 = {
@@ -131,7 +131,7 @@ public:
 					}
 				}
 				if (fftctl.node_bot > 0) {
-					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN%02d.json", fftctl.node_bot);
+					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN11%02d.json", fftctl.node_bot);
 					fft.m_u16Length = strlen((char *)fft.m_u8Command);
 
 					const CanardTransferMetadata fft_transfer_metadata_0 = {
@@ -160,7 +160,4 @@ protected:
 	CanardTransferID _transfer_id_top {0};
 	CanardTransferID _transfer_id_bot {0};
 	CanardPortID _portID;
-
-	//UavcanServiceRequestInterface *_response_callback = nullptr;
-
 };
