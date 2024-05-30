@@ -42,6 +42,7 @@
 #include <uORB/topics/sensor_avs_mel.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include <uORB/topics/sensor_gps.h>
+#include <uORB/topics/uavcan_parameter_value.h>
 //#include <uORB/topics/sensor_avs_adc.h>
 #include <uORB/topics/sensor_avs_evt_control.h>
 #include <uORB/topics/sensor_avs_peak_control.h>
@@ -278,8 +279,8 @@ AresAvs *AresAvs::instantiate(int argc, char *argv[])
 	int myoptind = 1;
 	int ch;
 	const char *myoptarg = nullptr;
-	uint8_t nodeID_top = 6;	// default if node not present
-	uint8_t nodeID_bot = 24;	// default if node not present
+	uint8_t nodeID_top = 0;	// default if node not present
+	uint8_t nodeID_bot = 20;	// default if node not present
 
 	// parse CLI arguments
 	while ((ch = px4_getopt(argc, argv, "t:b:", &myoptind, &myoptarg)) != EOF) {
@@ -335,13 +336,15 @@ void AresAvs::run()
 	int sensor_avs_mel_sub = orb_subscribe(ORB_ID(sensor_avs_mel));
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gps));
+	int cyphal_heartbeat_sub = orb_subscribe(ORB_ID(uavcan_parameter_value));
 	//int sensor_avs_adc_sub = orb_subscribe(ORB_ID(sensor_avs_adc));
 
 	px4_pollfd_struct_t fds[] = {
 		{.fd = sensor_avs_sub, 		 .events = POLLIN},
 		{.fd = sensor_avs_mel_sub, 	 .events = POLLIN},
 		{.fd = sensor_gnss_relative_sub, .events = POLLIN},
-		{.fd = sensor_gps_sub, 		 .events = POLLIN}
+		{.fd = sensor_gps_sub, 		 .events = POLLIN},
+		{.fd = cyphal_heartbeat_sub,.events = POLLIN}	// heartbeat
 		//{.fd = sensor_avs_adc_sub, 	 .events = POLLIN}
 	};
 
@@ -447,7 +450,12 @@ void AresAvs::run()
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
 			//PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
 		}
-		// else if (fds[4].revents & POLLIN) {
+		else if (fds[4].revents & POLLIN) {
+			struct uavcan_parameter_value_s uavcan_parameter_value;
+			orb_copy(ORB_ID(uavcan_parameter_value), cyphal_heartbeat_sub, &uavcan_parameter_value);
+			PX4_INFO("got heartbeat, node: %hu, time: %llu", uavcan_parameter_value.node_id, uavcan_parameter_value.timestamp);
+		}
+		// else if (fds[5].revents & POLLIN) {
 		// 	struct sensor_avs_adc_s sensor_avs_adc;
 		// 	orb_copy(ORB_ID(sensor_avs_adc), sensor_avs_adc_sub, &sensor_avs_adc);
 		// 	// TODO: do something with the data...
@@ -459,6 +467,7 @@ void AresAvs::run()
 	orb_unsubscribe(sensor_avs_mel_sub);
 	orb_unsubscribe(sensor_gnss_relative_sub);
 	orb_unsubscribe(sensor_gps_sub);
+	orb_unsubscribe(cyphal_heartbeat_sub);
 	//orb_unsubscribe(sensor_avs_adc_sub);
 }
 
@@ -537,8 +546,8 @@ $ ares_avs start -t 6 -b 24
 	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("cal");	// recalculate FFT corrections on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
-	PRINT_MODULE_USAGE_PARAM_INT('t', 6, 1, 127, "AVS node ID (top)", true);
-	PRINT_MODULE_USAGE_PARAM_INT('b', 24, 1, 127, "AVS node ID (bottom)", true);
+	PRINT_MODULE_USAGE_PARAM_INT('t', 0, 1, 127, "AVS node ID (top)", true);	// 6
+	PRINT_MODULE_USAGE_PARAM_INT('b', 20, 1, 127, "AVS node ID (bottom)", true);	// 24
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 
 	return 0;
@@ -789,11 +798,20 @@ int AresAvs::rtcm_command( bool flag)		// update event params in ARES, enable/di
 	rtcmActive = flag;
 	rtcm.rtcm_mode = flag;
 
-	if (flag == true)
-		PX4_INFO("Enable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
-	else
-		PX4_INFO("Disable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
-
+	if (aresNodeId_top > 0)
+	{
+		if (flag == true)
+			PX4_INFO("Enable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+		else
+			PX4_INFO("Disable Moving baseline on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	}
+	if (aresNodeId_bot > 0)
+	{
+		if (flag == true)
+			PX4_INFO("Enable Ntrip corrections on ARES base node: %hd", aresNodeId_bot);
+		else
+			PX4_INFO("Disable Ntrip corrections on ARES base node: %hd", aresNodeId_bot);
+	}
 	orb_publish(ORB_ID(sensor_avs_gnss_control), rtcm_pub, &rtcm);
 
 	return 0;

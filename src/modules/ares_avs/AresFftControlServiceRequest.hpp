@@ -35,18 +35,22 @@
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
-
+#include <px4_platform_common/time.h>
+#include "AresServiceRequest.hpp"
 #include "ares/FFTcontrol_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs_fft_control.h>
 
-class AresFftControlServiceRequest : public BasePublisher
+class AresFftControlServiceRequest : public AresServiceRequest
 {
 public:
-	AresFftControlServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "fftcontrol", instance), _portID(portID)  { };
+	AresFftControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
+		AresServiceRequest(handle, "ares", "fftcontrol", ARES_SUBJECT_ID_FFT_CONTROL, ares_FFTcontrol_0_1_EXTENT_BYTES_)
+		{
+			_response_callback = response_handler;
+		};
 
 	~AresFftControlServiceRequest() override = default;
 
@@ -60,6 +64,8 @@ public:
 			PX4_INFO("ARES fft control update");
 			sensor_avs_fft_control_s fftctl {};
 			_fft_sub.update(&fftctl);
+			_node_id_top = fftctl.node_top;
+			_node_id_bot = fftctl.node_bot;
 
 			size_t fft_payload_size = ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t fft_payload_buffer[ares_FFTcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
@@ -83,10 +89,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&fft_transfer_metadata_0,
-									fft_payload_size,
-									&fft_payload_buffer);	// no response handler
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&fft_transfer_metadata_0,
+							fft_payload_size,
+							&fft_payload_buffer,
+					       		_response_callback);
 					}
 				}
 				if (fftctl.node_bot > 0) {
@@ -101,14 +109,17 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&fft_transfer_metadata_0,
-									fft_payload_size,
-									&fft_payload_buffer);	// no response handler
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&fft_transfer_metadata_0,
+							fft_payload_size,
+							&fft_payload_buffer,
+					       		_response_callback);
 					}
 				}
 			}
 			else if (fftctl.fft_param_id == FftControlId_CalibrateFromFile) {
+
 				if (fftctl.node_top > 0) {
 					sprintf((char *)fft.m_u8Command,"0:/system/cal/SN11%02d.json", fftctl.node_top);
 					fft.m_u16Length = strlen((char *)fft.m_u8Command);
@@ -124,10 +135,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&fft_transfer_metadata_0,
-									fft_payload_size,
-									&fft_payload_buffer);	// no response handler
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&fft_transfer_metadata_0,
+							fft_payload_size,
+							&fft_payload_buffer,
+					       		_response_callback);
 					}
 				}
 				if (fftctl.node_bot > 0) {
@@ -145,19 +158,18 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&fft_transfer_metadata_0,
-									fft_payload_size,
-									&fft_payload_buffer);	// no response handler
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+					       		&fft_transfer_metadata_0,
+					       		fft_payload_size,
+					       		&fft_payload_buffer,
+					       		_response_callback);
 					}
 				}
 			}
 		}
 	}
 
-protected:
+private:
 	uORB::Subscription _fft_sub{ORB_ID(sensor_avs_fft_control)};
-	CanardTransferID _transfer_id_top {0};
-	CanardTransferID _transfer_id_bot {0};
-	CanardPortID _portID;
 };

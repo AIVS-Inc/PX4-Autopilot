@@ -72,8 +72,6 @@ public:
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		//PX4_INFO("GnssPositionCallback");
-
 		ares_GnssPos_0_1 gnsspos {};
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_GnssPos_0_1_deserialize_(&gnsspos, (const uint8_t *)receive.payload, &msg_size_in_bits);
@@ -92,6 +90,7 @@ public:
 				node[active_node] = receive.metadata.remote_node_id;
 				msg_cnt = 1;
 			}
+			PX4_INFO("switch active [%hu] GNSS to node %lu", active_node, node[active_node]);
 		}
 
 		double lat = gnsspos.m_dLatitude;
@@ -120,26 +119,29 @@ public:
 		report.satellites_used = gnsspos.m_u8SIV;
 		report.vel_ned_valid = true;
 
-		// PX4_INFO("node:%lu, lat: %.9f, lon: %.9f, alt: %.2f m, (+- h: %.2f m, v: %.2f m)",
-		// 	  node[active_node], report.latitude_deg, report.longitude_deg, (double)report.altitude_msl_m, (double)report.eph, (double)report.epv);
+		//PX4_INFO("node:%lu, lat: %.9f, lon: %.9f, alt: %.2f m, (+- h: %.2f m, v: %.2f m)",
+		//	  node[active_node], report.latitude_deg, report.longitude_deg, (double)report.altitude_msl_m, (double)report.eph, (double)report.epv);
 
-		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
+		if (report.time_utc_usec > 0)
+		{
+			orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
 
-		if ((report.timestamp/1000000 > 120) && (report.fix_type >= 3)) {
-			// get current system time to check if it is valid (after 120 sec uptime)
-			struct timespec ts = {};
-			px4_clock_gettime(CLOCK_REALTIME, &ts);
-			time_t time_s = (time_t) (gnsspos.m_u64utcUsec/1000000);
-			if (abs(ts.tv_sec - (uint32_t)time_s) > 1) {
-				// set system time from GPS time
-				ts.tv_sec = time_s;
-				ts.tv_nsec = (gnsspos.m_u64utcUsec - (uint64_t)(time_s * 1000000)) * 1000;
-				int res = px4_clock_settime(CLOCK_REALTIME, &ts);
+			if ((report.timestamp/1000000 > 120) && (report.fix_type >= 3)) {
+				// get current system time to check if it is valid (after 120 sec uptime)
+				struct timespec ts = {};
+				px4_clock_gettime(CLOCK_REALTIME, &ts);
+				time_t time_s = (time_t) (gnsspos.m_u64utcUsec/1000000);
+				if (abs(ts.tv_sec - (uint32_t)time_s) > 1) {
+					// set system time from GPS time
+					ts.tv_sec = time_s;
+					ts.tv_nsec = (gnsspos.m_u64utcUsec - (uint64_t)(time_s * 1000000)) * 1000;
+					int res = px4_clock_settime(CLOCK_REALTIME, &ts);
 
-				if (res == 0) {
-					PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
-				} else {
-					PX4_ERR("Failed to set system time (%i)", res);
+					if (res == 0) {
+						PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
+					} else {
+						PX4_ERR("Failed to set system time (%i)", res);
+					}
 				}
 			}
 		}

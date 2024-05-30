@@ -35,18 +35,22 @@
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
-
+#include <px4_platform_common/time.h>
+#include "AresServiceRequest.hpp"
 #include "ares/SyncControl_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs_sync_control.h>
 
-class AresSyncControlServiceRequest : public BasePublisher
+class AresSyncControlServiceRequest : public AresServiceRequest
 {
 public:
-	AresSyncControlServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "synccontrol", instance), _portID(portID)  { };
+	AresSyncControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
+		AresServiceRequest(handle, "ares", "synccontrol", ARES_SUBJECT_ID_ADC_SYNC, ares_SyncControl_0_1_EXTENT_BYTES_)
+		{
+			_response_callback = response_handler;
+		};
 
 	~AresSyncControlServiceRequest() override = default;
 
@@ -60,6 +64,8 @@ public:
 			PX4_INFO("ARES Sync control update");
 			sensor_avs_sync_control_s syncctl {};
 			_sync_sub.update(&syncctl);
+			_node_id_top = syncctl.node_top;
+			_node_id_bot = syncctl.node_bot;
 
 			size_t sync_payload_size = ares_SyncControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t sync_payload_buffer[ares_SyncControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
@@ -73,16 +79,18 @@ public:
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
 					.remote_node_id = syncctl.node_top,
-					.transfer_id    = _transfer_id_sync_top,
+					.transfer_id    = _transfer_id_top,
 				};
 				result = ares_SyncControl_0_1_serialize_(&sync, sync_payload_buffer, &sync_payload_size);
 
 				if (result == 0) {
-					++_transfer_id_sync_top;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&sync_transfer_metadata_0,
-								sync_payload_size,
-								&sync_payload_buffer);	// no response handler
+					++_transfer_id_top;
+					_active_top = hrt_absolute_time();
+					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&sync_transfer_metadata_0,
+							sync_payload_size,
+							&sync_payload_buffer,
+					       		_response_callback);
 				}
 			}
 			if (syncctl.node_bot > 0) {
@@ -91,16 +99,18 @@ public:
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
 					.remote_node_id = syncctl.node_bot,
-					.transfer_id    = _transfer_id_sync_bot,
+					.transfer_id    = _transfer_id_bot,
 				};
 				result = ares_SyncControl_0_1_serialize_(&sync, sync_payload_buffer, &sync_payload_size);
 
 				if (result == 0) {
-					++_transfer_id_sync_bot;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&sync_transfer_metadata_0,
-								sync_payload_size,
-								&sync_payload_buffer);	// no response handler
+					++_transfer_id_bot;
+					_active_bot = hrt_absolute_time();
+					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&sync_transfer_metadata_0,
+							sync_payload_size,
+							&sync_payload_buffer,
+					       		_response_callback);
 				}
 			}
 		}
@@ -108,10 +118,4 @@ public:
 
 protected:
 	uORB::Subscription _sync_sub{ORB_ID(sensor_avs_sync_control)};
-	CanardTransferID _transfer_id_sync_top {0};
-	CanardTransferID _transfer_id_sync_bot {0};
-	CanardPortID _portID;
-
-	//UavcanServiceRequestInterface *_response_callback = nullptr;
-
 };

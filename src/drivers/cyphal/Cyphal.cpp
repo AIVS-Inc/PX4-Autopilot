@@ -74,6 +74,10 @@ CyphalNode::CyphalNode(uint32_t node_id, size_t capacity, size_t mtu_bytes) :
 	_node_manager.subscribe();
 #endif
 
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+	_ares_serv_manager.subscribe();
+#endif
+
 #ifdef CONFIG_CYPHAL_NODE_CLIENT
 	_node_client = new NodeClient(_canard_handle, _param_manager);
 
@@ -193,6 +197,9 @@ void CyphalNode::Run()
 
 #ifdef CONFIG_CYPHAL_NODE_MANAGER
 		_node_manager.update();
+#endif
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+		_ares_serv_manager.update();
 #endif
 	}
 

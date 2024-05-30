@@ -35,18 +35,22 @@
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
-
+#include <px4_platform_common/time.h>
+#include "AresServiceRequest.hpp"
 #include "ares/SDcontrol_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs_sd_control.h>
 
-class AresSdCapControlServiceRequest : public BasePublisher
+class AresSdCapControlServiceRequest : public AresServiceRequest
 {
 public:
-	AresSdCapControlServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "sdcontrol", instance), _portID(portID)  { };
+	AresSdCapControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
+		AresServiceRequest(handle, "ares", "sdcontrol", ARES_SUBJECT_ID_STORAGE_CONTROL, ares_SDcontrol_0_1_EXTENT_BYTES_)
+		{
+			_response_callback = response_handler;
+		};
 
 	~AresSdCapControlServiceRequest() override = default;
 
@@ -60,6 +64,8 @@ public:
 			PX4_INFO("ARES SD control update");
 			sensor_avs_sd_control_s sdctl {};
 			_sd_sub.update(&sdctl);
+			_node_id_top = sdctl.node_top;
+			_node_id_bot = sdctl.node_bot;
 
 			size_t sd_payload_size = ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t sd_payload_buffer[ares_SDcontrol_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
@@ -75,16 +81,18 @@ public:
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
 					.remote_node_id = sdctl.node_top,
-					.transfer_id    = _transfer_id_sd_cap_top,
+					.transfer_id    = _transfer_id_top,
 				};
 				result = ares_SDcontrol_0_1_serialize_(&sd, sd_payload_buffer, &sd_payload_size);
 
 				if (result == 0) {
-					++_transfer_id_sd_cap_top;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&sd_transfer_metadata_0,
-								sd_payload_size,
-								&sd_payload_buffer);	// no response handler
+					++_transfer_id_top;
+					_active_top = hrt_absolute_time();
+					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&sd_transfer_metadata_0,
+							sd_payload_size,
+							&sd_payload_buffer,
+					       		_response_callback);
 				}
 			}
 			if (sdctl.node_bot > 0) {
@@ -93,16 +101,18 @@ public:
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
 					.remote_node_id = sdctl.node_bot,
-					.transfer_id    = _transfer_id_sd_cap_bot,
+					.transfer_id    = _transfer_id_bot,
 				};
 				result = ares_SDcontrol_0_1_serialize_(&sd, sd_payload_buffer, &sd_payload_size);
 
 				if (result == 0) {
-					++_transfer_id_sd_cap_bot;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&sd_transfer_metadata_0,
-								sd_payload_size,
-								&sd_payload_buffer);	// no response handler
+					++_transfer_id_bot;
+					_active_bot = hrt_absolute_time();
+					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&sd_transfer_metadata_0,
+							sd_payload_size,
+							&sd_payload_buffer,
+					       		_response_callback);
 				}
 			}
 		}
@@ -110,10 +120,4 @@ public:
 
 protected:
 	uORB::Subscription _sd_sub{ORB_ID(sensor_avs_sd_control)};
-	CanardTransferID _transfer_id_sd_cap_top {0};
-	CanardTransferID _transfer_id_sd_cap_bot {0};
-	CanardPortID _portID;
-
-	//UavcanServiceRequestInterface *_response_callback = nullptr;
-
 };

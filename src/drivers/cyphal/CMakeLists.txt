@@ -75,6 +75,14 @@ if(CONFIG_CYPHAL_NODE_MANAGER)
     )
 endif()
 
+if(CONFIG_CYPHAL_ARES_SERVICE_MANAGER)
+list(APPEND SRCS
+		../../modules/ares_avs/AresServiceManager.hpp
+		../../modules/ares_avs/AresServiceManager.cpp
+    )
+endif()
+
+
 if(CONFIG_CYPHAL_NODE_CLIENT)
     list(APPEND SRCS
 		NodeClient.hpp

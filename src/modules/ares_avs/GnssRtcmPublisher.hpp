@@ -62,11 +62,12 @@ public:
 			gps_inject_data_s rtcm {};
 			_rtcm_sub.update(&rtcm);
 
-			size_t dest_payload_size = rtcm.len;
-			uint8_t dest_payload_buffer[rtcm.len];
+			size_t dest_payload_size = ares_Rtcm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
+			uint8_t dest_payload_buffer[ares_Rtcm_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
 
 			ares_Rtcm_0_1 dest {};
 			memcpy(dest.m_u8Data.elements,rtcm.data,rtcm.len);
+			dest.m_u8Data.count = rtcm.len;
 
 			const CanardTransferMetadata transfer_metadata = {
 				.priority       = CanardPriorityNominal,
@@ -76,6 +77,7 @@ public:
 				.transfer_id    = _transfer_id,
 			};
 			int32_t result = ares_Rtcm_0_1_serialize_(&dest, dest_payload_buffer, &dest_payload_size);
+			//PX4_INFO("copy %d RTCM bytes to CAN, result %ld", rtcm.len, result);
 
 			if (result == 0) {
 				++_transfer_id;

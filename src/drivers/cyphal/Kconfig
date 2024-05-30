@@ -27,6 +27,13 @@ if DRIVERS_CYPHAL
         help
             Implement Cyphal PNP server functionality and manages discovered nodes
 
+    config CYPHAL_ARES_SERVICE_MANAGER
+        bool "ARES manager"
+        default y
+        depends on CYPHAL_FMU
+        help
+            Implement Cyphal manage ARES AVS sensor functionality
+
     config CYPHAL_NODE_CLIENT
         bool "Node client"
         default y
@@ -68,28 +75,8 @@ if DRIVERS_CYPHAL
             bool "Ares RPM publisher"
             default y
 
-        config CYPHAL_ARES_RTCM_PUBLISHER
+        config CYPHAL_GNSS_RTCM_PUBLISHER
             bool "Ares RTCM publisher"
-            default y
-
-        config CYPHAL_ARES_FFT_PARAM_PUBLISHER
-            bool "Ares FFT parameters publisher"
-            default y
-
-        config CYPHAL_ARES_FFT_CONTROL_PUBLISHER
-            bool "Ares FFT control publisher"
-            default y
-
-        config CYPHAL_ARES_SD_CONTROL_PUBLISHER
-            bool "Ares SD Card control publisher"
-            default y
-
-        config CYPHAL_ARES_GNSS_CONTROL_PUBLISHER
-            bool "Ares GNSS control publisher"
-            default y
-
-        config CYPHAL_ARES_SYNC_CONTROL_PUBLISHER
-            bool "Ares SYNC control publisher"
             default y
     endmenu
 

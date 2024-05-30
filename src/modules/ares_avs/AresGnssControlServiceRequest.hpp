@@ -35,18 +35,22 @@
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
-
+#include <px4_platform_common/time.h>
+#include "AresServiceRequest.hpp"
 #include "ares/GnssControl_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs_gnss_control.h>
 
-class AresGnssControlServiceRequest : public BasePublisher
+class AresGnssControlServiceRequest : public AresServiceRequest
 {
 public:
-	AresGnssControlServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "gnsscontrol", instance), _portID(portID)  { };
+	AresGnssControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
+		AresServiceRequest(handle, "ares", "gnsscontrol", ARES_SUBJECT_ID_GNSS_PARAMS, ares_GnssControl_0_1_EXTENT_BYTES_)
+		{
+			_response_callback = response_handler;
+		};
 
 	~AresGnssControlServiceRequest() override = default;
 
@@ -60,6 +64,8 @@ public:
 			PX4_INFO("ARES GNSS control update");
 			sensor_avs_gnss_control_s gnssctl {};
 			_gnss_sub.update(&gnssctl);
+			_node_id_top = gnssctl.node_top;
+			_node_id_bot = gnssctl.node_bot;
 
 			size_t gnss_payload_size = ares_GnssControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t gnss_payload_buffer[ares_GnssControl_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
@@ -70,58 +76,56 @@ public:
 			uint8_t rtcm_mode_bot = GnssRtcmMode_None;
 
 			if ((gnssctl.rtcm_mode == GnssRtcmMode_Rover) || (gnssctl.rtcm_mode == GnssRtcmMode_Base)) {
-				// If both nodeIds are valid, top node will be annoited Base, bottom is Rover
-				if ((gnssctl.node_top > 0) && (gnssctl.node_bot > 0)) {
-					rtcm_mode_top = GnssRtcmMode_Rover;
-					rtcm_mode_bot = GnssRtcmMode_Base;
-				}
+				rtcm_mode_top = GnssRtcmMode_Rover;
+				rtcm_mode_bot = GnssRtcmMode_Base;
 			}
-			const CanardTransferMetadata gnss_transfer_metadata_top = {
-				.priority       = CanardPriorityNominal,
-				.transfer_kind  = CanardTransferKindRequest,
-				.port_id        = _portID,
-				.remote_node_id = gnssctl.node_top,
-				.transfer_id    = _transfer_id_gnss_cap_top,
-			};
-			gnss.m_u8Command[0] = rtcm_mode_top;
-			result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
+			if (gnssctl.node_top > 0) {
+				const CanardTransferMetadata gnss_transfer_metadata_top = {
+					.priority       = CanardPriorityNominal,
+					.transfer_kind  = CanardTransferKindRequest,
+					.port_id        = _portID,
+					.remote_node_id = gnssctl.node_top,
+					.transfer_id    = _transfer_id_top,
+				};
+				gnss.m_u8Command[0] = rtcm_mode_top;
+				result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
 
-			if (result == 0) {
-				++_transfer_id_gnss_cap_top;
-				result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+				if (result == 0) {
+					++_transfer_id_top;
+					_active_top = hrt_absolute_time();
+					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
 							&gnss_transfer_metadata_top,
 							gnss_payload_size,
-							&gnss_payload_buffer);	// no response handler
+							&gnss_payload_buffer,
+							_response_callback);
+				}
+				PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_top, gnss.m_u8Command[0]);
 			}
-			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_top, gnss.m_u8Command[0]);
+			if (gnssctl.node_bot > 0) {
+				const CanardTransferMetadata gnss_transfer_metadata_bot = {
+					.priority       = CanardPriorityNominal,
+					.transfer_kind  = CanardTransferKindRequest,
+					.port_id        = _portID,
+					.remote_node_id = gnssctl.node_bot,
+					.transfer_id    = _transfer_id_bot,
+				};
+				gnss.m_u8Command[0] = rtcm_mode_bot;
+				result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
 
-			const CanardTransferMetadata gnss_transfer_metadata_bot = {
-				.priority       = CanardPriorityNominal,
-				.transfer_kind  = CanardTransferKindRequest,
-				.port_id        = _portID,
-				.remote_node_id = gnssctl.node_bot,
-				.transfer_id    = _transfer_id_gnss_cap_bot,
-			};
-			gnss.m_u8Command[0] = rtcm_mode_bot;
-			result = ares_GnssControl_0_1_serialize_(&gnss, gnss_payload_buffer, &gnss_payload_size);
-
-			if (result == 0) {
-				++_transfer_id_gnss_cap_bot;
-				result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+				if (result == 0) {
+					++_transfer_id_bot;
+					_active_bot = hrt_absolute_time();
+					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
 							&gnss_transfer_metadata_bot,
 							gnss_payload_size,
-							&gnss_payload_buffer);	// no response handler
+							&gnss_payload_buffer,
+							_response_callback);
+				}
+				PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_bot, gnss.m_u8Command[0]);
 			}
-			PX4_INFO("set RTCM node %hd to %hd", gnssctl.node_bot, gnss.m_u8Command[0]);
 		}
 	}
 
 protected:
 	uORB::Subscription _gnss_sub{ORB_ID(sensor_avs_gnss_control)};
-	CanardTransferID _transfer_id_gnss_cap_top {0};
-	CanardTransferID _transfer_id_gnss_cap_bot {0};
-	CanardPortID _portID;
-
-	//UavcanServiceRequestInterface *_response_callback = nullptr;
-
 };

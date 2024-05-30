@@ -35,7 +35,8 @@
 
 #include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
-
+#include <px4_platform_common/time.h>
+#include "AresServiceRequest.hpp"
 #include "ares/EventParams_0_1.h"
 #include "ares/PeakParams_0_1.h"
 #include "ares/FFTlength_0_1.h"
@@ -50,11 +51,14 @@
 #include <uORB/topics/sensor_avs_peak_control.h>
 #include <uORB/topics/sensor_avs_fft_params.h>
 
-class AresFftParamServiceRequest : public BasePublisher
+class AresFftParamServiceRequest : public AresServiceRequest
 {
 public:
-	AresFftParamServiceRequest(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "fftparams", instance), _portID(portID)  { };
+	AresFftParamServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
+		AresServiceRequest(handle, "ares", "fftparams", ARES_SUBJECT_ID_FFT_PARAMS, ares_EventParams_0_1_EXTENT_BYTES_)
+		{
+			_response_callback = response_handler;
+		};
 
 	~AresFftParamServiceRequest() override = default;
 
@@ -72,8 +76,10 @@ public:
 			size_t cmd_payload_size = ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t cmd_payload_buffer[ares_EventParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
 			ares_EventParams_0_1 cmd {};
+			_node_id_top = evt.node_top;
+			_node_id_bot = evt.node_bot;
 
-			cmd.m_paramId = ares_fft_ParamId_EventDetector;
+			cmd.m_paramId = evt.fft_param_id;
 			cmd.m_relativeDb = (float) evt.relative_db;
 			cmd.m_numSources = (uint16_t) evt.num_sources;
 			cmd.m_angularRes = (uint8_t) evt.angular_resln;
@@ -95,10 +101,12 @@ public:
 
 				if (result == 0) {
 					++_transfer_id_top;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&cmd_transfer_metadata,
-								cmd_payload_size,
-								&cmd_payload_buffer);
+					_active_top = hrt_absolute_time();
+					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&cmd_transfer_metadata,
+							cmd_payload_size,
+							&cmd_payload_buffer,
+					       		_response_callback);
 				}
 				PX4_INFO("ARES event param update - complete, node %hd", evt.node_top);
 			}
@@ -118,10 +126,12 @@ public:
 
 				if (result == 0) {
 					++_transfer_id_bot;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&cmd_transfer_metadata,
-								cmd_payload_size,
-								&cmd_payload_buffer);
+					_active_bot = hrt_absolute_time();
+					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&cmd_transfer_metadata,
+							cmd_payload_size,
+							&cmd_payload_buffer,
+					       		_response_callback);
 				}
 				PX4_INFO("ARES event param update - complete, node %hd", evt.node_bot);
 			}
@@ -138,6 +148,9 @@ public:
 			size_t cmd_payload_size = ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_;
 			uint8_t cmd_payload_buffer[ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_];
 			ares_PeakParams_0_1 cmd {};
+			_node_id_top = pk.node_top;
+			_node_id_bot = pk.node_bot;
+
 
 			cmd.m_paramId = pk.fft_param_id;
 			cmd.m_iMaxHarmonics = (uint8_t) pk.max_harmonics;
@@ -159,10 +172,12 @@ public:
 
 				if (result == 0) {
 					++_transfer_id_top;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&cmd_transfer_metadata,
-								cmd_payload_size,
-								&cmd_payload_buffer);
+					_active_top = hrt_absolute_time();
+					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&cmd_transfer_metadata,
+							cmd_payload_size,
+							&cmd_payload_buffer,
+					       		_response_callback);
 				}
 				PX4_INFO("ARES peak param update - complete, node %hd", pk.node_top);
 			}
@@ -182,10 +197,12 @@ public:
 
 				if (result == 0) {
 					++_transfer_id_bot;
-					result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-								&cmd_transfer_metadata,
-								cmd_payload_size,
-								&cmd_payload_buffer);
+					_active_bot = hrt_absolute_time();
+					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+							&cmd_transfer_metadata,
+							cmd_payload_size,
+							&cmd_payload_buffer,
+					       		_response_callback);
 				}
 				PX4_INFO("ARES peak param update - complete, node %hd", pk.node_bot);
 			}
@@ -198,6 +215,8 @@ public:
 			PX4_INFO("ARES FFT param update");
 			sensor_avs_fft_params_s params {};
 			_param_sub.update(&params);
+			_node_id_top = params.node_top;
+			_node_id_bot = params.node_bot;
 
 			if (params.fft_param_id == ares_fft_ParamId_OutputDecimator)
 			{
@@ -223,10 +242,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES spatial filter update - complete, node %hd", params.node_top);
 				}
@@ -245,11 +266,13 @@ public:
 					result = ares_FFTspatial_0_1_serialize_(&spatial, cmd_payload_buffer, &cmd_payload_size);
 
 					if (result == 0) {
-						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						++_transfer_id_bot;
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES spatial filter update - complete, node %hd", params.node_bot);
 				}
@@ -263,6 +286,7 @@ public:
 				length.m_FftNumBins = params.fft_max_bins;
 				length.m_FftNumBlocks = params.fft_num_blocks;
 
+
 				if (params.node_top > 0) {
 					const CanardTransferMetadata cmd_transfer_metadata = {
 						.priority       = CanardPriorityNominal,
@@ -275,10 +299,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT length update - complete, node %hd", params.node_top);
 				}
@@ -294,10 +320,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT length update - complete, node %hd", params.node_bot);
 				}
@@ -311,6 +339,7 @@ public:
 				linear.m_FftStartBin = params.fft_start_bin;
 				linear.m_FftNumBins = params.fft_num_bins;
 
+
 				if (params.node_top > 0) {
 					const CanardTransferMetadata cmd_transfer_metadata = {
 						.priority       = CanardPriorityNominal,
@@ -323,10 +352,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT linear update - complete, node %hd", params.node_top);
 				}
@@ -342,10 +373,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT linear update - complete, node %hd", params.node_bot);
 				}
@@ -370,10 +403,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT window update - complete, node %hd", params.node_top);
 				}
@@ -389,10 +424,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT window update - complete, node %hd", params.node_bot);
 				}
@@ -417,10 +454,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_top;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_top = hrt_absolute_time();
+						request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT encrypt update - complete, node %hd", params.node_top);
 				}
@@ -436,10 +475,12 @@ public:
 
 					if (result == 0) {
 						++_transfer_id_bot;
-						result = _canard_handle.TxPush(hrt_absolute_time() + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-									&cmd_transfer_metadata,
-									cmd_payload_size,
-									&cmd_payload_buffer);
+						_active_bot = hrt_absolute_time();
+						request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
+								&cmd_transfer_metadata,
+								cmd_payload_size,
+								&cmd_payload_buffer,
+					       			_response_callback);
 					}
 					PX4_INFO("ARES FFT encrypt update - complete, node %hd", params.node_bot);
 				}
@@ -448,12 +489,7 @@ public:
 	};
 
 private:
-
 	uORB::Subscription _evt_sub{ORB_ID(sensor_avs_evt_control)};
 	uORB::Subscription _pk_sub{ORB_ID(sensor_avs_peak_control)};
 	uORB::Subscription _param_sub{ORB_ID(sensor_avs_fft_params)};
-
-	CanardTransferID _transfer_id_top {0};
-	CanardTransferID _transfer_id_bot {0};
-	CanardPortID _portID;
 };
