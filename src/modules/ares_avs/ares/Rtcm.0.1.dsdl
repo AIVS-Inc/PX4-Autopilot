@@ -1,5 +1,5 @@
 # AIVS Inc ARES Rtcm data payload
 
-uint8[<301]    m_u8Data
+uint8[<=300]    m_u8Data
 
 @sealed

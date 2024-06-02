@@ -344,7 +344,7 @@ void AresAvs::run()
 		{.fd = sensor_avs_mel_sub, 	 .events = POLLIN},
 		{.fd = sensor_gnss_relative_sub, .events = POLLIN},
 		{.fd = sensor_gps_sub, 		 .events = POLLIN},
-		{.fd = cyphal_heartbeat_sub,.events = POLLIN}	// heartbeat
+		{.fd = cyphal_heartbeat_sub,	 .events = POLLIN}	// heartbeat
 		//{.fd = sensor_avs_adc_sub, 	 .events = POLLIN}
 	};
 

@@ -49,11 +49,11 @@ void AresServiceManager::callback(const CanardRxTransfer &receive)
 
 	heartbeat.timestamp = hrt_absolute_time();
 	heartbeat.node_id = (uint8_t) receive.metadata.remote_node_id;
-	heartbeat.int_value = (uint64_t) hb.uptime;
+	heartbeat.int_value = (int64_t) hb.uptime;
 
 	// Check if this node is on the list
 	bool found_node = false;
-	hrt_abstime current_time = hrt_absolute_time() / 1000000;	// seconds
+	hrt_abstime current_time = heartbeat.timestamp / 1000000;	// seconds
 
 	for (auto &n : _nodes) {
 		if (n->node_id == heartbeat.node_id) {
@@ -70,11 +70,13 @@ void AresServiceManager::callback(const CanardRxTransfer &receive)
 		n->last_hb = current_time;
 
 		_nodes.add(n);
+		PX4_INFO("add node %hd: ", n->node_id);
 	}
 	// Remove any nodes that are no longer reporting heartbeats
 	for (auto &n : _nodes) {
-		if ((current_time - 5) > n->last_hb)
+		if ((n->last_hb > 0) && (current_time - 5) > n->last_hb)
 			_nodes.remove(n);
+			PX4_INFO("remove node %hd: ", n->node_id);
 	}
 	// Check that all active commands have been processed. If not acknowledged, raise warning.
 	hrt_abstime cmd_time;

@@ -51,8 +51,6 @@ class AdcFrameSubscriber : public UavcanBaseSubscriber
 {
 	struct sensor_avs_adc_s timedata;
 	orb_advert_t adc_pub;
-	struct sensor_gps_s gps_report;
-	orb_advert_t gps_pub;
 public:
 	AdcFrameSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
 		UavcanBaseSubscriber(handle, "ares.", "adcframe", instance), _portID(portID) { };
@@ -68,11 +66,6 @@ public:
 		/* advertise timedata topic */
 		memset(&this->timedata, 0, sizeof(this->timedata));
 		this->adc_pub = orb_advertise(ORB_ID(sensor_avs_adc), &this->timedata);
-
-		/* advertise gnss topic */
-		memset(&this->gps_report, 0, sizeof(this->gps_report));
-		this->gps_pub = orb_advertise(ORB_ID(sensor_gps), &this->gps_report);
-		PX4_INFO("subscribed to AdcFrame, port %d", _portID);
 	};
 
 	void callback(const CanardRxTransfer &receive) override
@@ -114,15 +107,7 @@ public:
 		timedata.timestamp_sample = adcframe.m_u32SampleIndex;
 		memcpy(timedata.adc_frame, adcframe.m_ai32Data, sizeof(adcframe.m_ai32Data));
 
-		gps_report.time_utc_usec = utc_us;
-		gps_report.latitude_deg = lat;
-		gps_report.latitude_deg = lon;
-		gps_report.altitude_ellipsoid_m = alt;
-		gps_report.eph = dh.meter;
-		gps_report.epv = dv.meter;
-
 		orb_publish( ORB_ID(sensor_avs_adc), this->adc_pub, &this->timedata);	///< uORB pub for AVS events
-		orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->gps_report);	///< uORB pub for AVS events
 	};
 private:
 	CanardPortID _portID;

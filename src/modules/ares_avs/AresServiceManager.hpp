@@ -62,8 +62,8 @@ class AresNode : public ListNode<AresNode *>
 public:
 	uint8_t node_id {0};
 	uint32_t uptime {0};
-	uint32_t hb_cnt {0};	// counts heartbeats for this node
-	hrt_abstime last_hb;	// absolute time of last heartbeat
+	uint32_t hb_cnt {0};		// counts heartbeats for this node
+	hrt_abstime last_hb {0};	// absolute time of last heartbeat
 };
 
 class AresServiceManager : public UavcanBaseSubscriber, public UavcanServiceRequestInterface
