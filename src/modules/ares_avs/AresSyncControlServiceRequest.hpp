@@ -47,7 +47,7 @@ class AresSyncControlServiceRequest : public AresServiceRequest
 {
 public:
 	AresSyncControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
-		AresServiceRequest(handle, "ares", "synccontrol", ARES_SUBJECT_ID_ADC_SYNC, ares_SyncControl_0_1_EXTENT_BYTES_)
+		AresServiceRequest(handle, "ares.", "synccontrol", ARES_SUBJECT_ID_ADC_SYNC, ares_SyncControl_0_1_EXTENT_BYTES_)
 		{
 			_response_callback = response_handler;
 		};

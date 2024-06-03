@@ -47,7 +47,7 @@ class AresGnssControlServiceRequest : public AresServiceRequest
 {
 public:
 	AresGnssControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
-		AresServiceRequest(handle, "ares", "gnsscontrol", ARES_SUBJECT_ID_GNSS_PARAMS, ares_GnssControl_0_1_EXTENT_BYTES_)
+		AresServiceRequest(handle, "ares.", "gnsscontrol", ARES_SUBJECT_ID_GNSS_PARAMS, ares_GnssControl_0_1_EXTENT_BYTES_)
 		{
 			_response_callback = response_handler;
 		};

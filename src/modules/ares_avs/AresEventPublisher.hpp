@@ -50,7 +50,7 @@ class AresEventPublisher : public AresPublisher
 {
 public:
 	AresEventPublisher(CanardHandle &handle, uint8_t instance = 0) :
-		AresPublisher(handle, "ares", "esc", instance)
+		AresPublisher(handle, "ares.", "rpm", instance)
 	{
 		int32_t val;
 		param_get(param_find("AVS_RPM_AVG_MSEC"), &val); desired_rpm_avg_msec = (uint32_t) val;

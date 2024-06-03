@@ -85,7 +85,7 @@ private:
 			{
 				return new AresEventPublisher(handle, 0);
 			},
-			"ares.esc",
+			"ares.rpm",
 			0
 		},
 		{

@@ -55,7 +55,7 @@ void AresPubManager::updateBasePublications()
 
 		for (auto &basepub : _basepublishers) {
 			// Check if publisher has already been created
-			char full_subj_name[200];
+			char full_subj_name[80];
 			snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", basepub->getPrefixName(), basepub->getSubjectName());
 			const uint8_t instance = basepub->getInstance();
 

@@ -47,7 +47,7 @@ class AresSdCapControlServiceRequest : public AresServiceRequest
 {
 public:
 	AresSdCapControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
-		AresServiceRequest(handle, "ares", "sdcontrol", ARES_SUBJECT_ID_STORAGE_CONTROL, ares_SDcontrol_0_1_EXTENT_BYTES_)
+		AresServiceRequest(handle, "ares.", "sdcontrol", ARES_SUBJECT_ID_STORAGE_CONTROL, ares_SDcontrol_0_1_EXTENT_BYTES_)
 		{
 			_response_callback = response_handler;
 		};

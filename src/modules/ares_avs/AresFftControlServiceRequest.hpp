@@ -47,7 +47,7 @@ class AresFftControlServiceRequest : public AresServiceRequest
 {
 public:
 	AresFftControlServiceRequest(CanardHandle &handle, UavcanServiceRequestInterface *response_handler) :
-		AresServiceRequest(handle, "ares", "fftcontrol", ARES_SUBJECT_ID_FFT_CONTROL, ares_FFTcontrol_0_1_EXTENT_BYTES_)
+		AresServiceRequest(handle, "ares.", "fftcontrol", ARES_SUBJECT_ID_FFT_CONTROL, ares_FFTcontrol_0_1_EXTENT_BYTES_)
 		{
 			_response_callback = response_handler;
 		};

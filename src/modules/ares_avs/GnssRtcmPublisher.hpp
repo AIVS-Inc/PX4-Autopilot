@@ -48,7 +48,7 @@ class GnssRtcmPublisher : public AresPublisher
 {
 public:
 	GnssRtcmPublisher(CanardHandle &handle, uint8_t instance = 0) :
-		AresPublisher(handle, "ares", "rtcm", instance)
+		AresPublisher(handle, "ares.", "rtcm", instance)
 	{
 	};
 
