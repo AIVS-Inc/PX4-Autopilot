@@ -70,14 +70,6 @@ if DRIVERS_CYPHAL
         config CYPHAL_UORB_SENSOR_GPS_PUBLISHER
             bool "uORB sensor_gps publisher"
             default n
-
-        config CYPHAL_ARES_RPM_PUBLISHER
-            bool "Ares RPM publisher"
-            default y
-
-        config CYPHAL_GNSS_RTCM_PUBLISHER
-            bool "Ares RTCM publisher"
-            default y
     endmenu
 
     menu "Subscriber support"
@@ -101,27 +93,6 @@ if DRIVERS_CYPHAL
         config CYPHAL_UORB_SENSOR_GPS_SUBSCRIBER
             bool "uORB sensor_gps Subscriber"
             default n
-
-        config CYPHAL_ARES_POSITION
-            bool "Ares Position Subscriber"
-            default y
-
-        config CYPHAL_ARES_RELPOSNED
-            bool "Ares RelPosNed Subscriber"
-            default y
-
-        config CYPHAL_ARES_EVENT
-            bool "ARES Event Subscriber"
-            default y
-
-        config CYPHAL_ARES_MEL_INTENSITY
-            bool "ARES MEL Intensity Subscriber"
-            default y
-
-        config CYPHAL_ARES_ADC_FRAME
-            bool "ARES ADC Frame Subscriber"
-            default n
-
     endmenu
 
     menu "Advertised Services"

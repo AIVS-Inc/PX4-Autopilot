@@ -1,3 +1,4 @@
+
 /****************************************************************************
  *
  *   Copyright (c) 2021 PX4 Development Team. All rights reserved.
@@ -46,8 +47,13 @@
 
 SubscriptionManager::~SubscriptionManager()
 {
-	//_dynsubscribers.clear();
-	_basesubscribers.clear();
+	UavcanDynamicPortSubscriber *dynsub;
+
+	while (_dynsubscribers != nullptr) {
+		dynsub = _dynsubscribers;
+		_dynsubscribers = dynsub->next();
+		delete dynsub;
+	}
 }
 
 void SubscriptionManager::subscribe()
@@ -61,50 +67,67 @@ void SubscriptionManager::subscribe()
 	_access_rsp.subscribe();
 	_list_rsp.subscribe();
 
-	//updateDynamicSubscriptions();
-	updateBaseSubscriptions();
+	updateDynamicSubscriptions();
 }
 
 void SubscriptionManager::updateDynamicSubscriptions()
 {
-	for (auto &sub : _cyphal_dyn_subs) {
+	for (auto &sub : _uavcan_subs) {
 
 		bool found_subscriber = false;
+		UavcanDynamicPortSubscriber *dynsub = _dynsubscribers;
 
-		// for (auto &dynsub : _dynsubscribers) {
-		// 	// Check if subscriber has already been created
-		// 	char full_subj_name[200];
-		// 	snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", dynsub->getSubjectPrefix(), dynsub->getSubjectName());
-		// 	const uint8_t instance = dynsub->getInstance();
+		while (dynsub != nullptr) {
+			// Check if subscriber has already been created
+			const char *subj_prefix = dynsub->getSubjectPrefix();
+			const char *subj_name = dynsub->getSubjectName();
+			const uint8_t instance = dynsub->getInstance();
+			char subject_name[90];
+			snprintf(subject_name, sizeof(subject_name), "%s%s", subj_prefix, subj_name);
 
-		// 	if (strcmp(full_subj_name, sub.subject_name) == 0 && instance == sub.instance) {
-		// 		found_subscriber = true;
-		// 		break;
-		// 	}
-		// }
+			if (strcmp(subject_name, sub.subject_name) == 0 && instance == sub.instance) {
+				found_subscriber = true;
+				break;
+			}
+
+			dynsub = dynsub->next();
+		}
 
 		if (found_subscriber) {
 			continue;
 		}
 
-		char cyphal_param[90];
-		snprintf(cyphal_param, sizeof(cyphal_param), "cyphal.sub.%s.%d.id", sub.subject_name, sub.instance);
+		char uavcan_param[90];
+		snprintf(uavcan_param, sizeof(uavcan_param), "uavcan.sub.%s.%d.id", sub.subject_name, sub.instance);
 		uavcan_register_Value_1_0 value;
 
-		if (_param_manager.GetParamByName(cyphal_param, value)) {
+		if (_param_manager.GetParamByName(uavcan_param, value)) {
 			uint16_t port_id = value.natural16.value.elements[0];
 
 			if (port_id <= CANARD_PORT_ID_MAX) { // PortID is set, create a subscriber
-				// UavcanDynamicPortSubscriber *dynsub = sub.create_sub(_canard_handle, _param_manager);
+				dynsub = sub.create_sub(_canard_handle, _param_manager);
 
-				// if (dynsub == nullptr) {
-				// 	PX4_ERR("Out of memory");
-				// 	return;
-				// }
+				if (dynsub == nullptr) {
+					PX4_ERR("Out of memory");
+					return;
+				}
 
-				// _dynsubscribers.add(dynsub);
+				if (_dynsubscribers == nullptr) {
+					// Set the head of our linked list
+					_dynsubscribers = dynsub;
 
-				// dynsub->updateParam();
+				} else {
+					// Append the new subscriber to our linked list
+					UavcanDynamicPortSubscriber *tmp = _dynsubscribers;
+
+					while (tmp->next() != nullptr) {
+						tmp = tmp->next();
+					}
+
+					tmp->setNext(dynsub);
+				}
+
+				dynsub->updateParam();
 			}
 
 		} else {
@@ -114,71 +137,25 @@ void SubscriptionManager::updateDynamicSubscriptions()
 	}
 }
 
-void SubscriptionManager::updateBaseSubscriptions()
-{
-	for (auto &sub : _cyphal_base_subs) {
-
-		bool found_subscriber = false;
-
-		for (auto &basesub : _basesubscribers) {
-			// Check if subscriber has already been created
-			char full_subj_name[200];
-			snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", basesub->getSubjectPrefix(), basesub->getSubjectName());
-			const uint8_t instance = basesub->getInstance();
-
-			if (strcmp(full_subj_name, sub.subject_name) == 0 && instance == sub.instance) {
-				found_subscriber = true;
-				break;
-			}
-		}
-
-		if (found_subscriber) {
-			continue;
-		}
-
-		UavcanBaseSubscriber *basesub = sub.create_sub(_canard_handle);
-
-		if (basesub == nullptr) {
-			PX4_ERR("Out of memory");
-			return;
-		}
-		_basesubscribers.add(basesub);
-
-		basesub->updateParam();
-	}
-}
-
-
 void SubscriptionManager::printInfo()
 {
-	// for (auto &dynsub : _dynsubscribers) {
-	// 	dynsub->printInfo();
-	// }
-	for (auto &basesub : _basesubscribers) {
-		basesub->printInfo();
-	}
-}
+	UavcanDynamicPortSubscriber *dynsub = _dynsubscribers;
 
-void SubscriptionManager::updateDynParams()
-{
-	// for (auto &dynsub : _dynsubscribers) {
-	// 	dynsub->updateParam();
-	// }
-	// // Check for any newly-enabled subscriptions
-	// updateDynamicSubscriptions();
-}
-
-void SubscriptionManager::updateBaseParams()
-{
-	for (auto &basesub : _basesubscribers) {
-		basesub->updateParam();
+	while (dynsub != nullptr) {
+		dynsub->printInfo();
+		dynsub = dynsub->next();
 	}
-	// Check for any newly-enabled subscriptions
-	updateBaseSubscriptions();
 }
 
 void SubscriptionManager::updateParams()
 {
-	// updateDynParams();
-	updateBaseParams();
+	UavcanDynamicPortSubscriber *dynsub = _dynsubscribers;
+
+	while (dynsub != nullptr) {
+		dynsub->updateParam();
+		dynsub = dynsub->next();
+	}
+
+	// Check for any newly-enabled subscriptions
+	updateDynamicSubscriptions();
 }

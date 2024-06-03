@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
+#include "AresPublisher.hpp"
 #include "ares/EscRpm_0_1.h"
 #include "ares/FFTcontrol_0_1.h"
 #include "UavCanId.h"
@@ -46,11 +46,11 @@
  * This module publishes measured RPM and other information to Cyphal-CAN  for
  * use by ARES nodes in acoustic noise rejection.
  */
-class AresEventPublisher : public BasePublisher
+class AresEventPublisher : public AresPublisher
 {
 public:
 	AresEventPublisher(CanardHandle &handle, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "esc", instance)
+		AresPublisher(handle, "ares", "esc", instance)
 	{
 		int32_t val;
 		param_get(param_find("AVS_RPM_AVG_MSEC"), &val); desired_rpm_avg_msec = (uint32_t) val;

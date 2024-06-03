@@ -111,6 +111,17 @@ public:
 		}
 	};
 
+	UavcanDynamicPortSubscriber *next()
+	{
+		return _next_sub;
+	}
+
+	void setNext(UavcanDynamicPortSubscriber *next)
+	{
+		_next_sub = next;
+	}
+
 protected:
 	UavcanParamManager &_param_manager;
+	UavcanDynamicPortSubscriber *_next_sub {nullptr};
 };

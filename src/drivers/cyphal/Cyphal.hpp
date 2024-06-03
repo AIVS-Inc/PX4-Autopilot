@@ -64,6 +64,8 @@
 
 #ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
 #include "../../modules/ares_avs/AresServiceManager.hpp"
+#include "../../modules/ares_avs/AresPubManager.hpp"
+#include "../../modules/ares_avs/AresSubManager.hpp"
 #endif
 
 #ifdef CONFIG_CYPHAL_NODE_CLIENT
@@ -72,7 +74,6 @@
 
 #include "PublicationManager.hpp"
 #include "SubscriptionManager.hpp"
-#include "../../modules/ares_avs/AresServiceManager.hpp"
 
 #include "Actuators/EscClient.hpp" /// TODO: Add EscServer.hpp for node-side service
 
@@ -176,6 +177,8 @@ private:
 
 #ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
 	AresServiceManager _ares_serv_manager {_canard_handle};
+	AresPubManager 	   _ares_pub_manager  {_canard_handle};
+	AresSubManager     _ares_sub_manager  {_canard_handle};
 #endif
 
 #ifdef CONFIG_CYPHAL_NODE_CLIENT

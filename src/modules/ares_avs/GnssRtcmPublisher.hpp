@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
+#include "AresPublisher.hpp"
 #include "ares/Rtcm_0_1.h"
 #include "UavCanId.h"
 #include <uORB/uORB.h>
@@ -44,11 +44,11 @@
  * This module acts as a bridge for rtcm correction data from a base station, or NTRIP source,
  * to Cyphal-CAN for use by an ARES node designated as a moving base.
  */
-class GnssRtcmPublisher : public BasePublisher
+class GnssRtcmPublisher : public AresPublisher
 {
 public:
 	GnssRtcmPublisher(CanardHandle &handle, uint8_t instance = 0) :
-		BasePublisher(handle, "ares", "rtcm", instance)
+		AresPublisher(handle, "ares", "rtcm", instance)
 	{
 	};
 
@@ -77,11 +77,13 @@ public:
 						_rtcm_len |= rtcm.data[2]; 		  // Bits 0-7 of packet length
 						_rtcm_len += 6;        			  // 6 additional bytes of header, msgType, CRC
 						if (_rtcm_len > 300) {
-							PX4_ERR("RTCM message size exceeds allocated buffer size");
+							PX4_ERR("RTCM message size %hu (%hhu:%hhu) exceeds allocated buffer size", _rtcm_len, rtcm.data[1], rtcm.data[2]);
+						} else {
+							// Copy the fragment into the local buffer
+							memcpy(_rtcm_buf,rtcm.data,rtcm.len);
+							_rtcm_offset += rtcm.len;
+							//PX4_INFO("Start of new %hu message copied, offset %hu bytes", _rtcm_len, _rtcm_offset);
 						}
-						// Copy the fragment into the local buffer
-						memcpy(_rtcm_buf,rtcm.data,rtcm.len);
-						_rtcm_offset += rtcm.len;
 					}
 					else {
 						PX4_INFO("Unknown byte in expected start of RTCM packet, discarding packet");
@@ -90,18 +92,20 @@ public:
 				else if (_rtcm_len > 0) {
 					// Continuation of fragmented message that had a valid header with message length
 					if (_rtcm_offset + rtcm.len > 300) {
-						PX4_ERR("Fragmented message growth exceeds allocated buffer size");
+						PX4_ERR("Fragmented message growth %hu exceeds allocated buffer size", _rtcm_offset + rtcm.len);
 						_rtcm_offset = 0;
 						_rtcm_len = 0;
 					}
 					else {
 						memcpy(_rtcm_buf+_rtcm_offset,rtcm.data,rtcm.len);
 						_rtcm_offset += rtcm.len;
+						//PX4_INFO("Continuation of %hu message copied, current offset %hu bytes", _rtcm_len, _rtcm_offset);
 					}
 					if (_rtcm_offset == _rtcm_len) {
 						// Message is now complete
 						memcpy(dest.m_u8Data.elements,_rtcm_buf,_rtcm_len);
 						dest.m_u8Data.count = _rtcm_len;
+						//PX4_INFO("message complete, total length %hu bytes",  _rtcm_len);
 						_rtcm_offset = 0;
 						_rtcm_len = 0;
 						send_msg = true;
@@ -122,6 +126,7 @@ public:
 					memcpy(dest.m_u8Data.elements,rtcm.data,rtcm.len);
 					dest.m_u8Data.count = rtcm.len;
 					send_msg = true;
+					//PX4_INFO("non-fragmented message complete, total length %hu bytes",  rtcm.len);
 				}
 			}
 			if (send_msg == true) {

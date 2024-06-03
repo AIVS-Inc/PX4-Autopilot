@@ -76,6 +76,8 @@ CyphalNode::CyphalNode(uint32_t node_id, size_t capacity, size_t mtu_bytes) :
 
 #ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
 	_ares_serv_manager.subscribe();
+	_ares_pub_manager.updateParams();
+	_ares_sub_manager.subscribe();
 #endif
 
 #ifdef CONFIG_CYPHAL_NODE_CLIENT
@@ -182,6 +184,10 @@ void CyphalNode::Run()
 		_pub_manager.updateParams();
 		_sub_manager.updateParams();
 
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+		_ares_pub_manager.updateParams();
+		_ares_sub_manager.updateParams();
+#endif
 		_mixing_output.updateParams();
 	}
 
@@ -200,6 +206,7 @@ void CyphalNode::Run()
 #endif
 #ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
 		_ares_serv_manager.update();
+		_ares_pub_manager.update();
 #endif
 	}
 
@@ -263,7 +270,9 @@ void CyphalNode::print_info()
 		 heap_diagnostics.oom_count);
 
 	_pub_manager.printInfo();
-
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+	_ares_pub_manager.printInfo();
+#endif
 	PX4_INFO("Message subscriptions:");
 	traverseTree<CanardRxSubscription>(_canard_handle.getRxSubscriptions(CanardTransferKindMessage),
 	[&](const CanardRxSubscription * const sub) {

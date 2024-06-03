@@ -31,12 +31,15 @@
 #
 ############################################################################
 
+set(LIBCANARD_DIR ../../drivers/cyphal/libcanard)
+
 px4_add_module(
 	MODULE modules__ares_avs
 	MAIN ares_avs
 	COMPILE_FLAGS
 		${MAX_CUSTOM_OPT_LEVEL}
 	INCLUDES
+		${LIBCANARD_DIR}/libcanard/
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${CMAKE_CURRENT_BINARY_DIR}
 		"/home/ares/PX4-Autopilot/build/px4_fmu-v6xrt_default/src/drivers/cyphal/dsdlc_generated/"
@@ -71,6 +74,11 @@ px4_add_module(
 		AresSdCapControlServiceRequest.hpp
 		AresGnssControlServiceRequest.hpp
 		AresSyncControlServiceRequest.hpp
+		AresPublisher.hpp
+		AresPubManager.hpp
+		AresPubManager.cpp
+		AresSubManager.hpp
+		AresSubManager.cpp
 		UavCanId.h
 	MODULE_CONFIG
 		module.yaml

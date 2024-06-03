@@ -32,103 +32,78 @@
  ****************************************************************************/
 
 /**
- * @file PublicationManager.cpp
+ * @file AresPubManager.cpp
  *
- * Manages the dynamic (run-time configurable) UAVCAN publications
+ * Manages the Ares Cyphal publications
  *
- * @author Peter van der Perk <peter.vanderperk@nxp.com>
- * @author Jacob Crabill <jacob@flyvoly.com>
+ * @author Jim Waite <jim.waite@aivs.us>
  */
 
 
-#include "PublicationManager.hpp"
+#include "AresPubManager.hpp"
 
-PublicationManager::~PublicationManager()
+AresPubManager::~AresPubManager()
 {
-	_dynpublishers.clear();
+	_basepublishers.clear();
 }
 
-void PublicationManager::updateDynamicPublications()
+void AresPubManager::updateBasePublications()
 {
-	for (auto &sub : _uavcan_pubs) {
+	for (auto &sub : _uavcan_base_pubs) {
 
 		bool found_publisher = false;
 
-		for (auto &dynpub : _dynpublishers) {
-			// Check if subscriber has already been created
+		for (auto &basepub : _basepublishers) {
+			// Check if publisher has already been created
 			char full_subj_name[200];
-			snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", dynpub->getPrefixName(), dynpub->getSubjectName());
-			const uint8_t instance = dynpub->getInstance();
+			snprintf(full_subj_name, sizeof(full_subj_name), "%s%s", basepub->getPrefixName(), basepub->getSubjectName());
+			const uint8_t instance = basepub->getInstance();
 
 			if (strcmp(full_subj_name, sub.subject_name) == 0 && instance == sub.instance) {
 				found_publisher = true;
 				break;
 			}
 		}
-
 		if (found_publisher) {
 			continue;
 		}
+		AresPublisher *basepub = sub.create_pub(_canard_handle);
 
-		char uavcan_param[90];
-		snprintf(uavcan_param, sizeof(uavcan_param), "cyphal.pub.%s.%d.id", sub.subject_name, sub.instance);
-		uavcan_register_Value_1_0 value;
-
-		if (_param_manager.GetParamByName(uavcan_param, value)) {
-			uint16_t port_id = value.natural16.value.elements[0];
-
-			if (port_id <= CANARD_PORT_ID_MAX) { // PortID is set, create a subscriber
-				UavcanPublisher *dynpub = sub.create_pub(_canard_handle, _param_manager);
-
-				if (dynpub == nullptr) {
-					PX4_ERR("Out of memory");
-					return;
-				}
-
-				_dynpublishers.add(dynpub);
-
-				dynpub->updateParam();
-			}
-
-		} else {
-			PX4_ERR("Port ID param for publisher %s.%u not found", sub.subject_name, sub.instance);
+		if (basepub == nullptr) {
+			PX4_ERR("Out of memory");
 			return;
 		}
+		_basepublishers.add(basepub);
+
+		basepub->updateParam();
 	}
 }
 
-void PublicationManager::printInfo()
+void AresPubManager::printInfo()
 {
-	for (auto &dynpub : _dynpublishers) {
-		dynpub->printInfo();
+	for (auto &basepub : _basepublishers) {
+		basepub->printInfo();
 	}
 }
 
-void PublicationManager::updateParams()
+void AresPubManager::updateParams()
 {
-	for (auto &dynpub : _dynpublishers) {
-		dynpub->updateParam();
+	for (auto &basepub : _basepublishers) {
+		basepub->updateParam();
 	}
-
 	// Check for any newly-enabled publication
-	updateDynamicPublications();
+	updateBasePublications();
 }
 
-UavcanPublisher *PublicationManager::getPublisher(const char *subject_name)
+UavcanPublisher *AresPubManager::getPublisher(const char *subject_name)
 {
-	for (auto &dynpub : _dynpublishers) {
-		if (strcmp(dynpub->getSubjectName(), subject_name) == 0) {
-			return dynpub;
-		}
-	}
-
 	return NULL;
 }
 
 
-void PublicationManager::update()
+void AresPubManager::update()
 {
-	for (auto &dynpub : _dynpublishers) {
-		dynpub->update();
+	for (auto &basepub : _basepublishers) {
+		basepub->update();
 	}
 }

@@ -79,6 +79,10 @@ if(CONFIG_CYPHAL_ARES_SERVICE_MANAGER)
 list(APPEND SRCS
 		../../modules/ares_avs/AresServiceManager.hpp
 		../../modules/ares_avs/AresServiceManager.cpp
+		../../modules/ares_avs/AresSubManager.hpp
+		../../modules/ares_avs/AresSubManager.cpp
+		../../modules/ares_avs/AresPubManager.hpp
+		../../modules/ares_avs/AresPubManager.cpp
     )
 endif()
 

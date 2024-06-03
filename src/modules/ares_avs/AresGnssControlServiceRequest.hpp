@@ -33,7 +33,7 @@
 
 #pragma once
 
-#include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
+#include "AresPublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
 #include <px4_platform_common/time.h>
 #include "AresServiceRequest.hpp"

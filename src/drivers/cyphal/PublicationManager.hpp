@@ -64,15 +64,6 @@
 #define CONFIG_CYPHAL_UORB_SENSOR_GPS_PUBLISHER 0
 #endif
 
-// Base Publishers
-#ifndef CONFIG_CYPHAL_ARES_RPM_PUBLISHER
-#define CONFIG_CYPHAL_ARES_RPM_PUBLISHER 0
-#endif
-
-#ifndef CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER
-#define CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER 0
-#endif
-
 /* Preprocessor calculation of publisher count */
 
 #define UAVCAN_PUB_COUNT \
@@ -82,14 +73,9 @@
 	CONFIG_CYPHAL_UORB_ACTUATOR_OUTPUTS_PUBLISHER + \
 	CONFIG_CYPHAL_UORB_SENSOR_GPS_PUBLISHER
 
-#define UAVCAN_BASE_PUB_COUNT \
-	CONFIG_CYPHAL_ARES_RPM_PUBLISHER + \
-	CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER
-
 #include <px4_platform_common/defines.h>
 #include <drivers/drv_hrt.h>
 #include "Publishers/Publisher.hpp"
-#include "Publishers/BasePublisher.hpp"
 #include "CanardInterface.hpp"
 
 #include <uORB/topics/actuator_outputs.h>
@@ -99,22 +85,12 @@
 #include "Publishers/udral/Readiness.hpp"
 #include "Publishers/udral/Gnss.hpp"
 #include "Publishers/uORB/uorb_publisher.hpp"
-#include "../../modules/ares_avs/AresEventPublisher.hpp"
-#include "../../modules/ares_avs/GnssRtcmPublisher.hpp"
-#include "../../modules/ares_avs/UavCanId.h"
 
 typedef struct {
 	UavcanPublisher *(*create_pub)(CanardHandle &handle, UavcanParamManager &pmgr) {};
 	const char *subject_name;
 	const uint8_t instance;
 } UavcanDynPubBinder;
-
-typedef struct {
-	BasePublisher *(*create_pub)(CanardHandle &handle) {};
-	const char *subject_name;
-	CanardPortID id;
-	const uint8_t instance;
-} UavcanBasePubBinder;
 
 class PublicationManager
 {
@@ -130,12 +106,10 @@ public:
 
 private:
 	void updateDynamicPublications();
-	void updateBasePublications();
 
 	CanardHandle &_canard_handle;
 	UavcanParamManager &_param_manager;
 	List<UavcanPublisher *> _dynpublishers;
-	List<BasePublisher *> _basepublishers;
 
 
 	const UavcanDynPubBinder _uavcan_pubs[UAVCAN_PUB_COUNT] {
@@ -186,29 +160,6 @@ private:
 				return new uORB_over_UAVCAN_Publisher<sensor_gps_s>(handle, pmgr, ORB_ID(sensor_gps));
 			},
 			"uorb.sensor_gps",
-			0
-		},
-#endif
-	};
-
-	const UavcanBasePubBinder _uavcan_base_pubs[UAVCAN_BASE_PUB_COUNT] {
-#if CONFIG_CYPHAL_ARES_RPM_PUBLISHER
-		{
-			[](CanardHandle & handle) -> BasePublisher *
-			{
-				return new AresEventPublisher(handle, 0);
-			},
-			"ares.esc",
-			0
-		},
-#endif
-#if CONFIG_CYPHAL_GNSS_RTCM_PUBLISHER
-		{
-			[](CanardHandle & handle) -> BasePublisher *
-			{
-				return new GnssRtcmPublisher(handle, 0);
-			},
-			"ares.rtcm",
 			0
 		},
 #endif

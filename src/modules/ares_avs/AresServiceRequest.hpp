@@ -34,7 +34,7 @@
 #pragma once
 
 #include <px4_platform_common/defines.h>
-#include "../../drivers/cyphal/Publishers/BasePublisher.hpp"
+#include "AresPublisher.hpp"
 #include "../../drivers/cyphal/Services/ServiceRequest.hpp"
 
 class AresServiceRequest : public UavcanServiceRequest
