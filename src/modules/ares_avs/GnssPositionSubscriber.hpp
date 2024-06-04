@@ -126,8 +126,8 @@ public:
 		{
 			orb_publish( ORB_ID(sensor_gps), this->gps_pub, &this->report);	///< uORB pub for gps position
 
-			if ((report.timestamp/1000000 > 120) && (report.fix_type >= 3)) {
-				// get current system time to check if it is valid (after 120 sec uptime)
+			if ((report.timestamp/1000000 > 180) && (report.fix_type >= 3)) {
+				// get current system time to check if it is valid (after 3 minute uptime)
 				struct timespec ts = {};
 				px4_clock_gettime(CLOCK_REALTIME, &ts);
 				time_t time_s = (time_t) (gnsspos.m_u64utcUsec/1000000);

@@ -88,6 +88,7 @@ public:
 		// advertise publication of detected ARES node IDs
 		memset(&this->heartbeat, 0, sizeof(this->heartbeat));
 		this->heartbeat_pub = orb_advertise(ORB_ID(uavcan_parameter_value), &this->heartbeat);
+		PX4_INFO("subscribed to Heartbeat msgs, port %u", uavcan_node_Heartbeat_1_0_FIXED_PORT_ID_);
 
 		// Subscribe to responses to various resquests
 		_fft_param.subscribe();
@@ -96,7 +97,89 @@ public:
 		_gnss_control.subscribe();
 		_sync_control.subscribe();
 	}
-	void callback(const CanardRxTransfer &receive); 	// Heartbeat callback
+	void callback(const CanardRxTransfer &receive) override
+	{
+		// heartbeat subscription callback
+		uavcan_node_Heartbeat_1_0 hb{};
+		size_t msg_size_in_bits = receive.payload_size;
+		uavcan_node_Heartbeat_1_0_deserialize_(&hb, (const uint8_t *)receive.payload, &msg_size_in_bits);
+
+		heartbeat.timestamp = hrt_absolute_time();
+		heartbeat.node_id = (uint8_t) receive.metadata.remote_node_id;
+		heartbeat.int_value = (int64_t) hb.uptime;
+		heartbeat.param_type = (uint8_t) hb.mode.value;
+
+		// Check if this node is on the list
+		bool found_node = false;
+		hrt_abstime current_time = heartbeat.timestamp / 1000000;	// seconds
+
+		for (auto &n : _nodes) {
+			if (n->node_id == heartbeat.node_id) {
+				found_node = true;
+				n->last_hb = current_time;
+			}
+		}
+		if (found_node == false) {
+			// add a new node to the list
+			AresNode *n = new AresNode();
+			n->node_id = heartbeat.node_id;
+			n->uptime = hb.uptime;
+			n->hb_cnt = 0;
+			n->last_hb = current_time;
+
+			_nodes.add(n);
+			PX4_INFO("add ARES node %hd: ", n->node_id);
+		}
+		// Remove any nodes that are no longer reporting heartbeats
+		for (auto &n : _nodes) {
+			if ((n->last_hb > 0) && (current_time - 5) > n->last_hb) {
+				_nodes.remove(n);
+				PX4_WARN("remove ARES node %hd: ", n->node_id);
+			}
+		}
+		// Check that all active commands have been processed. If not acknowledged, raise warning.
+		hrt_abstime cmd_time;
+
+		for (auto &n : _nodes)
+		{
+			cmd_time = _fft_control.get_command_active(n->node_id);
+			if (cmd_time > 0) {
+				if ((current_time - cmd_time) > 3) {
+					PX4_WARN("Timeout on FFT Control command");
+					_fft_control.reset_command_active(n->node_id);
+				}
+			}
+			cmd_time = _fft_param.get_command_active(n->node_id);
+			if (cmd_time > 0) {
+				if ((current_time - cmd_time) > 3) {
+					PX4_WARN("Timeout on FFT Param request");
+					_fft_param.reset_command_active(n->node_id);
+				}
+			}
+			cmd_time = _sd_cap_control.get_command_active(n->node_id);
+			if (cmd_time > 0) {
+				if ((current_time - cmd_time) > 3) {
+					PX4_WARN("Timeout on SD Capture request");
+					_sd_cap_control.reset_command_active(n->node_id);
+				}
+			}
+			cmd_time = _gnss_control.get_command_active(n->node_id);
+			if (cmd_time > 0) {
+				if ((current_time - cmd_time) > 3) {
+					PX4_WARN("Timeout on GNSS Control request");
+					_gnss_control.reset_command_active(n->node_id);
+				}
+			}
+			cmd_time = _sync_control.get_command_active(n->node_id);
+			if (cmd_time > 0) {
+				if ((current_time - cmd_time) > 3) {
+					PX4_WARN("Timeout on Sync Control request");
+					_sync_control.reset_command_active(n->node_id);
+				}
+			}
+		}
+		orb_publish( ORB_ID(uavcan_parameter_value), this->heartbeat_pub, &this->heartbeat);	///< uORB pub for AVS events
+	}
 
 	void HandleAresResponse(const CanardRxTransfer &receive);
 

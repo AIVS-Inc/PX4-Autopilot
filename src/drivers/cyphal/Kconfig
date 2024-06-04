@@ -22,7 +22,7 @@ if DRIVERS_CYPHAL
 
     config CYPHAL_NODE_MANAGER
         bool "Node manager"
-        default y
+        default n
         depends on CYPHAL_FMU
         help
             Implement Cyphal PNP server functionality and manages discovered nodes

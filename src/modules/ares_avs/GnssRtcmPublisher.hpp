@@ -110,6 +110,9 @@ public:
 						_rtcm_len = 0;
 						send_msg = true;
 					}
+					else {
+						PX4_INFO("fragment still not complete, offset %hu, len %hu", _rtcm_offset, _rtcm_len);
+					}
 				}
 				else {
 					PX4_ERR("Detected zero length RTCM packet");

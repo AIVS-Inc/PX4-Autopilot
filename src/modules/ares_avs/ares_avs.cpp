@@ -325,8 +325,9 @@ AresAvs::AresAvs(uint8_t nodeID_top, uint8_t nodeID_bot)
 {
 	aresNodeId_top = nodeID_top;
 	aresNodeId_bot = nodeID_bot;
-	fftEnable = false;		// assume that this is the initial ARES state
-					// TODO: query state
+	fftEnable = false;		// FFT mode off is the default powerup state
+	top_node_reported = false;	// haven't received node heartbeats yet
+	bot_node_reported = false;
 }
 
 void AresAvs::run()
@@ -353,8 +354,6 @@ void AresAvs::run()
 
 	// time and clock synchronization
 	bool clock_set = false; // update local FMU clock to GPS time
-	bool top_node_reported = (aresNodeId_top > 0) ? false : true;
-	bool bot_node_reported = (aresNodeId_bot > 0) ? false : true;
 
 	// the first time we get an AVS packet from either node indicates that ARES GPS clock is solid for that node
 	int error_counter = 0;
@@ -377,7 +376,7 @@ void AresAvs::run()
 			error_counter++;
 		}
 		else if (fds[0].revents & POLLIN) {
-			struct sensor_avs_s sensor_avs;
+			struct sensor_avs_s sensor_avs;		// this is the main measurement result
 			orb_copy(ORB_ID(sensor_avs), sensor_avs_sub, &sensor_avs);
 			//PX4_INFO("got sensor_avs, node: %lu, time: %llu", sensor_avs.device_id, sensor_avs.time_utc_usec);
 
@@ -419,14 +418,17 @@ void AresAvs::run()
 					clock_set = true;
 				}
 				if (sync_done == false) {
-					// need both nodes to report AVS event msg before we can sync, to ensure both have reached PPS lock
-					if (sensor_avs.device_id == aresNodeId_top) {
-						top_node_reported = true;
+					// need both nodes to report operational status before we can sync, to ensure both have reached PPS lock
+					bool autosync = false;
+					if (aresNodeId_top > 0) {
+						if ((top_node_reported == true) && (bot_node_reported == true))
+							autosync = true;
 					}
-					else if (sensor_avs.device_id == aresNodeId_bot) {
-						bot_node_reported = true;
+					else if (bot_node_reported == true) {
+						autosync = true;
 					}
-					if ((top_node_reported == true) && (bot_node_reported == true)) {
+					if (autosync == true)
+					{
 						// convert node UTC time to date time
 						time_t time_s = (time_t)(sensor_avs.time_utc_usec / 1000000);
 						sync_command( time_s);
@@ -453,7 +455,14 @@ void AresAvs::run()
 		else if (fds[4].revents & POLLIN) {
 			struct uavcan_parameter_value_s uavcan_parameter_value;
 			orb_copy(ORB_ID(uavcan_parameter_value), cyphal_heartbeat_sub, &uavcan_parameter_value);
-			PX4_INFO("got heartbeat, node: %hu, time: %llu", uavcan_parameter_value.node_id, uavcan_parameter_value.timestamp);
+			PX4_INFO("got heartbeat, node: %hhu, mode: %hhu, time: %llu", uavcan_parameter_value.node_id, uavcan_parameter_value.param_type, uavcan_parameter_value.timestamp);
+
+			if (uavcan_parameter_value.param_type == 0 ){	//operational
+				if (aresNodeId_top == uavcan_parameter_value.node_id)
+					top_node_reported = true;
+				if (aresNodeId_bot == uavcan_parameter_value.node_id)
+					bot_node_reported = true;
+			}
 		}
 		// else if (fds[5].revents & POLLIN) {
 		// 	struct sensor_avs_adc_s sensor_avs_adc;

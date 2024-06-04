@@ -115,8 +115,10 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
-	uint8_t aresNodeId_top = 6;
-	uint8_t aresNodeId_bot = 24;
+	uint8_t aresNodeId_top = 0;
+	uint8_t aresNodeId_bot = 0;
+	bool top_node_reported = false;
+	bool bot_node_reported = false;
 	bool fftEnable = false;
 	bool rtcmActive = false;
 	bool captureActive = false;

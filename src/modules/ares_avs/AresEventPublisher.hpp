@@ -65,8 +65,8 @@ public:
 
 			esc_status_s esc_sta {};
 			_esc_sub.update(&esc_sta);
-			if (esc_sta.esc_count > 4)	// TODO: should handle up to 8
-				esc_sta.esc_count = 4;
+			if (esc_sta.esc_count > 8)
+				esc_sta.esc_count = 8;
 
 			for (int i=0; i<esc_sta.esc_count; i++ ) {
 				if (esc_sta.esc[i].esc_rpm > 0) {
