@@ -69,6 +69,7 @@ px4_add_module(
 		GnssRelPosNedSubscriber.hpp
 		GnssPositionSubscriber.hpp
 		AdcFrameSubscriber.hpp
+		AresSyncStateSubscriber.hpp
 		AresFftParamServiceRequest.hpp
 		AresFftControlServiceRequest.hpp
 		AresSdCapControlServiceRequest.hpp

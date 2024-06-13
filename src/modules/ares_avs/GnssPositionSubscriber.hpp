@@ -131,16 +131,17 @@ public:
 				struct timespec ts = {};
 				px4_clock_gettime(CLOCK_REALTIME, &ts);
 				time_t time_s = (time_t) (gnsspos.m_u64utcUsec/1000000);
-				if (abs(ts.tv_sec - (uint32_t)time_s) > 1) {
+				if ((abs(ts.tv_sec - (uint32_t)time_s) > 1) &&
+				    ((uint32_t)time_s > 1717719180 )){
 					// set system time from GPS time
 					ts.tv_sec = time_s;
 					ts.tv_nsec = (gnsspos.m_u64utcUsec - (uint64_t)(time_s * 1000000)) * 1000;
 					int res = px4_clock_settime(CLOCK_REALTIME, &ts);
 
 					if (res == 0) {
-						PX4_INFO("Successfully set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
+						PX4_INFO("GnssPosSub set system time, %lu: %lu", (uint32_t)ts.tv_sec, ts.tv_nsec);
 					} else {
-						PX4_ERR("Failed to set system time (%i)", res);
+						PX4_ERR("GnssPosSub failed to set system time (%i)", res);
 					}
 				}
 			}

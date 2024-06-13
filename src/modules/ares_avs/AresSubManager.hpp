@@ -48,7 +48,7 @@
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 #include "AresEventSubscriber.hpp"
 #include "MelIntensitySubscriber.hpp"
-#include "AdcFrameSubscriber.hpp"
+#include "AresSyncStateSubscriber.hpp"
 #include "GnssPositionSubscriber.hpp"
 #include "GnssRelPosNedSubscriber.hpp"
 
@@ -75,7 +75,7 @@ private:
 	CanardHandle &_canard_handle;
 	List<UavcanBaseSubscriber *> _basesubscribers;
 
-	const AresSubBinder _cyphal_base_subs[4]
+	const AresSubBinder _cyphal_base_subs[5]
 	{
 		{
 			[](CanardHandle & handle) -> UavcanBaseSubscriber *
@@ -109,13 +109,13 @@ private:
 			"ares.melintensity",
 			0
 		},
-		// {
-		// 	[](CanardHandle & handle) -> UavcanBaseSubscriber *
-		// 	{
-		// 		return new AdcFrameSubscriber(handle, ARES_SUBJECT_ID_FFT_ADC_FRAME, 0);
-		// 	},
-		// 	"ares.adcframe",
-		// 	0
-		// },
+		{
+			[](CanardHandle & handle) -> UavcanBaseSubscriber *
+			{
+				return new AresSyncStateSubscriber(handle, ARES_SUBJECT_ID_TIME_SYNC, 0);
+			},
+			"ares.sync",
+			0
+		},
 	};
 };

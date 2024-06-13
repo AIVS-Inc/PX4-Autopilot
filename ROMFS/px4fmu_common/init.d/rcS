@@ -542,6 +542,7 @@ else
 		if param greater -s CYPHAL_ENABLE 0
 		then
 			cyphal start
+			ares_avs start
 		fi
 	# fi
 

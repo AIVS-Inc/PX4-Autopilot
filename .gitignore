@@ -146,3 +146,4 @@ src/modules/ares_avs/ares/SDcontrol_0_1.h
 src/modules/ares_avs/ares/SyncControl_0_1.h
 src/modules/ares_avs/AresEventServiceRequest.hpp
 src/modules/ares_avs/AresPeakServiceRequest.hpp
+src/modules/ares_avs/ares/TimeSync_0_1.h

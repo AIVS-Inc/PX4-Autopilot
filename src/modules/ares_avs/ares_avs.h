@@ -36,8 +36,25 @@
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/time.h>
 #include <px4_platform_common/module_params.h>
+#include <uORB/Subscription.hpp>
 #include <uORB/SubscriptionInterval.hpp>
 #include <uORB/topics/parameter_update.h>
+#include <uORB/topics/parameter_update.h>
+#include <uORB/topics/sensor_avs.h>
+#include <uORB/topics/sensor_avs_mel.h>
+#include <uORB/topics/sensor_gnss_relative.h>
+#include <uORB/topics/sensor_gps.h>
+#include <uORB/topics/uavcan_parameter_value.h>
+#include <uORB/topics/sensor_avs_evt_control.h>
+#include <uORB/topics/sensor_avs_peak_control.h>
+#include <uORB/topics/sensor_avs_fft_control.h>
+#include <uORB/topics/sensor_avs_sd_control.h>
+#include <uORB/topics/sensor_avs_gnss_control.h>
+#include <uORB/topics/sensor_avs_sync_control.h>
+#include <uORB/topics/sensor_avs_fft_params.h>
+#include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/manual_control_setpoint.h>
+#include <uORB/topics/vehicle_status.h>
 
 //#include "ares/AdcFrame_0_1.h"
 #include "ares/GnssImu_0_1.h"
@@ -47,6 +64,7 @@
 #include "ares/FFTcontrol_0_1.h"
 #include "ares/EventParams_0_1.h"
 #include "ares/Rtcm_0_1.h"
+#include "ares/TimeSync_0_1.h"
 
 #include "UavCanId.h"
 
@@ -54,11 +72,53 @@ using namespace time_literals;
 
 extern "C" __EXPORT int ares_avs_main(int argc, char *argv[]);
 
+typedef enum: int32_t {
+	AVS_INIT = 0,
+	AVS_OPERATIONAL,
+	AVS_RTCM_ON,
+	AVS_PREFLIGHT,
+	AVS_BEGIN,
+	AVS_CAPTURE_ON,
+	AVS_SYNC_ACK,
+	AVS_SYNC_WAIT,
+	AVS_ARM_WAIT,
+	AVS_ARMED,
+	AVS_TAKEOFF,
+	AVS_HOLD,
+	AVS_POSITION,
+	AVS_LAND,
+	AVS_DISARMED,
+	AVS_CAPTURE_OFF,
+	AVS_END
+} avs_state;
+
+struct avs_state_str {
+   static const char* statestr[];
+};
+const char* avs_state_str::statestr[] = {
+	"AVS_INIT",
+	"AVS_OPERATIONAL",
+	"AVS_RTCM_ON",
+	"AVS_PREFLIGHT",
+	"AVS_BEGIN",
+	"AVS_CAPTURE_ON",
+	"AVS_SYNC_ACK",
+	"AVS_SYNC_WAIT",
+	"AVS_ARM_WAIT",
+	"AVS_ARMED",
+	"AVS_TAKEOFF",
+	"AVS_HOLD",
+	"AVS_POSITION",
+	"AVS_LAND",
+	"AVS_DISARMED",
+	"AVS_CAPTURE_OFF",
+	"AVS_END"
+	};
 
 class AresAvs : public ModuleBase<AresAvs>, public ModuleParams
 {
 public:
-	AresAvs(uint8_t nodeID_top, uint8_t nodeID_bot);
+	AresAvs();
 
 	virtual ~AresAvs() = default;
 
@@ -98,6 +158,10 @@ public:
 
 	int cal_command();
 
+	int begin_command();
+
+	int end_command();
+
 	int sync_command_now();
 
 	int sync_command( time_t time_sec);
@@ -107,6 +171,19 @@ public:
 	int rtcm_command(bool flag);
 
 	int cap_command(bool flag);
+
+	void set_next_state(int32_t state);
+
+	bool nodes_reported(vehicle_command_ack_s recvd_ack, const uint32_t subjectID);
+
+	bool sync_reported(void);
+
+	bool nodes_operational(void);
+
+	int32_t get_next_nav_state(uint8_t nav_state);
+
+	int32_t arm_action(bool manual_control, manual_control_setpoint_s setpoint, bool veh_status, vehicle_status_s stat);
+
 private:
 
 	/**
@@ -115,16 +192,22 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
+	int32_t current_state = avs_state::AVS_INIT;
+
 	uint8_t aresNodeId_top = 0;
 	uint8_t aresNodeId_bot = 0;
-	bool top_node_reported = false;
-	bool bot_node_reported = false;
+	bool top_node_hb_reported = false;
+	bool bot_node_hb_reported = false;
+	bool top_node_ack_reported = false;
+	bool bot_node_ack_reported = false;
+	bool top_node_sync = false;
+	bool bot_node_sync = false;
+	uint8_t hb_count = 0;	// heartbeat counter used for implementing delays in the state machine
 	bool fftEnable = false;
-	bool rtcmActive = false;
-	bool captureActive = false;
 
 	DEFINE_PARAMETERS(
 
+		(ParamInt<px4::params::AVS_BOT_NODE_ID>) _nodeid_bot,
 		(ParamInt<px4::params::AVS_FFT_DEC>)  	 _fft_dec,
 		(ParamInt<px4::params::AVS_FFT_LONG>)  	 _fft_long,
 		(ParamInt<px4::params::AVS_FFT_ENCRYPT>) _fft_encrypt,
@@ -156,7 +239,5 @@ private:
 
 	// Subscriptions
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
-	bool sync_done = false;	// for system sync if there are two nodes
-
 };
 

@@ -76,7 +76,7 @@ public:
 			sd.m_u8Command[0] = sdctl.sd_capture;
 
 			if (sdctl.node_top > 0) {
-				const CanardTransferMetadata sd_transfer_metadata_0 = {
+				const CanardTransferMetadata sd_transfer_metadata_top = {
 					.priority       = CanardPriorityNominal,
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
@@ -89,14 +89,15 @@ public:
 					++_transfer_id_top;
 					_active_top = hrt_absolute_time();
 					request(_active_top + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-							&sd_transfer_metadata_0,
+							&sd_transfer_metadata_top,
 							sd_payload_size,
 							&sd_payload_buffer,
 					       		_response_callback);
 				}
+				PX4_INFO("set SD capture on node %hd to %hd", sdctl.node_top, sdctl.sd_capture);
 			}
 			if (sdctl.node_bot > 0) {
-				const CanardTransferMetadata sd_transfer_metadata_0 = {
+				const CanardTransferMetadata sd_transfer_metadata_bot = {
 					.priority       = CanardPriorityNominal,
 					.transfer_kind  = CanardTransferKindRequest,
 					.port_id        = _portID,
@@ -109,11 +110,12 @@ public:
 					++_transfer_id_bot;
 					_active_bot = hrt_absolute_time();
 					request(_active_bot + PUBLISHER_DEFAULT_TIMEOUT_USEC,
-							&sd_transfer_metadata_0,
+							&sd_transfer_metadata_bot,
 							sd_payload_size,
 							&sd_payload_buffer,
 					       		_response_callback);
 				}
+				PX4_INFO("set SD capture on node %hd to %hd", sdctl.node_bot, sdctl.sd_capture);
 			}
 		}
 	}

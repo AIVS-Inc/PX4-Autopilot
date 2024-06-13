@@ -45,8 +45,10 @@
 #include <px4_platform_common/defines.h>
 #include <px4_platform_common/time.h>
 #include <uORB/uORB.h>
+#include <uORB/Publication.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/uavcan_parameter_value.h>
+#include <uORB/topics/vehicle_command_ack.h>
 #include <uavcan/node/Heartbeat_1_0.h>
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 #include "AresFftParamServiceRequest.hpp"
@@ -106,12 +108,12 @@ public:
 
 		heartbeat.timestamp = hrt_absolute_time();
 		heartbeat.node_id = (uint8_t) receive.metadata.remote_node_id;
-		heartbeat.int_value = (int64_t) hb.uptime;
-		heartbeat.param_type = (uint8_t) hb.mode.value;
+		heartbeat.int_value = (int64_t) hb.mode.value;
+		heartbeat.param_type = (uint8_t) AVS_HEARTBEAT;
 
 		// Check if this node is on the list
 		bool found_node = false;
-		hrt_abstime current_time = heartbeat.timestamp / 1000000;	// seconds
+		hrt_abstime current_time = heartbeat.timestamp; // microseconds
 
 		for (auto &n : _nodes) {
 			if (n->node_id == heartbeat.node_id) {
@@ -132,7 +134,7 @@ public:
 		}
 		// Remove any nodes that are no longer reporting heartbeats
 		for (auto &n : _nodes) {
-			if ((n->last_hb > 0) && (current_time - 5) > n->last_hb) {
+			if ((n->last_hb > 0) && (current_time - 2000000ULL) > n->last_hb) {	// 2 sec
 				_nodes.remove(n);
 				PX4_WARN("remove ARES node %hd: ", n->node_id);
 			}
@@ -144,36 +146,36 @@ public:
 		{
 			cmd_time = _fft_control.get_command_active(n->node_id);
 			if (cmd_time > 0) {
-				if ((current_time - cmd_time) > 3) {
-					PX4_WARN("Timeout on FFT Control command");
+				if ((current_time - cmd_time) > 2000000ULL) {
+					PX4_WARN("Timeout on FFT Control command, current_time: %lld, cmd_time: %lld", current_time, cmd_time);
 					_fft_control.reset_command_active(n->node_id);
 				}
 			}
 			cmd_time = _fft_param.get_command_active(n->node_id);
 			if (cmd_time > 0) {
-				if ((current_time - cmd_time) > 3) {
-					PX4_WARN("Timeout on FFT Param request");
+				if ((current_time - cmd_time) > 2000000ULL) {
+					PX4_WARN("Timeout on FFT Param request, current_time: %lld, cmd_time: %lld", current_time, cmd_time);
 					_fft_param.reset_command_active(n->node_id);
 				}
 			}
 			cmd_time = _sd_cap_control.get_command_active(n->node_id);
 			if (cmd_time > 0) {
-				if ((current_time - cmd_time) > 3) {
-					PX4_WARN("Timeout on SD Capture request");
+				if ((current_time - cmd_time) > 2000000ULL) {
+					PX4_WARN("Timeout on SD Capture request, current_time: %lld, cmd_time: %lld", current_time, cmd_time);
 					_sd_cap_control.reset_command_active(n->node_id);
 				}
 			}
 			cmd_time = _gnss_control.get_command_active(n->node_id);
 			if (cmd_time > 0) {
-				if ((current_time - cmd_time) > 3) {
-					PX4_WARN("Timeout on GNSS Control request");
+				if ((current_time - cmd_time) > 2000000ULL) {
+					PX4_WARN("Timeout on GNSS Control request, current_time: %lld, cmd_time: %lld", current_time, cmd_time);
 					_gnss_control.reset_command_active(n->node_id);
 				}
 			}
 			cmd_time = _sync_control.get_command_active(n->node_id);
 			if (cmd_time > 0) {
-				if ((current_time - cmd_time) > 3) {
-					PX4_WARN("Timeout on Sync Control request");
+				if ((current_time - cmd_time) > 2000000ULL) {
+					PX4_WARN("Timeout on Sync Control request, current_time: %lld, cmd_time: %lld", current_time, cmd_time);
 					_sync_control.reset_command_active(n->node_id);
 				}
 			}
@@ -208,4 +210,5 @@ private:
 	List <AresNode *> _nodes;
 	struct uavcan_parameter_value_s heartbeat;
 	orb_advert_t heartbeat_pub;
+	uORB::Publication<vehicle_command_ack_s> vehicle_command_ack_pub{ORB_ID(vehicle_command_ack)};
 };

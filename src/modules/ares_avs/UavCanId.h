@@ -6,8 +6,10 @@
 #define CAN_ARES_UAVCANID_H_
 
 ////////////////////////
-// Defined Subject Ids, must change to full dynamic Cyphal register defined Ids
+// Defined Subject Ids
 ////////////////////////
+#define ARES_SUBJECT_ID_TIME_SYNC				7168
+
 #define ARES_SUBJECT_ID_GNSS_PARAMS				509
 #define ARES_SUBJECT_ID_PHASOR_PARAMS				508
 #define ARES_SUBJECT_ID_CAN_PARAMS				507
@@ -39,6 +41,13 @@
 #define ARES_SUBJECT_ID_FFT_RPM					1246
 #define ARES_SUBJECT_ID_FFT_MEL_INTENSITY			1247
 #define ARES_SUBJECT_ID_GNSS_NTRIP				1248
+
+// distinguish between uORB message types sharing uavcan_param_value.msg definition
+typedef enum: uint8_t {
+	AVS_HEARTBEAT = 0,
+	AVS_SYNC_MSG,
+	AVS_SYNC_OCCURRED
+} cyphal_param_type;
 
 ////////////////////////
 // ARES FFT Parameters

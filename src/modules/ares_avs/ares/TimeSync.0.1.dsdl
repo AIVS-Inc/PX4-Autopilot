@@ -1,0 +1,23 @@
+# AIVS Inc time synchronization message
+
+uint64   m_tMasterCurrentUtcTime
+uint64   m_tsMasterPreviousUtcSec
+uint32   m_tsMasterPreviousUtcNanoSec
+uint32   m_u32MasterFrcAtCanTx
+uint32   m_u32MasterFrcAtPps
+bool     m_bSyncOccurred
+
+@sealed
+
+# struct timespec {
+# 	time_t	tv_sec;		/* seconds */
+# 	long	tv_nsec;	/* and nanoseconds */
+# };
+# typedef struct	// uavcan_time_Synchronization_1_0
+# {
+# 	time_t m_tMasterCurrentUtcTime;				//  8
+# 	struct timespec m_tsMasterPreviousUtcTime;		// 12 -> 20
+# 	uint32_t m_u32MasterFrcAtCanTx;				//  4 -> 24
+# 	uint32_t m_u32MasterFrcAtPps;				//  4 -> 28
+# 	bool m_bSyncOccurred;					//  1 -> 29
+# } uavcan_time_Synchronization_1_0;
