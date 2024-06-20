@@ -94,7 +94,7 @@ public:
 		PX4_INFO("Response");
 
 		if (_response_callback != nullptr &&
-		    receive.metadata.transfer_id == (request_transfer_id - 1) &&
+		    /*receive.metadata.transfer_id == (request_transfer_id - 1) && */
 		    receive.metadata.remote_node_id == remote_node_id) {
 			_response_callback->response_callback(receive);
 		}

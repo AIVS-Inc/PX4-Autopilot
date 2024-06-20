@@ -64,9 +64,9 @@ public:
 		remote_node_id = receive.metadata.remote_node_id;
 
 		if (remote_node_id == _node_id_top)
-			request_transfer_id = _transfer_id_top + 1;	// ARES sends an incremented transfer_id as a response
+			request_transfer_id = _transfer_id_top; // + 1;	// ARES sends an incremented transfer_id as a response
 		else if (remote_node_id == _node_id_bot)		// i.e., doesn't meet the Cyphal spec, FIX this
-			request_transfer_id = _transfer_id_bot + 1;
+			request_transfer_id = _transfer_id_bot; // + 1;
 		else
 			request_transfer_id = 0;
 

@@ -531,11 +531,11 @@ void AresAvs::run()
 				if (sync_reported() == false) {
 					if ((aresNodeId_bot > 0) && (cyphal_param.node_id == aresNodeId_bot)) {
 						bot_node_sync = true;
-						PX4_INFO("bottom node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
+						//PX4_INFO("bottom node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
 					}
 					if ((aresNodeId_top > 0) && (cyphal_param.node_id == aresNodeId_top)) {
 						top_node_sync = true;
-						PX4_INFO("top node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
+						//PX4_INFO("top node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
 					}
 				}
 			}
@@ -586,31 +586,28 @@ void AresAvs::run()
 			if (veh_status == true) {
 				if (stat.pre_flight_checks_pass == true) {
 					PX4_INFO("System passes preflight checks, wait for RC or manual command to start");
-					set_next_state(AVS_BEGIN);
+					set_next_state(AVS_MEAS_INIT);
 				}
 				veh_status = false;
 			}
 			else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
 				// Check if the preflight check passed
 				if (stat.pre_flight_checks_pass == true) {
-					set_next_state(AVS_BEGIN);
+					set_next_state(AVS_MEAS_INIT);
 				}
 			}
 			break;
-		case AVS_BEGIN:
-			if (manual_control == true) {
+		case AVS_MEAS_INIT:
+			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
+				// Check if the begin switch is false, which indicates that the system logger has not been started
 				if (setpoint.aux1 > 0.3f) {
 					PX4_INFO("System commanded by RC to start mission, initiate capture");
 					cap_command( true);
 					set_next_state(AVS_CAPTURE_ON);
-
-					// TMP
-					// Capture On is not properly acknowledged, so skip to do sync
-					bot_node_sync = false;
-					top_node_sync = false;
-					sync_command_now();
-					set_next_state(AVS_SYNC_ACK);
-					// end TMP
+				}
+				else if (hb_count < 1) {
+					// don't continue until it is moved to true
+					PX4_INFO("Move Begin/End lever to up position");
 				}
 				manual_control = false;
 			}
@@ -657,41 +654,39 @@ void AresAvs::run()
 			break;
 		case AVS_ARMED:
 			//PX4_INFO("AVS armed");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat));
+			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_TAKEOFF:
 			//PX4_INFO("AVS takeoff");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat));
+			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_HOLD:
 			//PX4_INFO("AVS hold");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat));
+			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_POSITION:
 			//PX4_INFO("AVS position");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat));
+			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_LAND:
 			//PX4_INFO("AVS land");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat));
+			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_DISARMED:
 			PX4_INFO("Disarmed after mission, go to capture off");
 			cap_command( false);
 			set_next_state(AVS_CAPTURE_OFF);
-
-			// TMP - workaround non-acknowledgement of "sd cap off"
-			set_next_state(AVS_PREFLIGHT);
-			// TMP end
 			break;
 		case AVS_CAPTURE_OFF:
-			if (hb_count > 2) {
-				if (command_ack == true) {
-					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
-						set_next_state(AVS_PREFLIGHT);
-					}
-					command_ack = false;
+			if (command_ack == true) {
+				if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
+					set_next_state(AVS_PREFLIGHT);
 				}
+				else {
+					PX4_INFO("CAP_OFF: nodes_reported returned false, command: %lu, node %hhu, result %hhu",
+						cmd_ack.command, cmd_ack.target_system, cmd_ack.result);
+				}
+				command_ack = false;
 			}
 			break;
 		case AVS_END:
@@ -700,8 +695,8 @@ void AresAvs::run()
 					PX4_INFO("Waiting for command to end switch state");
 				}
 				else if (fabs(setpoint.aux1) < 0.1) {
-					PX4_INFO("Mission sequence ends here, wait for BEGIN");
-					set_next_state(AVS_BEGIN);
+					PX4_INFO("Use RC or QGC controls to end mission");
+					set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
 				}
 				manual_control = false;
 			}
@@ -720,7 +715,10 @@ void AresAvs::run()
 
 void AresAvs::set_next_state(int32_t state)
 {
-	current_state = state;
+	if (state != current_state) {
+		current_state = state;
+		PX4_INFO("current state: %s", avs_state_str::statestr[state]);
+	}
 	hb_count = 0;
 }
 
@@ -821,7 +819,11 @@ int32_t AresAvs::get_next_nav_state(uint8_t nav_state )
 	}
 }
 
-int32_t AresAvs::arm_action(bool manual_control, manual_control_setpoint_s setpoint, bool veh_status, vehicle_status_s stat)
+int32_t AresAvs::arm_action(bool manual_control,
+			    manual_control_setpoint_s setpoint,
+			    bool veh_status,
+			    vehicle_status_s stat,
+			    int vehicle_status_sub)
 {
 	int32_t next_state = current_state;
 
@@ -832,11 +834,14 @@ int32_t AresAvs::arm_action(bool manual_control, manual_control_setpoint_s setpo
 		}
 		else if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
 			next_state = get_next_nav_state(stat.nav_state);
-			if (next_state != current_state) {
-				PX4_INFO("System armed, nav_state: %hhd", stat.nav_state);
-			}
 		}
 		veh_status = false;
+	}
+	else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
+		// Check if the preflight check passed
+		if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
+			next_state = AVS_DISARMED;
+		}
 	}
 	return next_state;
 }
@@ -1137,8 +1142,7 @@ int AresAvs::cal_command()			// recompute FFT correction vectors
 int AresAvs::begin_command()			// begin a flight sequence manually
 {
 	PX4_INFO("Start new AVS flight sequence by manual command, initiate capture");
-	cap_command( true);
-	set_next_state(AVS_CAPTURE_ON);
+	set_next_state(AVS_INIT);
 	return 0;
 }
 

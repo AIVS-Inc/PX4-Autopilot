@@ -77,7 +77,7 @@ typedef enum: int32_t {
 	AVS_OPERATIONAL,
 	AVS_RTCM_ON,
 	AVS_PREFLIGHT,
-	AVS_BEGIN,
+	AVS_MEAS_INIT,
 	AVS_CAPTURE_ON,
 	AVS_SYNC_ACK,
 	AVS_SYNC_WAIT,
@@ -100,7 +100,7 @@ const char* avs_state_str::statestr[] = {
 	"AVS_OPERATIONAL",
 	"AVS_RTCM_ON",
 	"AVS_PREFLIGHT",
-	"AVS_BEGIN",
+	"AVS_MEAS_INIT",
 	"AVS_CAPTURE_ON",
 	"AVS_SYNC_ACK",
 	"AVS_SYNC_WAIT",
@@ -182,7 +182,7 @@ public:
 
 	int32_t get_next_nav_state(uint8_t nav_state);
 
-	int32_t arm_action(bool manual_control, manual_control_setpoint_s setpoint, bool veh_status, vehicle_status_s stat);
+	int32_t arm_action(bool manual_control, manual_control_setpoint_s setpoint, bool veh_status, vehicle_status_s stat, int vehicle_status_sub);
 
 private:
 
