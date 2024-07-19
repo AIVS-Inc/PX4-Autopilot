@@ -583,23 +583,37 @@ void AresAvs::run()
 			}
 			break;
 		case AVS_PREFLIGHT:
-			if (veh_status == true) {
-				if (stat.pre_flight_checks_pass == true) {
-					PX4_INFO("System passes preflight checks, wait for RC or manual command to start");
-					set_next_state(AVS_MEAS_INIT);
+			// Verify that begin switch is false, which indicates that the system logger has not been started
+			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
+				// Check if the lever may still be in a high state from a previous test
+				if (setpoint.aux1 > 0.3f) {
+					if (hb_count < 1) {
+						PX4_INFO("Move Begin/End lever to CENTER position");
+					}
 				}
-				veh_status = false;
-			}
-			else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
-				// Check if the preflight check passed
-				if (stat.pre_flight_checks_pass == true) {
-					set_next_state(AVS_MEAS_INIT);
+				else {
+					// Also ensure that all PX4 preflight checks have passed
+					if (veh_status == true) {
+						if (stat.pre_flight_checks_pass == true) {
+							PX4_INFO("System passes preflight checks, wait for RC or manual command to start");
+							set_next_state(AVS_MEAS_INIT);
+						}
+						veh_status = false;
+					}
+					else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
+						// Check if the preflight check passed
+						if (stat.pre_flight_checks_pass == true) {
+							set_next_state(AVS_MEAS_INIT);
+						}
+					}
 				}
+				manual_control = false;
 			}
+
 			break;
 		case AVS_MEAS_INIT:
 			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
-				// Check if the begin switch is false, which indicates that the system logger has not been started
+				// Wait for the lever to go up
 				if (setpoint.aux1 > 0.3f) {
 					PX4_INFO("System commanded by RC to start mission, initiate capture");
 					cap_command( true);
@@ -607,7 +621,7 @@ void AresAvs::run()
 				}
 				else if (hb_count < 1) {
 					// don't continue until it is moved to true
-					PX4_INFO("Move Begin/End lever to up position");
+					PX4_INFO("Move Begin/End lever to UP position");
 				}
 				manual_control = false;
 			}
@@ -678,15 +692,17 @@ void AresAvs::run()
 			set_next_state(AVS_CAPTURE_OFF);
 			break;
 		case AVS_CAPTURE_OFF:
-			if (command_ack == true) {
-				if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
-					set_next_state(AVS_PREFLIGHT);
+			if (hb_count > 1) {	// delay to wait for "cap off" ack
+				if (command_ack == true) {
+					//if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
+						set_next_state(AVS_PREFLIGHT);
+					//}
+					// else {	// there may be another source of the command_ack uORB message, as this fails
+					// 	PX4_INFO("CAP_OFF: nodes_reported returned false!!, command: %lu, node %hhu, result %hhu",
+					// 		cmd_ack.command, cmd_ack.target_system, cmd_ack.result);
+					// }
+					command_ack = false;
 				}
-				else {
-					PX4_INFO("CAP_OFF: nodes_reported returned false, command: %lu, node %hhu, result %hhu",
-						cmd_ack.command, cmd_ack.target_system, cmd_ack.result);
-				}
-				command_ack = false;
 			}
 			break;
 		case AVS_END:
