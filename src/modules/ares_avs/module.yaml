@@ -1,0 +1,239 @@
+module_name: AVS Acoustic Vector Sensor
+
+parameters:
+  - group: AVS
+    definitions:
+
+      AVS_BOT_NODE_ID:
+        description:
+          short: Node ID of downward looking AVS node
+          long: Node ID of the AVS sensor mounted underneath the drone body
+        type: int32
+        min: 1
+        max: 127
+        increment: 1
+        default: 20
+
+      AVS_FFT_DEC:
+        description:
+          short: FFT measurement decimation
+          long: Number of new ADC frames per FFT processing frame (1=96 samples, 2=192 samples, etc.)
+        type: int32
+        min: 1
+        max: 12
+        increment: 1
+        default: 2
+
+      AVS_FFT_LONG:
+        description:
+          short: FFT long length flag
+          long: Flag to set long (1152 samples, true) FFT or short (192 samples, false)
+        type: boolean
+        default: true
+
+      AVS_FFT_ENCRYPT:
+        description:
+          short: FFT data encryption flag
+          long: Flag to select data encryption for ARES data in motion or at rest
+        type: boolean
+        default: false
+
+      AVS_FFT_STRT_BIN:
+        description:
+          short: FFT start bin
+          long: Starting bin index (zero-based) for FFT data, bin width=delta_f
+        type: int32
+        min: 1
+        max: 150
+        increment: 1
+        default: 15
+
+      AVS_FFT_NUM_BINS:
+        description:
+          short: FFT number of bins
+          long: Number of bins for FFT data vectors
+        type: int32
+        min: 1
+        max: 575
+        increment: 1
+        default: 560
+
+      AVS_FFT_WINDOW:
+        description:
+          short: FFT Hann window flag
+          long: Flag to select Hann window (true), or no window (false)
+        type: boolean
+        default: true
+
+      AVS_EVT_REL_DB:
+        description:
+          short: Event threshold
+          long: Relative dB level used for event detection against background SIL
+        type: int32
+        min: -10
+        max: 20
+        increment: 1
+        default: 1
+
+      AVS_EVT_NUM_SRC:
+        description:
+          short: Number sources
+          long: Number of sources to be detected per event window
+        type: int32
+        min: 0
+        max: 360
+        increment: 1
+        default: 1
+
+      AVS_EVT_ANG_RES:
+        description:
+          short: Angular resolution
+          long: Bearing histogram angular resolution
+        type: int32
+        unit: deg
+        min: 1
+        max: 45
+        increment: 1
+        default: 10
+
+      AVS_EVT_BG_TC:
+        description:
+          short: Smoothing time constant
+          long: Background SIL time constant
+        type: int32
+        unit: s
+        min: 1
+        max: 10000
+        increment: 1
+        default: 1000
+
+      AVS_EVT_EVT_WIN:
+        description:
+          short: Event window
+          long: Histogram period in terms of the number of 25 msec update intervals
+        type: int32
+        min: 1
+        max: 200
+        increment: 1
+        default: 10
+
+      AVS_EVT_BGSIL:
+        description:
+          short: Background SIL meas flag
+          long: Flag to set self measurement of background SIL
+        type: boolean
+        default: true
+
+      AVS_EVT_BGSIL_DB:
+        description:
+          short: Background SIL threshold dB
+          long: Background SIL threshold when self-measurement is false
+        type: int32
+        min: 30
+        max: 100
+        increment: 1
+        default: 70
+
+      AVS_PK_NUM_HARM:
+        description:
+          short: RPM harmonics
+          long:  Number of RPM harmonics to blank
+        type: int32
+        min: 1
+        max: 20
+        increment: 1
+        default: 4
+
+      AVS_PK_NUM_PEAK:
+        description:
+          short: Max no of peaks in angle histogram
+          long:  Max no of peaks in angle histogram
+        type: int32
+        min: 1
+        max: 5
+        increment: 1
+        default: 5
+
+      AVS_PK_MIN_HGHT:
+        description:
+          short: Minimum peak height in dB
+          long:  Minimum peak height in dB
+        type: int32
+        min: 0
+        max: 100
+        increment: 1
+        default: 10
+
+      AVS_PK_MIN_D_DB:
+        description:
+          short: Minimum peak change in dB
+          long:  Minimum peak change in dB
+        type: int32
+        min: 0
+        max: 100
+        increment: 1
+        default: 6
+
+      AVS_PK_MIN_BLNK:
+        description:
+          short: Minimum angle change in degrees
+          long:  Minimum angle change in degrees
+        type: int32
+        min: 3
+        max: 90
+        increment: 1
+        default: 45
+
+      AVS_SPATIAL_FILT:
+        description:
+          short: Select spatial filtering for a dual-AVS drone (0=none, 1=top, 2=bottom)
+          long: Spatial filtering disregards source events arising from hemispheres below (top AVS), or above (bottom AVS)
+        type: int32
+        min: 0
+        max: 2
+        increment: 1
+        default: 0
+
+      AVS_TARGET_SYNC:
+        description:
+          short: AVS sync time (UTC sec)
+          long:  Specified sync time for AVS nodes in UTC sec
+        type: int32
+        min: 1711000000
+        default: 1721000000
+        max: 2147483647
+        increment: 1
+
+      AVS_RPM_AVG_MSEC:
+        description:
+          short: RPM average time
+          long:  Desired RPM average time in milliseconds
+        type: int32
+        min: 1
+        max: 500
+        increment: 1
+        default: 25
+
+      AVS_ANT_DX:
+        description:
+          short: GNSS antenna delta-X
+          long: Separation of GNSS antennas in x-direction
+        type: float
+        unit: m
+        min: 0.0
+        max: 1.0
+        increment: 0.001
+        decimal: 2
+        default: 0.0
+
+      AVS_ANT_DY:
+        description:
+          short: GNSS antenna delta-y
+          long: Separation of GNSS antennas in y-direction
+        type: float
+        unit: m
+        min: 0.0
+        max: 1.0
+        increment: 0.001
+        decimal: 2
+        default: 0.39

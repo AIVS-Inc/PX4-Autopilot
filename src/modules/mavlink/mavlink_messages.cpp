@@ -62,6 +62,7 @@
 #include "streams/ATTITUDE_QUATERNION.hpp"
 #include "streams/ATTITUDE_TARGET.hpp"
 #include "streams/AUTOPILOT_VERSION.hpp"
+#include "streams/AVS_STATUS.hpp"
 #include "streams/BATTERY_STATUS.hpp"
 #include "streams/CAMERA_IMAGE_CAPTURED.hpp"
 #include "streams/CAMERA_TRIGGER.hpp"
@@ -463,6 +464,12 @@ static const StreamListItem streams_list[] = {
 #if defined(ESC_STATUS_HPP)
 	create_stream_list_item<MavlinkStreamESCStatus>(),
 #endif // ESC_STATUS_HPP
+#if defined(AVS_STATUS_HPP)
+	create_stream_list_item<MavlinkStreamAvsStatus>(),
+#endif // AVS_STATUS_HPP
+#if defined(REL_POS_NED_HPP)
+	create_stream_list_item<MavlinkStreamRelPosNed>(),
+#endif // REL_POS_NED_HPP
 #if defined(AUTOPILOT_VERSION_HPP)
 	create_stream_list_item<MavlinkStreamAutopilotVersion>(),
 #endif // AUTOPILOT_VERSION_HPP

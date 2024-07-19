@@ -1,0 +1,17 @@
+# AIVS Inc ARES GNSS position data description
+
+uint64  m_u64utcUsec
+float64 m_dLatitude
+float64 m_dLongitude
+float32 m_fHorizontalAccuracy
+float32 m_fVerticalAccuracy
+float32 m_fGroundSpeed
+float32 m_fAltitudeEllipsoid
+float32 m_fNorthVel
+float32 m_fEastVel
+float32 m_fDownVel
+uint8   m_u8PDOP		# PDOP * 10
+uint8 	m_u8FixType
+uint8 	m_u8SIV
+
+@sealed

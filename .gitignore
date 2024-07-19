@@ -108,3 +108,9 @@ src/systemcmds/topic_listener/listener_generated.cpp
 
 # colcon
 log/
+
+# ares_avs module
+.vscode/launch.ext.json
+src/modules/ares_avs/ares/*.h
+
+src/modules/ares_avs/nunavut/support/serialization.h

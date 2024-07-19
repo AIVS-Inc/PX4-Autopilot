@@ -1403,6 +1403,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("ATTITUDE_QUATERNION", 10.0f);
 		configure_stream_local("ATTITUDE_TARGET", 2.0f);
 		configure_stream_local("AVAILABLE_MODES", 0.3f);
+		configure_stream_local("AVS_STATUS", 2.0f);
 		configure_stream_local("BATTERY_STATUS", 0.5f);
 		configure_stream_local("CAMERA_IMAGE_CAPTURED", unlimited_rate);
 		configure_stream_local("COLLISION", unlimited_rate);
@@ -1435,6 +1436,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("POSITION_TARGET_LOCAL_NED", 1.5f);
 		configure_stream_local("RAW_RPM", 2.0f);
 		configure_stream_local("RC_CHANNELS", 5.0f);
+		configure_stream_local("REL_POS_NED", 1.0f);
 		configure_stream_local("SCALED_PRESSURE", 1.0f);
 		configure_stream_local("SERVO_OUTPUT_RAW_0", 1.0f);
 		configure_stream_local("SYS_STATUS", 1.0f);

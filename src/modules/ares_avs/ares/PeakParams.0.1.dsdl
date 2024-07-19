@@ -1,0 +1,10 @@
+# AIVS Inc noise event measurement paramters
+
+uint16	    m_paramId	             # FFT parameter Id as specified in UavCanId.h
+uint8       m_iMaxHarmonics          # number harmonics used for RPM blanking
+uint8       m_iNumberOfPeaks         # number of peaks to find in azimuth angle histogram
+float32     m_fMinimumPeakHeight     # minimum peak height in dB
+float32     m_fMinimumPeakChange     # minimum change in dB between detected peaks
+float32     m_fMinimumPeakBlanking   # number change in degrees between peaks
+
+@sealed

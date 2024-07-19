@@ -1,0 +1,8 @@
+# AIVS Inc FFT measurement parameters
+
+uint16	    m_FftParamId      # Specify what parameter is to be changed
+
+uint16	    m_FftNumBins      # FFT long (1152 samples, 576 bins) or FFT short (192 samples, 96 bins)
+uint16	    m_FftNumBlocks    # FFT long (12) ir FFT short (2)
+
+@sealed

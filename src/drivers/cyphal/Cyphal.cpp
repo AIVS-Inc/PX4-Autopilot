@@ -76,6 +76,12 @@ CyphalNode::CyphalNode(uint32_t node_id, size_t capacity, size_t mtu_bytes) :
 	_node_manager.subscribe();
 #endif
 
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+	_ares_serv_manager.subscribe();
+	_ares_pub_manager.updateParams();
+	_ares_sub_manager.subscribe();
+#endif
+
 #ifdef CONFIG_CYPHAL_NODE_CLIENT
 	_node_client = new NodeClient(_canard_handle, _param_manager);
 
@@ -121,13 +127,13 @@ int CyphalNode::start(uint32_t node_id, uint32_t bitrate)
 		return -1;
 	}
 
-	bool can_fd = false;
+	bool can_fd = true;
 
 	if (can_fd) {
 		_instance = new CyphalNode(node_id, 8, CANARD_MTU_CAN_FD);
 
 	} else {
-		_instance = new CyphalNode(node_id, 512, CANARD_MTU_CAN_CLASSIC);
+		_instance = new CyphalNode(node_id, 64, CANARD_MTU_CAN_CLASSIC);
 	}
 
 	if (_instance == nullptr) {
@@ -180,6 +186,10 @@ void CyphalNode::Run()
 		_pub_manager.updateParams();
 		_sub_manager.updateParams();
 
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+		_ares_pub_manager.updateParams();
+		_ares_sub_manager.updateParams();
+#endif
 		_mixing_output.updateParams();
 	}
 
@@ -197,6 +207,10 @@ void CyphalNode::Run()
 
 #ifdef CONFIG_CYPHAL_NODE_MANAGER
 		_node_manager.update();
+#endif
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+		_ares_serv_manager.update();
+		_ares_pub_manager.update();
 #endif
 	}
 
@@ -260,7 +274,9 @@ void CyphalNode::print_info()
 		 heap_diagnostics.oom_count);
 
 	_pub_manager.printInfo();
-
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+	_ares_pub_manager.printInfo();
+#endif
 	PX4_INFO("Message subscriptions:");
 	traverseTree<CanardRxSubscription>(_canard_handle.getRxSubscriptions(CanardTransferKindMessage),
 	[&](const CanardRxSubscription * const sub) {
@@ -295,7 +311,7 @@ void CyphalNode::print_info()
 		}
 	});
 
-	_mixing_output.printInfo();
+	//_mixing_output.printInfo();
 
 	pthread_mutex_unlock(&_node_mutex);
 }
@@ -303,7 +319,7 @@ void CyphalNode::print_info()
 static void print_usage()
 {
 	PX4_INFO("usage: \n"
-		 "\tuavcannode {start|status|stop}");
+		 "\tcyphal {start|status|stop}");
 }
 
 extern "C" __EXPORT int cyphal_main(int argc, char *argv[])

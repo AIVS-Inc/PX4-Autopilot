@@ -45,12 +45,13 @@
 #include <px4_platform_common/log.h>
 
 #include <lib/parameters/param.h>
+#include <containers/List.hpp>
 
 #include "../CanardHandle.hpp"
 #include "../CanardInterface.hpp"
 #include "../ParamManager.hpp"
 
-class UavcanBaseSubscriber
+class UavcanBaseSubscriber: public ListNode<UavcanBaseSubscriber *>
 {
 public:
 	UavcanBaseSubscriber(CanardHandle &handle, const char *prefix_name, const char *subject_name, uint8_t instance = 0) :
