@@ -200,7 +200,7 @@ void CyphalNode::Run()
 		// send uavcan::node::Heartbeat_1_0 @ 1 Hz
 		sendHeartbeat();
 
-		sendPortList();
+		//sendPortList();
 
 		// Check all publishers
 		_pub_manager.update();

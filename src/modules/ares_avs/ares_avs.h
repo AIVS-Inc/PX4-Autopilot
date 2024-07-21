@@ -187,6 +187,40 @@ public:
 private:
 
 	/**
+	 * @brief Get the parameter with the given name into `value`.
+	 *
+	 * @param name The name of the parameter.
+	 * @param value The value in which to store the parameter.
+	 *
+	 * @return `PX4_OK` on success, or `PX4_ERROR` if the parameter wasn't found.
+	*/
+	static uint32_t get_parameter(const char *name, int32_t *value);
+
+	/**
+	 * @brief Get the parameter with the given name into `value`.
+	 *
+	 * @param name The name of the parameter.
+	 * @param value The value in which to store the parameter.
+	 *
+	 * @return `PX4_OK` on success, or `PX4_ERROR` if the parameter wasn't found.
+	*/
+	static uint32_t get_parameter(const char *name, float *value);
+
+	/**
+	 * @brief Don't use this, use the other parameter functions instead!
+	 */
+	template<typename T>
+	static uint32_t _get_parameter(const char *name, T *value)
+	{
+		param_t handle = param_find(name);
+
+		if (handle == PARAM_INVALID || param_get(handle, value) == PX4_ERROR) {
+			PX4_ERR("Failed to get parameter %s", name);
+			return PX4_ERROR;
+		}
+		return PX4_OK;
+	}
+	/**
 	 * Check for parameter changes and update them if needed.
 	 * @param parameter_update_sub uorb subscription to parameter_update
 	 * @param force for a parameter update

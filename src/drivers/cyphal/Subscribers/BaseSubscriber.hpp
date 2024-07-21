@@ -149,6 +149,12 @@ public:
 		}
 	}
 
+	void updateParam()
+	{
+		// Only called once at init time
+		subscribe();
+	};
+
 protected:
 	struct SubjectSubscription {
 		CanardRxSubscription _canard_sub;

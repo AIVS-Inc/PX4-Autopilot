@@ -80,6 +80,7 @@ void AresSubManager::updateBaseSubscriptions()
 			return;
 		}
 		_basesubscribers.add(basesub);
+		basesub->updateParam();
 	}
 }
 
@@ -93,6 +94,9 @@ void AresSubManager::printInfo()
 
 void AresSubManager::updateBaseParams()
 {
+	for (auto &basesub : _basesubscribers) {
+		basesub->updateParam();
+	}
 	// Check for any newly-enabled subscriptions
 	updateBaseSubscriptions();
 }

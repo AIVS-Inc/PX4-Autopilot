@@ -259,11 +259,11 @@ int AresAvs::custom_command(int argc, char *argv[])
 			object = _object.load();
 
 			if (object) {
-				if (object->current_state <= AVS_ARM_WAIT) {
+				if (object->current_state > AVS_ARM_WAIT) {
 					return object->end_command();	// end a flight sequence
 				}
 				else {
-					PX4_INFO("must disarm system to perform this action");
+					PX4_INFO("system must already be armed to perform this action");
 					return 0;
 				}
 			} else {
@@ -586,7 +586,9 @@ void AresAvs::run()
 			// Verify that begin switch is false, which indicates that the system logger has not been started
 			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
 				// Check if the lever may still be in a high state from a previous test
-				if (setpoint.aux1 > 0.3f) {
+				int32_t rc_mode;
+				get_parameter("COM_RC_IN_MODE", &rc_mode);
+				if ((rc_mode < 4) && (setpoint.aux1 > 0.3f)) {
 					if (hb_count < 1) {
 						PX4_INFO("Move Begin/End lever to CENTER position");
 					}
@@ -614,12 +616,14 @@ void AresAvs::run()
 		case AVS_MEAS_INIT:
 			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
 				// Wait for the lever to go up
-				if (setpoint.aux1 > 0.3f) {
+				int32_t rc_mode;
+				get_parameter("COM_RC_IN_MODE", &rc_mode);
+				if ((rc_mode < 4) && (setpoint.aux1 > 0.3f)) {
 					PX4_INFO("System commanded by RC to start mission, initiate capture");
 					cap_command( true);
 					set_next_state(AVS_CAPTURE_ON);
 				}
-				else if (hb_count < 1) {
+				else if ((rc_mode < 4) && (hb_count < 1)) {
 					// don't continue until it is moved to true
 					PX4_INFO("Move Begin/End lever to UP position");
 				}
@@ -707,12 +711,16 @@ void AresAvs::run()
 			break;
 		case AVS_END:
 			if (manual_control == true) {
-				if (setpoint.aux1 > 0.3f) {
-					PX4_INFO("Waiting for command to end switch state");
-				}
-				else if (fabs(setpoint.aux1) < 0.1) {
-					PX4_INFO("Use RC or QGC controls to end mission");
-					set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+				int32_t rc_mode;
+				get_parameter("COM_RC_IN_MODE", &rc_mode);
+				if (rc_mode < 4) {
+					if (setpoint.aux1 > 0.3f) {
+						PX4_INFO("Waiting for command to end switch state");
+					}
+					else if (fabs(setpoint.aux1) < 0.1) {
+						PX4_INFO("Use RC or QGC controls to end mission");
+						set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+					}
 				}
 				manual_control = false;
 			}
@@ -873,6 +881,16 @@ void AresAvs::parameters_update(bool force)
 		// update parameters from storage
 		updateParams();
 	}
+}
+
+uint32_t AresAvs::get_parameter(const char *name, int32_t *value)
+{
+	return _get_parameter(name, value);
+}
+
+uint32_t AresAvs::get_parameter(const char *name, float *value)
+{
+	return _get_parameter(name, value);
 }
 
 int AresAvs::print_usage(const char *reason)
@@ -1157,15 +1175,17 @@ int AresAvs::cal_command()			// recompute FFT correction vectors
 
 int AresAvs::begin_command()			// begin a flight sequence manually
 {
-	PX4_INFO("Start new AVS flight sequence by manual command, initiate capture");
-	set_next_state(AVS_INIT);
+	PX4_INFO("Begin mission, initiate capture");
+	cap_command( true);
+	set_next_state(AVS_CAPTURE_ON);
 	return 0;
 }
 
 int AresAvs::end_command()			// end a flight sequence
 {
 	PX4_INFO("End AVS flight sequence by manual command");
-	set_next_state(AVS_END);
+	cap_command( false);
+	set_next_state(AVS_CAPTURE_OFF);
 	return 0;
 }
 
