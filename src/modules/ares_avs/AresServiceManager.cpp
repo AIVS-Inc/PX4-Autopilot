@@ -39,7 +39,7 @@
  */
 
 #include "AresServiceManager.hpp"
-#include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/sensor_avs_cmd_ack.h>
 
 void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 {
@@ -61,8 +61,8 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 	ares_FFTencrypt_0_1  encrypt {};
 
 	size_t size_bytes = receive.payload_size;
-	uint8_t command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
-	uint8_t command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
+	uint8_t command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
+	uint8_t command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
 	uint16_t component = 0;
 
 	switch (receive.metadata.port_id) {
@@ -75,7 +75,7 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 			_fft_control.reset_command_active( receive.metadata.remote_node_id);	// everything good, we got the response we were looking for
 		}
 		else {
-			command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+			command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 		}
 		break;
 	  }
@@ -92,41 +92,41 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 				param_get(param_find("AVS_EVT_NUM_SRC"), &i32val);
 				if ((uint16_t)i32val != event.m_numSources) {
 					PX4_INFO("evt.m_numSources not confirmed, id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BG_TC"),   &i32val);
 				if ((uint16_t)i32val != event.m_bkgndSILtc) {
 					PX4_INFO("evt.m_bkgndSILtc not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_REL_DB"),  &fVal);
 				if (abs(fVal - event.m_relativeDb) > 1e-2) {
 					PX4_INFO("evt.m_relativeDb not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_ANG_RES"), &i32val);
 				if ((uint8_t)i32val != event.m_angularRes) {
 					PX4_INFO("evt.m_angularRes not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_EVT_WIN"), &i32val);
 				if ((uint8_t)i32val != event.m_eventWindow) {
 					PX4_INFO("evt.m_eventWindow not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BGSIL"),   &i32val);
 				if ((bool)i32val != event.m_selfMeasureBg) {
 					PX4_INFO("evt.m_selfMeasureBg not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BGSIL_DB"),&fVal);
 				if (abs(fVal - event.m_bgDbThreshold) > 1e-2) {
 					PX4_INFO("evt.m_bgDbThreshold not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			}
 			else {
-				command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+				command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 			}
 			break;
 		case ares_PeakParams_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_:
@@ -139,30 +139,30 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 				param_get(param_find("AVS_PK_NUM_HARM"), &i32val);
 				if ((uint8_t)i32val != peak.m_iMaxHarmonics) {
 					PX4_INFO("peak.m_iMaxHarmonics not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_PK_NUM_PEAK"), &i32val);
 				if ((uint8_t)i32val != peak.m_iNumberOfPeaks) {
 					PX4_INFO("peak.m_iNumberOfPeaks not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_PK_MIN_HGHT"), &fVal);
 				if (abs(fVal - peak.m_fMinimumPeakHeight) > 1e-2) {
 					PX4_INFO("peak.m_fMinimumPeakHeight not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_PK_MIN_D_DB"), &fVal);
 				if (abs(fVal - peak.m_fMinimumPeakChange) > 1e-2) {
 					PX4_INFO("peak.m_fMinimumPeakChange not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_PK_MIN_BLNK"), &fVal);
 				if (abs(fVal - peak.m_fMinimumPeakBlanking) > 1e-2) {
 					PX4_INFO("not confirmed id: %d", receive.metadata.remote_node_id);}
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 			}
 			else {
-				command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+				command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 			}
 			break;
 		case ares_FFTspatial_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_:
@@ -175,16 +175,16 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 				param_get(param_find("AVS_FFT_DEC"), &i32val);
 				if ((uint8_t)i32val != spatial.m_FftDec) {
 					PX4_INFO("spatial.m_FftDec not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_SPATIAL_FILT"), &i32val);
 				if ((uint8_t)i32val != spatial.m_SpatialFilt) {
 					PX4_INFO("spatial.m_SpatialFilt not confirmed id: %d", receive.metadata.remote_node_id);
-					command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			}
 			else {
-				command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+				command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 			}
 			break;
 		case ares_FFTlength_0_1_SERIALIZATION_BUFFER_SIZE_BYTES_:
@@ -201,16 +201,16 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 					param_get(param_find("AVS_FFT_STRT_BIN"), &i32val);
 					if ((uint16_t)i32val != linear.m_FftStartBin) {
 						PX4_INFO("linear.m_FftStartBin not confirmed id: %d", receive.metadata.remote_node_id);
-						command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+						command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 					}
 					param_get(param_find("AVS_FFT_NUM_BINS"), &i32val);
 					if ((uint16_t)i32val != linear.m_FftNumBins) {
 						PX4_INFO("linear.m_FftNumBins not confirmed id: %d", receive.metadata.remote_node_id);
-						command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+						command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 					}
 				}
 				else {
-					command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			} else {
 				fft_param_active = (_fft_param.get_command_active( receive.metadata.remote_node_id) > 0) ? true : false;
@@ -221,11 +221,11 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 					param_get(param_find("AVS_FFT_LONG"), &i32val);
 					if (((bool)i32val == true) && (length.m_FftNumBins != 576)) {
 						PX4_INFO("length.m_FftNumBins not confirmed id: %d", receive.metadata.remote_node_id);
-						command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+						command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 					}
 				}
 				else {
-					command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			}
 			break;
@@ -243,11 +243,11 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 					param_get(param_find("AVS_FFT_ENCRYPT"), &i32val);
 					if ((uint8_t) i32val != encrypt.m_FftEncrypt) {
 						PX4_INFO("encrypt.m_FftEncrypt not confirmed id: %d", receive.metadata.remote_node_id);
-						command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+						command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 					}
 				}
 				else {
-					command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			} else {
 				fft_param_active = (_fft_param.get_command_active( receive.metadata.remote_node_id) > 0) ? true : false;
@@ -258,11 +258,11 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 					param_get(param_find("AVS_FFT_WINDOW"), &i32val);
 					if ((uint8_t) i32val != window.m_FftWinEnable) {
 						PX4_INFO("window.m_FftWinEnable not confirmed id: %d", receive.metadata.remote_node_id);
-						command_result_param1 = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+						command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 					}
 				}
 				else {
-					command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+					command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			}
 			break;
@@ -278,7 +278,7 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 			_gnss_control.reset_command_active( receive.metadata.remote_node_id);	// everything good, we got the response we were looking for
 		}
 		else {
-			command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+			command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 		}
 		break;
 	  }
@@ -291,7 +291,7 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 			_sd_cap_control.reset_command_active( receive.metadata.remote_node_id);	// everything good, we got the response we were looking for
 		}
 		else {
-			command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+			command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 		}
 		break;
 	  }
@@ -304,19 +304,19 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 			_sync_control.reset_command_active( receive.metadata.remote_node_id);	// everything good, we got the response we were looking for
 		}
 		else {
-			command_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_FAILED;
+			command_result = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 		}
 		break;
 	  }
 	}
 	// publish acknowledgement
-	vehicle_command_ack_s command_ack{};
+	sensor_avs_cmd_ack_s command_ack{};
 	command_ack.command = receive.metadata.port_id;
 	command_ack.result = command_result;
 	command_ack.target_system = receive.metadata.remote_node_id;
 	command_ack.target_component = component;
 	command_ack.result_param1 = command_result_param1;
 	command_ack.timestamp = hrt_absolute_time();
-	vehicle_command_ack_pub.publish(command_ack);
+	sensor_avs_cmd_ack_pub.publish(command_ack);
 }
 

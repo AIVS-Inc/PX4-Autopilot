@@ -254,16 +254,52 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "end")) {
+	else if (!strcmp(argv[0], "arm")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				if (object->current_state == AVS_ARM_WAIT) {
+					return object->arm_command();
+				}
+				else {
+					PX4_INFO("arm: not in ARM_WAIT state");
+					return 0;
+				}
+			} else {
+				PX4_INFO("end: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "disarm")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
 				if (object->current_state > AVS_ARM_WAIT) {
+					return object->disarm_command();
+				}
+				else {
+					PX4_INFO("disarm: not in an armed state");
+					return 0;
+				}
+			} else {
+				PX4_INFO("end: task not running");
+				return 1;
+			}
+		}
+	}
+	else if (!strcmp(argv[0], "end")) {
+		if (is_running()) {
+			object = _object.load();
+
+			if (object) {
+				if (object->current_state == AVS_DISARMED) {
 					return object->end_command();	// end a flight sequence
 				}
 				else {
-					PX4_INFO("system must already be armed to perform this action");
+					PX4_INFO("system must disarmed to perform this action");
 					return 0;
 				}
 			} else {
@@ -422,7 +458,7 @@ void AresAvs::run()
 	int sensor_gnss_relative_sub = orb_subscribe(ORB_ID(sensor_gnss_relative));
 	int sensor_gps_sub = orb_subscribe(ORB_ID(sensor_gps));
 	int cyphal_param_sub = orb_subscribe(ORB_ID(uavcan_parameter_value));
-	int vehicle_command_ack_sub = orb_subscribe(ORB_ID(vehicle_command_ack));
+	int sensor_avs_cmd_ack_sub = orb_subscribe(ORB_ID(sensor_avs_cmd_ack));
 	int manual_control_sub = orb_subscribe(ORB_ID(manual_control_setpoint));
 	int vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
 
@@ -432,16 +468,15 @@ void AresAvs::run()
 		{.fd = sensor_gnss_relative_sub, .events = POLLIN},
 		{.fd = sensor_gps_sub, 		 .events = POLLIN},
 		{.fd = cyphal_param_sub,	 .events = POLLIN},	// heartbeat or sync
-		{.fd = vehicle_command_ack_sub,	 .events = POLLIN},
+		{.fd = sensor_avs_cmd_ack_sub,	 .events = POLLIN},
 		{.fd = manual_control_sub,	 .events = POLLIN},
 		{.fd = vehicle_status_sub,	 .events = POLLIN}
 	};
 	struct timespec ts = {};
 	bool command_ack = false;
-	bool manual_control = false;
 	bool veh_status = false;
 
-	struct vehicle_command_ack_s cmd_ack;
+	struct sensor_avs_cmd_ack_s cmd_ack;
 	struct manual_control_setpoint_s setpoint;
 	struct vehicle_status_s stat;
 
@@ -544,12 +579,11 @@ void AresAvs::run()
 			//}
 		}
 		else if (fds[5].revents & POLLIN) {
-			orb_copy(ORB_ID(vehicle_command_ack), vehicle_command_ack_sub, &cmd_ack);
+			orb_copy(ORB_ID(sensor_avs_cmd_ack), sensor_avs_cmd_ack_sub, &cmd_ack);
 			command_ack = true;
 		}
 		else if (fds[6].revents & POLLIN) {
 			orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint);
-			manual_control = true;
 		}
 		else if (fds[7].revents & POLLIN) {
 			orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat);
@@ -609,25 +643,31 @@ void AresAvs::run()
 						}
 					}
 				}
-				manual_control = false;
 			}
 
 			break;
 		case AVS_MEAS_INIT:
 			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
-				// Wait for the lever to go up
 				int32_t rc_mode;
 				get_parameter("COM_RC_IN_MODE", &rc_mode);
-				if ((rc_mode < 4) && (setpoint.aux1 > 0.3f)) {
-					PX4_INFO("System commanded by RC to start mission, initiate capture");
-					cap_command( true);
-					set_next_state(AVS_CAPTURE_ON);
+				if (rc_mode < 4) {
+					if (setpoint.aux1 > 0.3f) {
+						// Wait for the lever to go up
+						PX4_INFO("System commanded by RC to start mission, initiate capture");
+						cap_command( true);
+						set_next_state(AVS_CAPTURE_ON);
+					}
+					else if (hb_count < 1) {
+						// don't continue until it is moved to true
+						PX4_INFO("Move Begin/End lever to UP position");
+					}
 				}
-				else if ((rc_mode < 4) && (hb_count < 1)) {
-					// don't continue until it is moved to true
-					PX4_INFO("Move Begin/End lever to UP position");
+				else {
+					if (hb_count < 1) {
+						// can't continue until until a user console command
+						PX4_INFO("Waiting for BEGIN mission command");
+					}
 				}
-				manual_control = false;
 			}
 			break;
 		case AVS_CAPTURE_ON:
@@ -672,23 +712,23 @@ void AresAvs::run()
 			break;
 		case AVS_ARMED:
 			//PX4_INFO("AVS armed");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_TAKEOFF:
 			//PX4_INFO("AVS takeoff");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_HOLD:
 			//PX4_INFO("AVS hold");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_POSITION:
 			//PX4_INFO("AVS position");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_LAND:
 			//PX4_INFO("AVS land");
-			set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
+			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_DISARMED:
 			PX4_INFO("Disarmed after mission, go to capture off");
@@ -698,31 +738,15 @@ void AresAvs::run()
 		case AVS_CAPTURE_OFF:
 			if (hb_count > 1) {	// delay to wait for "cap off" ack
 				if (command_ack == true) {
-					//if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
+					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
 						set_next_state(AVS_PREFLIGHT);
-					//}
-					// else {	// there may be another source of the command_ack uORB message, as this fails
-					// 	PX4_INFO("CAP_OFF: nodes_reported returned false!!, command: %lu, node %hhu, result %hhu",
-					// 		cmd_ack.command, cmd_ack.target_system, cmd_ack.result);
-					// }
+					}
+					else {
+						PX4_INFO("CAP_OFF: nodes_reported returned false!!, command: %lu, node %hhu, result %hhu",
+							cmd_ack.command, cmd_ack.target_system, cmd_ack.result);
+					}
 					command_ack = false;
 				}
-			}
-			break;
-		case AVS_END:
-			if (manual_control == true) {
-				int32_t rc_mode;
-				get_parameter("COM_RC_IN_MODE", &rc_mode);
-				if (rc_mode < 4) {
-					if (setpoint.aux1 > 0.3f) {
-						PX4_INFO("Waiting for command to end switch state");
-					}
-					else if (fabs(setpoint.aux1) < 0.1) {
-						PX4_INFO("Use RC or QGC controls to end mission");
-						set_next_state(arm_action(manual_control, setpoint, veh_status, stat, vehicle_status_sub));
-					}
-				}
-				manual_control = false;
 			}
 			break;
 		}
@@ -732,7 +756,7 @@ void AresAvs::run()
 	orb_unsubscribe(sensor_gnss_relative_sub);
 	orb_unsubscribe(sensor_gps_sub);
 	orb_unsubscribe(cyphal_param_sub);
-	orb_unsubscribe(vehicle_command_ack_sub);
+	orb_unsubscribe(sensor_avs_cmd_ack_sub);
 	orb_unsubscribe(manual_control_sub);
 	orb_unsubscribe(vehicle_status_sub);
 }
@@ -780,20 +804,20 @@ bool AresAvs::nodes_operational(void)
 	return operational;
 }
 
-bool AresAvs::nodes_reported(vehicle_command_ack_s recvd_ack, const uint32_t subjectID)
+bool AresAvs::nodes_reported(sensor_avs_cmd_ack_s recvd_ack, const uint32_t subjectID)
 {
 	bool ack = false;
 
 	if ((aresNodeId_bot > 0) &&
 	    (recvd_ack.command == subjectID) &&
 	    (recvd_ack.target_system == aresNodeId_bot) &&
-	    (recvd_ack.result == vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED)) {
+	    (recvd_ack.result == sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_ACCEPTED)) {
 		bot_node_ack_reported = true;
 	}
 	if ((aresNodeId_top > 0) &&
 	    (recvd_ack.command == subjectID) &&
 	    (recvd_ack.target_system == aresNodeId_top) &&
-	    (recvd_ack.result == vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED)) {
+	    (recvd_ack.result == sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_ACCEPTED)) {
 		top_node_ack_reported = true;
 	}
 	if ((aresNodeId_bot > 0) && (aresNodeId_top > 0)) {
@@ -843,11 +867,7 @@ int32_t AresAvs::get_next_nav_state(uint8_t nav_state )
 	}
 }
 
-int32_t AresAvs::arm_action(bool manual_control,
-			    manual_control_setpoint_s setpoint,
-			    bool veh_status,
-			    vehicle_status_s stat,
-			    int vehicle_status_sub)
+int32_t AresAvs::arm_action(bool veh_status, vehicle_status_s stat, int vehicle_status_sub)
 {
 	int32_t next_state = current_state;
 
@@ -862,7 +882,6 @@ int32_t AresAvs::arm_action(bool manual_control,
 		veh_status = false;
 	}
 	else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
-		// Check if the preflight check passed
 		if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
 			next_state = AVS_DISARMED;
 		}
@@ -915,6 +934,8 @@ $ ares_avs help		// display this help
 	   start	// start the ARES app, begin monitoring CAN messages
 	   stop		// stop the ARES application
 	   begin	// begin a flight sequence
+	   arm		// arm the vehicle
+	   disarm	// disarm the vehicle
 	   end		// end the current flight sequence
 	   status	// reply with run status
 	   cap1		// enable SD raw data capture
@@ -942,7 +963,9 @@ $ ares_avs start
 	PRINT_MODULE_USAGE_COMMAND("start");	// start app
 	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
 	PRINT_MODULE_USAGE_COMMAND("begin");	// begin flight sequence
-	PRINT_MODULE_USAGE_COMMAND("end");	// end flight sequence
+	PRINT_MODULE_USAGE_COMMAND("arm");	// arm vehicle
+	PRINT_MODULE_USAGE_COMMAND("disarm");	// disarm vehicle
+	PRINT_MODULE_USAGE_COMMAND("end");	// end mission
 	PRINT_MODULE_USAGE_COMMAND("status");	// reply if running or not
 	PRINT_MODULE_USAGE_COMMAND("cap1");	// SD capture on
 	PRINT_MODULE_USAGE_COMMAND("cap0");	// SD capture off
@@ -1181,12 +1204,71 @@ int AresAvs::begin_command()			// begin a flight sequence manually
 	return 0;
 }
 
+int AresAvs::arm_command()
+{
+	PX4_INFO("Arm vehicle");
+	send_vehicle_command(vehicle_command_s::VEHICLE_CMD_COMPONENT_ARM_DISARM,
+		static_cast<float>(vehicle_command_s::ARMING_ACTION_ARM),0.0f);
+	set_next_state(AVS_ARMED);
+
+	// update meas state
+	// struct vehicle_status_s stat;
+	// int vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+	// set_next_state(arm_action( false, stat, vehicle_status_sub));
+	return 0;
+}
+
+int AresAvs::disarm_command()
+{
+	PX4_INFO("Disarm vehicle");
+	send_vehicle_command(vehicle_command_s::VEHICLE_CMD_COMPONENT_ARM_DISARM,
+		static_cast<float>(vehicle_command_s::ARMING_ACTION_DISARM),0.0f);
+	set_next_state(AVS_DISARMED);
+
+	// update meas state
+	// struct vehicle_status_s stat;
+	// int vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+	// set_next_state(arm_action( false, stat, vehicle_status_sub));
+	return 0;
+}
+
 int AresAvs::end_command()			// end a flight sequence
 {
-	PX4_INFO("End AVS flight sequence by manual command");
-	cap_command( false);
-	set_next_state(AVS_CAPTURE_OFF);
+	PX4_INFO("End mission, force landing and subsequent disarm");
+
+	// we have to land first
+	send_vehicle_command(vehicle_command_s::VEHICLE_CMD_NAV_LAND);
+
+	// update meas state
+	struct vehicle_status_s stat;
+	int vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+	set_next_state(arm_action( false, stat, vehicle_status_sub));
 	return 0;
+}
+
+bool AresAvs::send_vehicle_command(const uint32_t cmd, const float param1, const float param2,
+				 const float param3,  const float param4, const double param5,
+				 const double param6, const float param7)
+{
+	vehicle_command_s vcmd{};
+	vcmd.command = cmd;
+	vcmd.param1 = param1;
+	vcmd.param2 = param2;
+	vcmd.param3 = param3;
+	vcmd.param4 = param4;
+	vcmd.param5 = param5;
+	vcmd.param6 = param6;
+	vcmd.param7 = param7;
+
+	uORB::SubscriptionData<vehicle_status_s> vehicle_status_sub{ORB_ID(vehicle_status)};
+	vcmd.source_system = vehicle_status_sub.get().system_id;
+	vcmd.target_system = vehicle_status_sub.get().system_id;
+	vcmd.source_component = vehicle_status_sub.get().component_id;
+	vcmd.target_component = vehicle_status_sub.get().component_id;
+
+	uORB::Publication<vehicle_command_s> vcmd_pub{ORB_ID(vehicle_command)};
+	vcmd.timestamp = hrt_absolute_time();
+	return vcmd_pub.publish(vcmd);
 }
 
 int AresAvs::cap_command( bool flag)		// update event params in ARES, enable/disable FFT

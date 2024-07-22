@@ -36,6 +36,7 @@
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/time.h>
 #include <px4_platform_common/module_params.h>
+#include <uORB/Publication.hpp>
 #include <uORB/Subscription.hpp>
 #include <uORB/SubscriptionInterval.hpp>
 #include <uORB/topics/parameter_update.h>
@@ -52,9 +53,10 @@
 #include <uORB/topics/sensor_avs_gnss_control.h>
 #include <uORB/topics/sensor_avs_sync_control.h>
 #include <uORB/topics/sensor_avs_fft_params.h>
-#include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/sensor_avs_cmd_ack.h>
 #include <uORB/topics/manual_control_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_command.h>
 
 //#include "ares/AdcFrame_0_1.h"
 #include "ares/GnssImu_0_1.h"
@@ -160,6 +162,10 @@ public:
 
 	int begin_command();
 
+	int arm_command();
+
+	int disarm_command();
+
 	int end_command();
 
 	int sync_command_now();
@@ -174,7 +180,7 @@ public:
 
 	void set_next_state(int32_t state);
 
-	bool nodes_reported(vehicle_command_ack_s recvd_ack, const uint32_t subjectID);
+	bool nodes_reported(sensor_avs_cmd_ack_s recvd_ack, const uint32_t subjectID);
 
 	bool sync_reported(void);
 
@@ -182,7 +188,7 @@ public:
 
 	int32_t get_next_nav_state(uint8_t nav_state);
 
-	int32_t arm_action(bool manual_control, manual_control_setpoint_s setpoint, bool veh_status, vehicle_status_s stat, int vehicle_status_sub);
+	int32_t arm_action(bool veh_status, vehicle_status_s stat, int vehicle_status_sub);
 
 private:
 
@@ -226,6 +232,11 @@ private:
 	 * @param force for a parameter update
 	 */
 	void parameters_update(bool force = false);
+
+	static bool send_vehicle_command(const uint32_t cmd, const float param1 = NAN, const float param2 = NAN,
+				 const float param3 = NAN,  const float param4 = NAN, const double param5 = static_cast<double>(NAN),
+				 const double param6 = static_cast<double>(NAN), const float param7 = NAN);
+
 	int32_t current_state = avs_state::AVS_INIT;
 
 	uint8_t aresNodeId_top = 0;

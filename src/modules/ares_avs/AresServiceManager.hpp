@@ -48,7 +48,7 @@
 #include <uORB/Publication.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/uavcan_parameter_value.h>
-#include <uORB/topics/vehicle_command_ack.h>
+#include <uORB/topics/sensor_avs_cmd_ack.h>
 #include <uavcan/node/Heartbeat_1_0.h>
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 #include "AresFftParamServiceRequest.hpp"
@@ -210,5 +210,5 @@ private:
 	List <AresNode *> _nodes;
 	struct uavcan_parameter_value_s heartbeat;
 	orb_advert_t heartbeat_pub;
-	uORB::Publication<vehicle_command_ack_s> vehicle_command_ack_pub{ORB_ID(vehicle_command_ack)};
+	uORB::Publication<sensor_avs_cmd_ack_s> sensor_avs_cmd_ack_pub{ORB_ID(sensor_avs_cmd_ack)};
 };
