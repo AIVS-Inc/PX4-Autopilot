@@ -63,7 +63,9 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("external_ins_attitude");
 	add_optional_topic("external_ins_global_position");
 	add_optional_topic("external_ins_local_position");
-	add_optional_topic("esc_status", 250);
+	add_optional_topic("esc_status", 2); //250);	// want every RPM message
+	add_optional_topic("sensor_avs", 50);
+	add_optional_topic("sensor_avs_mel", 50);
 	add_topic("failure_detector_status", 100);
 	add_topic("failsafe_flags");
 	add_optional_topic("follow_target", 500);
@@ -180,7 +182,7 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic_multi("sensor_accel", 1000, 4);
 	add_optional_topic_multi("sensor_baro", 1000, 4);
 	add_topic_multi("sensor_gps", 1000, 2);
-	add_topic_multi("sensor_gnss_relative", 1000, 1);
+	add_topic_multi("sensor_gnss_relative", 250, 1);
 	add_optional_topic_multi("sensor_gyro", 1000, 4);
 	add_topic_multi("sensor_mag", 1000, 4);
 	add_topic_multi("sensor_optical_flow", 1000, 2);
