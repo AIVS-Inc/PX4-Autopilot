@@ -57,6 +57,7 @@
 #include <uORB/topics/vehicle_status.h>
 
 #include "streams/ACTUATOR_OUTPUT_STATUS.hpp"
+#include "streams/AVS_STATUS.hpp"
 #include "streams/ALTITUDE.hpp"
 #include "streams/ATTITUDE.hpp"
 #include "streams/ATTITUDE_QUATERNION.hpp"
@@ -106,6 +107,7 @@
 #include "streams/PROTOCOL_VERSION.hpp"
 #include "streams/RAW_RPM.hpp"
 #include "streams/RC_CHANNELS.hpp"
+#include "streams/REL_POS_NED.hpp"
 #include "streams/SCALED_IMU.hpp"
 #include "streams/SCALED_IMU2.hpp"
 #include "streams/SCALED_IMU3.hpp"
