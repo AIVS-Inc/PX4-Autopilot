@@ -114,3 +114,4 @@ log/
 src/modules/ares_avs/ares/*.h
 
 src/modules/ares_avs/nunavut/support/serialization.h
+platforms/nuttx/src/px4/nxp/imxrt/dshot/dshot.cCLK
