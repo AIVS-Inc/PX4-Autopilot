@@ -31,58 +31,52 @@
  *
  ****************************************************************************/
 
-#ifndef AVS_STATUS_HPP
-#define AVS_STATUS_HPP
+#ifndef AVS_MFC_HPP
+#define AVS_MFC_HPP
 
-#include <uORB/topics/sensor_avs.h>
+#include <uORB/topics/sensor_avs_mel.h>
 
-class MavlinkStreamAvsStatus : public MavlinkStream
+class MavlinkStreamAvsMfc : public MavlinkStream
 {
 public:
-	static MavlinkStream *new_instance(Mavlink *mavlink) { return new MavlinkStreamAvsStatus(mavlink); }
+	static MavlinkStream *new_instance(Mavlink *mavlink) { return new MavlinkStreamAvsMfc(mavlink); }
 
-	static constexpr const char *get_name_static() { return "AVS_STATUS"; }
-	static constexpr uint16_t get_id_static() { return MAVLINK_MSG_ID_AVS_STATUS; }
+	static constexpr const char *get_name_static() { return "AVS_MFC"; }
+	static constexpr uint16_t get_id_static() { return MAVLINK_MSG_ID_AVS_MFC; }
 
-	const char *get_name() const override { return MavlinkStreamAvsStatus::get_name_static(); }
+	const char *get_name() const override { return MavlinkStreamAvsMfc::get_name_static(); }
 	uint16_t get_id() override { return get_id_static(); }
 
 	unsigned get_size() override
 	{
-		return _sensor_avs_sub.advertised() ? MAVLINK_MSG_ID_AVS_STATUS + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		return _sensor_avs_mfc_sub.advertised() ? MAVLINK_MSG_ID_AVS_MFC + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
 	}
 
 private:
-	explicit MavlinkStreamAvsStatus(Mavlink *mavlink) : MavlinkStream(mavlink) {}
+	explicit MavlinkStreamAvsMfc(Mavlink *mavlink) : MavlinkStream(mavlink) {}
 
-	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
+	uORB::Subscription _sensor_avs_mfc_sub{ORB_ID(sensor_avs)};
 
 	bool send() override
 	{
-		sensor_avs_s sensor_avs_status;
+		sensor_avs_mel_s sensor_avs_mel;
 
-		if (_sensor_avs_sub.update(&sensor_avs_status)) {
-			mavlink_avs_status_t msg{};
+		if (_sensor_avs_mfc_sub.update(&sensor_avs_mel)) {
+			mavlink_avs_mfc_t msg{};
 
-			msg.time_usec = sensor_avs_status.time_utc_usec;
-			msg.sample_index = sensor_avs_status.timestamp_sample;
-			msg.histogram_count = sensor_avs_status.histogram_count;
-			msg.source_index = sensor_avs_status.source_index;
-			msg.node_id = sensor_avs_status.device_id;
-			msg.spl = sensor_avs_status.spl;
-			msg.sil = sensor_avs_status.sil;
-			msg.azimuth = sensor_avs_status.azimuth_deg;
-			msg.elevation = sensor_avs_status.elevation_deg;
-			msg.intensity = sensor_avs_status.active_intensity;
-			msg.q_factor = sensor_avs_status.q_factor;
+			msg.time_usec = sensor_avs_mel.time_utc_usec;
+			msg.sample_index = sensor_avs_mel.timestamp_sample;
+			msg.node_id = sensor_avs_mel.device_id;
 
-			mavlink_msg_avs_status_send_struct(_mavlink->get_channel(), &msg);
+			for (unsigned int i = 0; i < sensor_avs_mel.FFT_MEL_BANDS; i++) {
+				msg.intensity[i] = sensor_avs_mel.active_intensity[i];
+			}
+			mavlink_msg_avs_mfc_send_struct(_mavlink->get_channel(), &msg);
 
 			return true;
 		}
-
 		return false;
 	}
 };
 
-#endif // AVS_STATUS_HPP
+#endif // AVS_MFC_HPP

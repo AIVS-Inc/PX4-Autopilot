@@ -79,29 +79,31 @@ public:
 		ares_Bearings_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
 		uint64_t utc_us = aresevent.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
-		uint32_t idx = aresevent.m_iSourceIndex;
+		uint16_t idx = aresevent.m_iSourceIndex;
+		uint16_t cnt = aresevent.m_iHistogramCnt;
 		double spl = aresevent.m_fSplDb;
 		double sil = aresevent.m_fSilDb;
-		double bgsil = aresevent.m_fSilBgDb;
+		double qfac = aresevent.m_fQfac;
 		double acti = aresevent.m_fActiveI;
 		double azim = aresevent.m_fAzimuth;
 		double elev = aresevent.m_fElevation;
 		uint32_t node = receive.metadata.remote_node_id;
 
-		//PX4_INFO("node:%lu,idx:%lu,usec:%llu,spl:%.2f,sil:%.2f,bgsil:%.2f,acti:%.2f,az:%.2f,el:%.2f",
-		//  	  node,idx,utc_us,spl,sil,bgsil,acti,azim,elev );
+		// PX4_INFO("node:%lu,idx:%hu,cnt:%hu,usec:%llu,spl:%.2f,sil:%.2f,q-fac:%.2f,acti:%.2f,az:%.2f,el:%.2f",
+		//   	  node,idx,cnt,utc_us,spl,sil,qfac,acti,azim,elev );
 
 		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;
 		bearings.time_utc_usec = utc_us;
 		bearings.spl = spl;
 		bearings.sil = sil;
-		bearings.bkgrnd_sil = bgsil;
+		bearings.q_factor = qfac;
 		bearings.active_intensity = acti;
 		bearings.azimuth_deg = azim;
 		bearings.elevation_deg = elev;
 		bearings.timestamp_sample = aresevent.m_u32SampleIndex;
 		bearings.source_index = idx;
+		bearings.histogram_count = cnt;
 
 		orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
 	};

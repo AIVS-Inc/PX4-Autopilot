@@ -277,6 +277,9 @@ private:
 		(ParamInt<px4::params::AVS_SPATIAL_FILT>)_avs_spatial_filt,
 		(ParamInt<px4::params::AVS_TARGET_SYNC>) _avs_target_sync,
 		(ParamInt<px4::params::AVS_RPM_AVG_MSEC>)_avs_rpm_avg_len,
+		(ParamInt<px4::params::AVS_IP_XFER_TYPE>)_avs_ip_xfer_type,
+		(ParamInt<px4::params::AVS_IP_XFER_ADDR>)_avs_ip_xfer_addr,
+		(ParamInt<px4::params::AVS_IP_XFER_PORT>)_avs_ip_xfer_port,
 
 		(ParamFloat<px4::params::AVS_ANT_DX>)	 _avs_antenna_dx,
 		(ParamFloat<px4::params::AVS_ANT_DY>)	 _avs_antenna_dy

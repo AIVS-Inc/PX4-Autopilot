@@ -57,13 +57,13 @@
 #include <uORB/topics/vehicle_status.h>
 
 #include "streams/ACTUATOR_OUTPUT_STATUS.hpp"
-#include "streams/AVS_STATUS.hpp"
 #include "streams/ALTITUDE.hpp"
 #include "streams/ATTITUDE.hpp"
 #include "streams/ATTITUDE_QUATERNION.hpp"
 #include "streams/ATTITUDE_TARGET.hpp"
 #include "streams/AUTOPILOT_VERSION.hpp"
 #include "streams/AVS_STATUS.hpp"
+#include "streams/AVS_MFC.hpp"
 #include "streams/BATTERY_STATUS.hpp"
 #include "streams/CAMERA_IMAGE_CAPTURED.hpp"
 #include "streams/CAMERA_TRIGGER.hpp"
@@ -469,6 +469,9 @@ static const StreamListItem streams_list[] = {
 #if defined(AVS_STATUS_HPP)
 	create_stream_list_item<MavlinkStreamAvsStatus>(),
 #endif // AVS_STATUS_HPP
+#if defined(AVS_MFC_HPP)
+	create_stream_list_item<MavlinkStreamAvsMfc>(),
+#endif // AVS_MFC_HPP
 #if defined(REL_POS_NED_HPP)
 	create_stream_list_item<MavlinkStreamRelPosNed>(),
 #endif // REL_POS_NED_HPP

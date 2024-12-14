@@ -1,5 +1,6 @@
 # Acoustic Vector Sensor Mel Intensity
 
+uint8  FFT_MEL_BANDS = 15	# currently support on 15 Mel bands, from 60 Hz to 1.7 kHz
 uint64 timestamp		# time since system start (microseconds)
 uint32 timestamp_sample		# AVS sensor sample index since system SYNC
 uint64 time_utc_usec            # Timestamp (microseconds, UTC)

@@ -42,6 +42,23 @@
 #define ARES_SUBJECT_ID_FFT_MEL_INTENSITY			1247
 #define ARES_SUBJECT_ID_GNSS_NTRIP				1248
 
+// IP method for time data transfer
+#define ARES_XFER_NONE		0
+#define ARES_TCP_SERVER 	1
+#define ARES_TCP_CLIENT 	2
+#define ARES_UDP_BROADCAST 	3
+#define ARES_UORB_TIME_XFER	4
+#define ARES_MAV_TUNNEL_XFER	5
+#define ARES_TCP_CLIENT_TEST 	6
+
+// structure for passing ADC frame through mavlink tunnel
+typedef struct mvhdr {
+	uint16_t device_id;
+	uint16_t tID;
+	uint64_t utc_usec;
+	uint32_t sample_idx;
+} mvhdr_t;
+
 // distinguish between uORB message types sharing uavcan_param_value.msg definition
 typedef enum: uint8_t {
 	AVS_HEARTBEAT = 0,

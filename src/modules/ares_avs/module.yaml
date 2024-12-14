@@ -129,10 +129,10 @@ parameters:
           short: Background SIL threshold dB
           long: Background SIL threshold when self-measurement is false
         type: int32
-        min: 30
+        min: 20
         max: 100
         increment: 1
-        default: 70
+        default: 25
 
       AVS_PK_NUM_HARM:
         description:
@@ -213,6 +213,36 @@ parameters:
         max: 500
         increment: 1
         default: 25
+
+      AVS_IP_XFER_TYPE:
+        description:
+          short: Method for transfer of ARES data
+          long:  Time data xfer method (0=None,1=TCP server,2=TCP client,3=UDP,4=uORB,5=Mavlink,6=TCP server test)
+        type: int32
+        min: 0
+        max: 6
+        increment: 1
+        default: 0
+
+      AVS_IP_XFER_ADDR:
+        description:
+          short: IP address for host data transfer
+          long:  Enter encoded 32-bit unsigned for IPv4 address
+        type: int32
+        min: -2147483648
+        max: 2147483647
+        increment: 1
+        default: 0
+
+      AVS_IP_XFER_PORT:
+        description:
+          short: Port number for host data transfer
+          long:  Enter port number
+        type: int32
+        min: 0
+        max: 65536
+        increment: 1
+        default: 12345
 
       AVS_ANT_DX:
         description:

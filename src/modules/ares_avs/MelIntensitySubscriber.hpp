@@ -80,6 +80,7 @@ public:
 
 		uint64_t utc_us = mel_intensity.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
 		mel.timestamp = hrt_absolute_time();
+		mel.timestamp_sample = mel_intensity.m_u32SampleIndex;
 		mel.device_id = receive.metadata.remote_node_id;
 		mel.time_utc_usec = utc_us;
 
