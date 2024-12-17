@@ -64,6 +64,7 @@ private:
 		if (_sensor_gnss_relative_sub.update(&relposned)) {
 			mavlink_rel_pos_ned_t msg{};
 
+			msg.time_boot_ms = relposned.timestamp / 1000;
 			msg.north = relposned.position[0];
 			msg.east = relposned.position[1];
 			msg.down = relposned.position[2];

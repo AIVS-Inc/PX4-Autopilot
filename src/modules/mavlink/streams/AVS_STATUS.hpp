@@ -64,6 +64,7 @@ private:
 		if (_sensor_avs_sub.update(&sensor_avs_status)) {
 			mavlink_avs_status_t msg{};
 
+			msg.time_boot_ms = sensor_avs_status.timestamp / 1000;
 			msg.time_usec = sensor_avs_status.time_utc_usec;
 			msg.sample_index = sensor_avs_status.timestamp_sample;
 			msg.histogram_count = sensor_avs_status.histogram_count;

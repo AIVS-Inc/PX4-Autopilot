@@ -1625,8 +1625,9 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 	/* fallthrough */
 	case MAVLINK_MODE_CUSTOM:
 		configure_stream_local("AVS_STATUS", unlimited_rate); //2.0f);
-		configure_stream_local("AVS_MEL", unlimited_rate); //2.0f);
-		//stream nothing
+		configure_stream_local("AVS_MFC", unlimited_rate); //2.0f);
+		configure_stream_local("ATTITUDE", 2.0f);		// node is not moving, just need to average pos and orientation
+		configure_stream_local("GLOBAL_POSITION_INT", 2.0f);
 		break;
 
 	case MAVLINK_MODE_CONFIG: // USB

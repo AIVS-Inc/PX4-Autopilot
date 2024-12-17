@@ -64,6 +64,7 @@ private:
 		if (_sensor_avs_mfc_sub.update(&sensor_avs_mel)) {
 			mavlink_avs_mfc_t msg{};
 
+			msg.time_boot_ms = sensor_avs_mel.timestamp / 1000;
 			msg.time_usec = sensor_avs_mel.time_utc_usec;
 			msg.sample_index = sensor_avs_mel.timestamp_sample;
 			msg.node_id = sensor_avs_mel.device_id;
