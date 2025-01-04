@@ -1,0 +1,8 @@
+# AIVS Inc FFT measurement parameters
+
+uint16	    m_FftParamId      # Specify what parameter is to be changed
+
+uint16      m_FftStartBin     # Starting bin index (zero-based) for FFT data, bin width=delta_f
+uint16      m_FftNumBins      # Number of bins for FFT data vectors
+
+@sealed

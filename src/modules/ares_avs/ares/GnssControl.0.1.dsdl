@@ -1,0 +1,14 @@
+# AIVS Inc GNSS measurement control parameters
+
+uint16      m_u16ParamId     # see below
+uint8[16]   m_u8Command      # see UavCanId.h
+
+@sealed
+
+# typedef struct __attribute__((aligned(2)))	// ares_gnss_Param_0_1
+# {
+# 	uint16_t m_u16ParamId;
+# 	uint8_t m_u8ParamValue[ 0 ];
+# } ares_gnss_Param_0_1;
+
+# See UavCanId.h for definitions of enumerated types

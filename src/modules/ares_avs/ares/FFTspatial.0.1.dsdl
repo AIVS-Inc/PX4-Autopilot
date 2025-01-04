@@ -1,0 +1,8 @@
+# AIVS Inc FFT measurement parameters
+
+uint16	    m_FftParamId      # Specify what parameter is to be changed
+
+uint8	    m_FftDec          # Number of FFT 96 sample frames until a processing step (used to set overlap)
+uint8       m_SpatialFilt     # Select spatial filtering for a dual-AVS drone (0=none, 1=top, 2=bottom)
+
+@sealed

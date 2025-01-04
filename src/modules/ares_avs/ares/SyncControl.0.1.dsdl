@@ -1,0 +1,5 @@
+# AIVS Inc Sync control time
+
+uint64      m_u64SyncSecs	# Set Sync time in UTC seconds
+
+@sealed

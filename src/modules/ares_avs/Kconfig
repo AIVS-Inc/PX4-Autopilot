@@ -1,0 +1,5 @@
+menuconfig MODULES_ARES_AVS
+	bool "ares_avs"
+	default n
+	---help---
+		ARES acoustic vector sensor application

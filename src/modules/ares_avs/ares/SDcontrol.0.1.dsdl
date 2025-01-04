@@ -1,0 +1,30 @@
+# AIVS Inc SD card control parameters
+
+uint16      m_u16ControlId     # see below
+uint16      m_u16Length
+uint8[16]   m_u8Command        # "enable" = 1 byte, but could be a path name
+
+@sealed
+
+#typedef enum	// ares_storage_ControlId
+#{
+#	StorageControlId_Min = 0,
+#	StorageControlId_CardMount = StorageControlId_Min,		// and unmount
+#	StorageControlId_CardStatus,	// card size, free space, status
+#	StorageControlId_FileStart,		// and stop
+#	StorageControlId_FileStatus,	// file size/status
+#	StorageControlId_FileRead,
+#	StorageControlId_FileDelete,
+#	StorageControlId_DirectoryList,
+#	StorageControlId_AppendFileOpen,
+#	StorageControlId_AppendFileWrite,
+#	StorageControlId_AppendFileClose,
+#	StorageControlId_GetFileSize,
+#	StorageControlId_ACK,
+#	StorageControlId_NACK,
+#	StorageControlId_COUNT,
+#	StorageControlId_Invalid,
+#	StorageControlId_Max = StorageControlId_COUNT - 1,
+#} ares_storage_ControlId;
+
+
