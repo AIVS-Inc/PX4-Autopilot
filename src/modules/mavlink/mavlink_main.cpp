@@ -1450,6 +1450,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("POSITION_TARGET_LOCAL_NED", 1.5f);
 		configure_stream_local("RAW_RPM", 2.0f);
 		configure_stream_local("RC_CHANNELS", 5.0f);
+		configure_stream_local("REL_POS_NED", 1.0f);
 		configure_stream_local("SCALED_PRESSURE", 1.0f);
 		configure_stream_local("SERVO_OUTPUT_RAW_0", 1.0f);
 		configure_stream_local("SYS_STATUS", 1.0f);
@@ -1638,7 +1639,10 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 
 	/* fallthrough */
 	case MAVLINK_MODE_CUSTOM:
-		//stream nothing
+		configure_stream_local("AVS_STATUS", unlimited_rate); //2.0f);
+		configure_stream_local("AVS_MFC", unlimited_rate); //2.0f);
+		configure_stream_local("ATTITUDE", 2.0f);		// node is not moving, just need to average pos and orientation
+		configure_stream_local("GLOBAL_POSITION_INT", 2.0f);
 		break;
 
 	case MAVLINK_MODE_CONFIG: // USB

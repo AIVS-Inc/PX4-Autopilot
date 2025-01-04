@@ -62,6 +62,12 @@
 #include "NodeManager.hpp"
 #endif
 
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+#include "../../modules/ares_avs/AresServiceManager.hpp"
+#include "../../modules/ares_avs/AresPubManager.hpp"
+#include "../../modules/ares_avs/AresSubManager.hpp"
+#endif
+
 #ifdef CONFIG_CYPHAL_NODE_CLIENT
 #include "NodeClient.hpp"
 #endif
@@ -170,6 +176,12 @@ private:
 
 #ifdef CONFIG_CYPHAL_NODE_MANAGER
 	NodeManager _node_manager {_canard_handle, _param_manager};
+#endif
+
+#ifdef CONFIG_CYPHAL_ARES_SERVICE_MANAGER
+	AresServiceManager _ares_serv_manager {_canard_handle};
+	AresPubManager 	   _ares_pub_manager  {_canard_handle};
+	AresSubManager     _ares_sub_manager  {_canard_handle};
 #endif
 
 #ifdef CONFIG_CYPHAL_NODE_CLIENT

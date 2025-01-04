@@ -60,11 +60,11 @@ PARAM_DEFINE_INT32(CYPHAL_ID, 1);
  *
  * @unit bit/s
  * @min 20000
- * @max 1000000
+ * @max 4000000
  * @reboot_required true
  * @group Cyphal
  */
-PARAM_DEFINE_INT32(CYPHAL_BAUD, 1000000);
+PARAM_DEFINE_INT32(CYPHAL_BAUD, 4000000);
 
 /* Subscription port ID, -1 will be treated as unset */
 

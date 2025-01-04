@@ -84,7 +84,7 @@ public:
 private:
 
 	int               _fd{-1};
-	bool              _can_fd{false};
+	bool              _can_fd{true};
 
 	//// Send msg structure
 	struct iovec       _send_iov {};

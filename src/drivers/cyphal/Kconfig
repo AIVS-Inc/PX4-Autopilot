@@ -4,7 +4,7 @@
 #
 menuconfig DRIVERS_CYPHAL
 	bool "Cyphal"
-	default n
+	default y
 	---help---
 		Enable support for Cyphal
 
@@ -22,10 +22,17 @@ if DRIVERS_CYPHAL
 
     config CYPHAL_NODE_MANAGER
         bool "Node manager"
-        default y
+        default n
         depends on CYPHAL_FMU
         help
             Implement Cyphal PNP server functionality and manages discovered nodes
+
+    config CYPHAL_ARES_SERVICE_MANAGER
+        bool "ARES manager"
+        default y
+        depends on CYPHAL_FMU
+        help
+            Implement Cyphal manage ARES AVS sensor functionality
 
     config CYPHAL_NODE_CLIENT
         bool "Node client"
