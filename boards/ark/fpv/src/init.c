@@ -65,6 +65,7 @@
 #include <stm32_uart.h>
 #include <arch/board/board.h>
 #include "arm_internal.h"
+#include "stm32_fdcan_sock.h"
 
 #include <drivers/drv_hrt.h>
 #include <drivers/drv_board_led.h>
@@ -295,5 +296,8 @@ __EXPORT int board_app_initialize(uintptr_t arg)
 	spix_sync_servo_init(BOARD_SPIX_SYNC_FREQ);
 	spix_sync_servo_set(0, 150);
 
+#ifdef CONFIG_STM32H7_FDCAN1
+	stm32_fdcansockinitialize(0);
+#endif
 	return OK;
 }

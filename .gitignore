@@ -111,4 +111,4 @@ log/
 
 # ares_avs
 src/modules/ares_avs/ares/*.h
-
+src/modules/ares_avs/nunavut/support/serialization.h
