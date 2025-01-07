@@ -198,7 +198,7 @@ void CyphalNode::Run()
 
 	if (_canard_handle.node_id() != CANARD_NODE_ID_UNSET) {
 		// send uavcan::node::Heartbeat_1_0 @ 1 Hz
-		//sendHeartbeat();
+		sendHeartbeat();
 
 		//sendPortList();
 

@@ -598,11 +598,11 @@ else
 	#		tune_control play error
 	#	fi
 	# else
-	#	if param greater -s CYPHAL_ENABLE 0
-	#	then
-	#		cyphal start
-	#		ares_avs start
-	#	fi
+	if param greater -s CYPHAL_ENABLE 0
+	then
+		cyphal start
+		ares_avs start
+	fi
 	#fi
 	if param greater -s ZENOH_ENABLE 0
 	then
