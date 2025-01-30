@@ -6,7 +6,7 @@ uint16      m_numSources      # number of to detect (low: 1, high: 360, nom: 2)
 uint8       m_angularRes      # histogram resolution (low: 1, high: 45, nom: 10)
 uint16      m_bkgndSILtc      # background SIL time constant (low: 1, high: 10000, nom: 500)
 uint8       m_eventWindow     # number of updates to the histogram per event, in delta-t steps (low: 1, high: 200, nom: 2)
-bool 	    m_selfMeasureBg   # flag if true, background SIL is measured, else is externally set by m_fBgDbThreshold
+uint8 	    m_selfMeasureBg   # 0=no bgNoise self-meas (use bgDbThreshold), 1=bg SIL is continuously measured, 2=measure once
 float32     m_bgDbThreshold   # user set value in dB that defines the SIL threshold
 
 @sealed

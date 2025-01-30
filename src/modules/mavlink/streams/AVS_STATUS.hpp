@@ -60,13 +60,25 @@ private:
 	bool send() override
 	{
 		sensor_avs_s sensor_avs_status;
+		int32_t sync_time;
 
 		if (_sensor_avs_sub.update(&sensor_avs_status)) {
 			mavlink_avs_status_t msg{};
 
+			// Use time_usec to communicate planned sync time prior to the sync
+			// There is a 3-5 second period when the sync time will be transmitted
+			param_get(param_find("AVS_TARGET_SYNC"), &sync_time);
+			if ((sync_time == 0) || (sensor_avs_status.time_utc_usec/1e6 > sync_time))
+			{
+				msg.time_usec = sensor_avs_status.time_utc_usec;
+				msg.sample_index = sensor_avs_status.timestamp_sample;
+			}
+			else
+			{
+				msg.time_usec = sync_time*1e6;
+				msg.sample_index = 0;
+			}
 			msg.time_boot_ms = sensor_avs_status.timestamp / 1000;
-			msg.time_usec = sensor_avs_status.time_utc_usec;
-			msg.sample_index = sensor_avs_status.timestamp_sample;
 			msg.histogram_count = sensor_avs_status.histogram_count;
 			msg.source_index = sensor_avs_status.source_index;
 			msg.node_id = sensor_avs_status.device_id;

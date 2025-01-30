@@ -200,38 +200,30 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "ena1")) {
+	else if (!strcmp(argv[0], "fft1")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
 				if (object->current_state <= AVS_ARM_WAIT) {
-					return object->ena_command(true);	// enable FFT
-				}
-				else {
-					PX4_INFO("must disarm system to perform this action");
-					return 0;
+					return object->fft_command(true);	// enable FFT
 				}
 			} else {
-				PX4_INFO("ena1: task not running");
+				PX4_INFO("fft1: task not running");
 				return 1;
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "ena0")) {
+	else if (!strcmp(argv[0], "fft0")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
 				if (object->current_state <= AVS_ARM_WAIT) {
-					return object->ena_command(false);	// disable FFT
-				}
-				else {
-					PX4_INFO("must disarm system to perform this action");
-					return 0;
+					return object->fft_command(false);	// disable FFT
 				}
 			} else {
-				PX4_INFO("ena0: task not running");
+				PX4_INFO("fft0: task not running");
 				return 1;
 			}
 		}
@@ -475,10 +467,12 @@ void AresAvs::run()
 	struct timespec ts = {};
 	bool command_ack = false;
 	bool veh_status = false;
+	bool gps_rcvd = false;
 
 	struct sensor_avs_cmd_ack_s cmd_ack;
 	struct manual_control_setpoint_s setpoint;
 	struct vehicle_status_s stat;
+	struct sensor_gps_s sensor_gps;
 
 	// initialize parameters
 	parameters_update(true);
@@ -519,9 +513,9 @@ void AresAvs::run()
 			//PX4_INFO("got sensor_gnss_relative, node: %lu, time: %llu", sensor_gnss_relative.device_id, sensor_gnss_relative.timestamp);
 		}
 		else if (fds[3].revents & POLLIN) {
-			struct sensor_gps_s sensor_gps;
 			orb_copy(ORB_ID(sensor_gps), sensor_gps_sub, &sensor_gps);
 			//PX4_INFO("got sensor_gps, node: %lu, time: %llu", sensor_gps.device_id, sensor_gps.timestamp);
+			gps_rcvd = true;
 		}
 		else if (fds[4].revents & POLLIN) {
 			struct uavcan_parameter_value_s cyphal_param;	// hijacking this message for heartbeat communication
@@ -566,11 +560,11 @@ void AresAvs::run()
 				if (sync_reported() == false) {
 					if ((aresNodeId_bot > 0) && (cyphal_param.node_id == aresNodeId_bot)) {
 						bot_node_sync = true;
-						//PX4_INFO("bottom node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
+						PX4_INFO("bottom node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
 					}
 					if ((aresNodeId_top > 0) && (cyphal_param.node_id == aresNodeId_top)) {
 						top_node_sync = true;
-						//PX4_INFO("top node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
+						PX4_INFO("top node %hhu FRC at sync: %lu", cyphal_param.node_id, (uint32_t)cyphal_param.int_value);
 					}
 				}
 			}
@@ -593,18 +587,24 @@ void AresAvs::run()
 
 		// Run ARES measurement state machine
 		switch (current_state) {
-		case AVS_INIT:
-			px4_clock_gettime(CLOCK_REALTIME, &ts);
-			if (abs(ts.tv_sec) > 1717719180) {
-				PX4_INFO("GNSS time update occurred: %lu, wait for nodes operational",ts.tv_sec);
-				set_next_state(AVS_OPERATIONAL);
+		case AVS_CONNECT:
+			if (nodes_operational() == true) {
+				PX4_INFO("Nodes operational, wait for GNSS PPS");
+				//rtcm_command(true);
+				set_next_state(AVS_PPS_WAIT);
 			}
 			break;
-		case AVS_OPERATIONAL:
-			if (nodes_operational() == true) {
-				PX4_INFO("Nodes operational, wait for RTCM ack");
-				rtcm_command(true);
-				set_next_state(AVS_RTCM_ON);
+		case AVS_PPS_WAIT:
+			if (gps_rcvd && sensor_gps.fix_type >= 3) {
+				PX4_INFO("GNSS pps occurred, wait for UTC time, fix: %hhu",sensor_gps.fix_type);
+				set_next_state(AVS_TIME_WAIT);
+			}
+			break;
+		case AVS_TIME_WAIT:
+			px4_clock_gettime(CLOCK_REALTIME, &ts);
+			if (abs(ts.tv_sec) > 1737000000) {
+				PX4_INFO("GNSS time update occurred: %lu, wait for preflight checks to pass",ts.tv_sec);
+				set_next_state(AVS_DO_SYNC);
 			}
 			break;
 		case AVS_RTCM_ON:
@@ -617,97 +617,103 @@ void AresAvs::run()
 			}
 			break;
 		case AVS_PREFLIGHT:
-			// Verify that begin switch is false, which indicates that the system logger has not been started
-			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
-				// Check if the lever may still be in a high state from a previous test
-				int32_t rc_mode;
-				get_parameter("COM_RC_IN_MODE", &rc_mode);
-				if ((rc_mode < 4) && (setpoint.aux1 > 0.3f)) {
-					if (hb_count < 1) {
-						PX4_INFO("Move Begin/End lever to CENTER position");
-					}
+			// Also ensure that all PX4 preflight checks have passed
+			if (veh_status == true) {
+				if (stat.pre_flight_checks_pass == true) {
+					PX4_INFO("System passes preflight checks, wait command to ARM");
+					set_next_state(AVS_MEAS_INIT);
 				}
-				else {
-					// Also ensure that all PX4 preflight checks have passed
-					if (veh_status == true) {
-						if (stat.pre_flight_checks_pass == true) {
-							PX4_INFO("System passes preflight checks, wait for RC or manual command to start");
-							set_next_state(AVS_MEAS_INIT);
-						}
-						veh_status = false;
-					}
-					else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
-						// Check if the preflight check passed
-						if (stat.pre_flight_checks_pass == true) {
-							set_next_state(AVS_MEAS_INIT);
-						}
-					}
+				veh_status = false;
+			}
+			else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
+				// Check if the preflight check passed
+				if (stat.pre_flight_checks_pass == true) {
+					PX4_INFO("Polled preflight checks pass, wait command to ARM");
+					set_next_state(AVS_MEAS_INIT);
 				}
 			}
-
 			break;
 		case AVS_MEAS_INIT:
-			if (orb_copy(ORB_ID(manual_control_setpoint), manual_control_sub, &setpoint) == PX4_OK) {
-				int32_t rc_mode;
-				get_parameter("COM_RC_IN_MODE", &rc_mode);
-				if (rc_mode < 4) {
-					if (setpoint.aux1 > 0.3f) {
-						// Wait for the lever to go up
-						PX4_INFO("System commanded by RC to start mission, initiate capture");
-						cap_command( true);
-						set_next_state(AVS_CAPTURE_ON);
-					}
-					else if (hb_count < 1) {
-						// don't continue until it is moved to true
-						PX4_INFO("Move Begin/End lever to UP position");
-					}
+		case AVS_ARM_WAIT:
+			// MEAS_INIT is now an idle state, which advances only upon external command,
+			// normally an external ARM command, which then causes a state transition to "fft1".
+			// This starts ARES FFT data processing. Hence, MEAS_INIT and ARM_WAIT are the same.
+
+			// We stay in this state to make FFT measurement changes,
+			// since once we start the FFT this is not possible
+			//PX4_INFO("ARM_WAIT: veh_status = %hhu, arm_status = %hhu", veh_status, stat.arming_state);
+			if (veh_status == true) {
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+					PX4_INFO("remote (ground control) command to arm");
+					fft_command( true);
+					//set_next_state(AVS_FFT_EN_ACK);  // set in fft_command()
 				}
-				else {
-					if (hb_count < 1) {
-						// can't continue until until a user console command
-						PX4_INFO("Waiting for BEGIN mission command");
-					}
+				veh_status = false;
+			}
+			else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
+				// Check if the vehicle is armed
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+					PX4_INFO("polled command to arm");
+					fft_command( true);
+					//set_next_state(AVS_FFT_EN_ACK);  // set in fft_command()
 				}
 			}
 			break;
-		case AVS_CAPTURE_ON:
+		case AVS_DO_SYNC:
 			if (hb_count > 1) {	// delay before sync
-				if (command_ack == true) {
-					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
-						PX4_INFO("Capture command acknowledged, initiate sync");
-						bot_node_sync = false;
-						top_node_sync = false;
-						sync_command_now();
-						set_next_state(AVS_SYNC_ACK);
-					}
-					command_ack = false;
-				}
+				// if (command_ack == true) {
+				// 	if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_STORAGE_CONTROL)) {
+						// PX4_INFO("Capture command acknowledged, initiate sync");
+				bot_node_sync = false;
+				top_node_sync = false;
+				int32_t sync_secs = 0;
+				param_set(param_find("AVS_TARGET_SYNC"), &sync_secs);
+				sync_command_now();
+				set_next_state(AVS_SYNC_ACK);
+					// }
+					// command_ack = false;
+				// }
 			}
 			break;
 		case AVS_SYNC_ACK:
-			if (command_ack == true) {
-				if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_ADC_SYNC)) {
-					PX4_INFO("Got sync ack, wait for sync confirmation");
-					set_next_state(AVS_SYNC_WAIT);
+			if (hb_count > 5) {	// timeout if ACK never received
+				set_next_state(AVS_CONNECT);
+			}
+			else
+			{
+				if (command_ack == true) {
+					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_ADC_SYNC)) {
+						PX4_INFO("Got sync ack, wait for sync confirmation");
+						set_next_state(AVS_SYNC_WAIT);
+					}
+					command_ack = false;
 				}
-				command_ack = false;
 			}
 			break;
 		case AVS_SYNC_WAIT:	// sync is at least a 5 second process
 			if (hb_count > 6) {	// eventually, wait for ARES to denote SyncState
 				if (sync_reported() == true) {
 					PX4_INFO("Sync confirmed, wait for arm");
-					set_next_state(AVS_ARM_WAIT);
+					set_next_state(AVS_PREFLIGHT);
+				}
+				else {	// timeout
+					set_next_state(AVS_CONNECT);
 				}
 			}
 			break;
-		case AVS_ARM_WAIT:
-			if (veh_status == true) {
-				if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
-					PX4_INFO("manual (ground control) command to arm");
-					set_next_state(AVS_ARMED);
+		case AVS_FFT_EN_ACK:
+			if (hb_count > 5) {	// timeout if ACK never received
+				set_next_state(AVS_CONNECT);
+			}
+			else
+			{
+				if (command_ack == true) {
+					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_FFT_CONTROL)) {
+						PX4_INFO("Got FFT enable ack");
+						set_next_state(AVS_ARMED);
+					}
+					command_ack = false;
 				}
-				veh_status = false;
 			}
 			break;
 		case AVS_ARMED:
@@ -731,9 +737,37 @@ void AresAvs::run()
 			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_DISARMED:
-			PX4_INFO("Disarmed after mission, go to capture off");
-			cap_command( false);
-			set_next_state(AVS_CAPTURE_OFF);
+			if (veh_status == true) {
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
+					PX4_INFO("remote (ground control) command to disarm");
+					fft_command( false);
+					//set_next_state(AVS_FFT_DIS_ACK);  // set in fft_command()
+				}
+				veh_status = false;
+			}
+			else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
+				// Check if the vehicle is armed
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
+					PX4_INFO("polled command to disarm");
+					fft_command( false);
+					//set_next_state(AVS_FFT_DIS_ACK);  // set in fft_command()
+				}
+			}
+			break;
+		case AVS_FFT_DIS_ACK:
+			if (hb_count > 5) {	// timeout if ACK never received
+				set_next_state(AVS_CONNECT);
+			}
+			else
+			{
+				if (command_ack == true) {
+					if (nodes_reported(cmd_ack, ARES_SUBJECT_ID_FFT_CONTROL)) {
+						PX4_INFO("Got FFT disable ack");
+						set_next_state(AVS_MEAS_INIT);
+					}
+					command_ack = false;
+				}
+			}
 			break;
 		case AVS_CAPTURE_OFF:
 			if (hb_count > 1) {	// delay to wait for "cap off" ack
@@ -858,6 +892,9 @@ int32_t AresAvs::get_next_nav_state(uint8_t nav_state )
 	case vehicle_status_s::NAVIGATION_STATE_POSITION_SLOW:
 		return(AVS_POSITION);
 		break;
+	case vehicle_status_s::NAVIGATION_STATE_DESCEND:
+		return(AVS_LAND);
+		break;
 	case vehicle_status_s::NAVIGATION_STATE_AUTO_LAND:
 		return(AVS_LAND);
 		break;
@@ -873,7 +910,7 @@ int32_t AresAvs::arm_action(bool veh_status, vehicle_status_s stat, int vehicle_
 
 	if (veh_status == true) {
 		if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
-			PX4_INFO("Disarmed after armed, go to capture off");
+			PX4_INFO("Disarmed after armed since vehicle state indicates DISARM");
 			next_state = AVS_DISARMED;
 		}
 		else if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
@@ -950,8 +987,8 @@ $ ares_avs help		// display this help
 	   win		// set Hann window on/off
 	   enc		// set data encryption on/off
 	   sync		// sync ARES ADCs
-	   ena1		// enable event detection
-	   ena0		// disable event detection
+	   fft1		// enable FFT
+	   fft0		// disable FFT
 	   cal		// recalculate FFT corrections on all node_ids
 
 There are no optional arguments, e.g., :
@@ -979,8 +1016,8 @@ $ ares_avs start
 	PRINT_MODULE_USAGE_COMMAND("win");	// send Hann window on/off
 	PRINT_MODULE_USAGE_COMMAND("enc");	// send data encryption on/off
 	PRINT_MODULE_USAGE_COMMAND("sync");	// sync ARES ADCs
-	PRINT_MODULE_USAGE_COMMAND("ena1");  	// enable FFT on all node_ids
-	PRINT_MODULE_USAGE_COMMAND("ena0");	// disable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("fft1");  	// enable FFT on all node_ids
+	PRINT_MODULE_USAGE_COMMAND("fft0");	// disable FFT on all node_ids
 	PRINT_MODULE_USAGE_COMMAND("cal");	// recalculate FFT corrections on all node_ids
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 
@@ -992,7 +1029,7 @@ int AresAvs::event_command()		// update event params in ARES, enable/disable FFT
 	int32_t val;
 
 	if (fftEnable == true){
-		ena_command( false);
+		fft_command( false);
 	}
 
 	/* advertise avs_evt_control topic */
@@ -1024,7 +1061,7 @@ int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
 	int32_t val;
 
 	if (fftEnable == true){
-		ena_command( false);
+		fft_command( false);
 	}
 
 	/* advertise avs_peak_control topic */
@@ -1054,7 +1091,7 @@ int AresAvs::send_fft_params( ares_fft_ParamId param_id)
 	int32_t val;
 
 	if (fftEnable == true){
-		ena_command( false);	// FFT must be diabled to make these changes
+		fft_command( false);	// FFT must be diabled to make these changes
 	}
 	/* advertise avs_fft_params topic */
 	struct sensor_avs_fft_params_s params;
@@ -1146,12 +1183,12 @@ int AresAvs::sync_command( time_t time_s)	// send an ADC sync to ARES at a speci
 	orb_publish(ORB_ID(sensor_avs_sync_control), sync_pub, &sync);
 
 	/* Record for logging purposes */
-	int32_t sync_secs = (int32_t)sync.sync_utc_sec;
+	int32_t sync_secs = (uint32_t)sync.sync_utc_sec;
 	param_set(param_find("AVS_TARGET_SYNC"), &sync_secs);	// FIX, wraps in year 2038
 	return 0;
 }
 
-int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/disable FFT
+int AresAvs::fft_command( bool flag)		// update event params in ARES, enable/disable FFT
 {
 	/* advertise avs_fft_control topic */
 	struct sensor_avs_fft_control_s fft;
@@ -1165,10 +1202,15 @@ int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/dis
 	fft.fft_enable = flag;
 
 	if (flag == true)
+	{
 		PX4_INFO("Enable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+		set_next_state(AVS_FFT_EN_ACK);
+	}
 	else
+	{
 		PX4_INFO("Disable FFT on ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
-
+		set_next_state(AVS_FFT_DIS_ACK);
+	}
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;
@@ -1177,7 +1219,7 @@ int AresAvs::ena_command( bool flag)		// update event params in ARES, enable/dis
 int AresAvs::cal_command()			// recompute FFT correction vectors
 {
 	if (fftEnable == true){
-		ena_command( false);	// FFT must be diabled to make these changes
+		fft_command( false);	// FFT must be diabled to make these changes
 	}
 	/* advertise avs_fft_control topic */
 	struct sensor_avs_fft_control_s fft;
@@ -1198,9 +1240,10 @@ int AresAvs::cal_command()			// recompute FFT correction vectors
 
 int AresAvs::begin_command()			// begin a flight sequence manually
 {
-	PX4_INFO("Begin mission, initiate capture");
-	cap_command( true);
-	set_next_state(AVS_CAPTURE_ON);
+	// PX4_INFO("Begin mission, initiate capture");
+	// cap_command( true);
+	// set_next_state(AVS_CAPTURE_ON);
+	PX4_INFO("Begin command is obsolete");
 	return 0;
 }
 

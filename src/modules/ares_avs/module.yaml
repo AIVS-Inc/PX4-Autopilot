@@ -119,10 +119,13 @@ parameters:
 
       AVS_EVT_BGSIL:
         description:
-          short: Background SIL meas flag
-          long: Flag to set self measurement of background SIL
-        type: boolean
-        default: true
+          short: Background SIL meas mode
+          long: Self measurement of background SIL (0=none,1=continuous,2=once)
+        type: int32
+        min: 0
+        max: 2
+        increment: 1
+        default: 2
 
       AVS_EVT_BGSIL_DB:
         description:

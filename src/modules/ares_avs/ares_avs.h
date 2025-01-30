@@ -75,12 +75,14 @@ using namespace time_literals;
 extern "C" __EXPORT int ares_avs_main(int argc, char *argv[]);
 
 typedef enum: int32_t {
-	AVS_INIT = 0,
-	AVS_OPERATIONAL,
+	AVS_CONNECT = 0,
+	AVS_PPS_WAIT,
+	AVS_TIME_WAIT,
 	AVS_RTCM_ON,
 	AVS_PREFLIGHT,
 	AVS_MEAS_INIT,
-	AVS_CAPTURE_ON,
+	AVS_FFT_EN_ACK,
+	AVS_DO_SYNC,
 	AVS_SYNC_ACK,
 	AVS_SYNC_WAIT,
 	AVS_ARM_WAIT,
@@ -90,6 +92,7 @@ typedef enum: int32_t {
 	AVS_POSITION,
 	AVS_LAND,
 	AVS_DISARMED,
+	AVS_FFT_DIS_ACK,
 	AVS_CAPTURE_OFF,
 	AVS_END
 } avs_state;
@@ -98,12 +101,14 @@ struct avs_state_str {
    static const char* statestr[];
 };
 const char* avs_state_str::statestr[] = {
-	"AVS_INIT",
-	"AVS_OPERATIONAL",
+	"AVS_CONNECT",
+	"AVS_PPS_WAIT",
+	"AVS_TIME_WAIT",
 	"AVS_RTCM_ON",
 	"AVS_PREFLIGHT",
 	"AVS_MEAS_INIT",
-	"AVS_CAPTURE_ON",
+	"AVS_FFT_ENABLE_ACK",
+	"AVS_DO_SYNC",
 	"AVS_SYNC_ACK",
 	"AVS_SYNC_WAIT",
 	"AVS_ARM_WAIT",
@@ -113,6 +118,7 @@ const char* avs_state_str::statestr[] = {
 	"AVS_POSITION",
 	"AVS_LAND",
 	"AVS_DISARMED",
+	"AVS_FFT_DISABLE_ACK",
 	"AVS_CAPTURE_OFF",
 	"AVS_END"
 	};
@@ -172,7 +178,7 @@ public:
 
 	int sync_command( time_t time_sec);
 
-	int ena_command(bool flag);
+	int fft_command(bool flag);
 
 	int rtcm_command(bool flag);
 
@@ -237,7 +243,7 @@ private:
 				 const float param3 = NAN,  const float param4 = NAN, const double param5 = static_cast<double>(NAN),
 				 const double param6 = static_cast<double>(NAN), const float param7 = NAN);
 
-	int32_t current_state = avs_state::AVS_INIT;
+	int32_t current_state = avs_state::AVS_CONNECT;
 
 	uint8_t aresNodeId_top = 0;
 	uint8_t aresNodeId_bot = 0;

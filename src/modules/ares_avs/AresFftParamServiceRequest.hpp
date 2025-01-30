@@ -85,7 +85,7 @@ public:
 			cmd.m_angularRes = (uint8_t) evt.angular_resln;
 			cmd.m_bkgndSILtc = (uint16_t) evt.bg_timeconst;
 			cmd.m_eventWindow = (uint8_t) evt.event_window;
-			cmd.m_selfMeasureBg = (bool) evt.self_measure_bg;
+			cmd.m_selfMeasureBg = (uint8_t) evt.self_measure_bg;
 			cmd.m_bgDbThreshold = (float) evt.bg_db_threshold;
 
 			if (evt.fft_enable == false && evt.node_top > 0) {

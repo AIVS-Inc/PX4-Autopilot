@@ -134,7 +134,7 @@ typedef struct __attribute__(( packed )) // ares_fft_Param_EventDetector
 	uint8_t m_iAngularResln;
 	uint16_t m_iBgTimeConstant;
 	uint8_t m_iEventWindow;
-	bool m_bSelfMeasureBg;
+	uint8_t m_iSelfMeasureBg;
 	float m_fBgDbThreshold;
 
 } ares_fft_Param_EventDetector;

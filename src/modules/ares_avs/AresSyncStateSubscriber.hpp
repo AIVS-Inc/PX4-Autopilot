@@ -89,6 +89,7 @@ public:
 		sync.int_value = (int64_t) timesync.m_u32MasterFrcAtPps;	// should make ARES changes to use m_u8SyncState
 
 		orb_publish( ORB_ID(uavcan_parameter_value), this->sync_pub, &this->sync);	///< uORB pub for AVS events
+		//PX4_INFO("Current time: %llu", timesync.m_tMasterCurrentUtcTime);
 	};
 private:
 	CanardPortID _portID;
