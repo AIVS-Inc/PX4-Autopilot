@@ -49,7 +49,7 @@ public:
 
 	unsigned get_size() override
 	{
-		return _sensor_avs_sub.advertised() ? MAVLINK_MSG_ID_AVS_STATUS + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		return _sensor_avs_sub.advertised() ? MAVLINK_MSG_ID_AVS_STATUS_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
 	}
 
 private:
@@ -70,25 +70,29 @@ private:
 			param_get(param_find("AVS_TARGET_SYNC"), &sync_time);
 			if ((sync_time == 0) || (sensor_avs_status.time_utc_usec/1e6 > sync_time))
 			{
-				msg.time_usec = sensor_avs_status.time_utc_usec;
-				msg.sample_index = sensor_avs_status.timestamp_sample;
+				msg.time_usec = sensor_avs_status.time_utc_usec;		// uint64
+				msg.adcidx = sensor_avs_status.timestamp_sample;		// uint32
 			}
 			else
 			{
 				msg.time_usec = sync_time*1e6;
-				msg.sample_index = 0;
+				msg.adcidx = 0;
 			}
-			msg.time_boot_ms = sensor_avs_status.timestamp / 1000;
-			msg.histogram_count = sensor_avs_status.histogram_count;
-			msg.source_index = sensor_avs_status.source_index;
-			msg.node_id = sensor_avs_status.device_id;
-			msg.spl = sensor_avs_status.spl;
-			msg.sil = sensor_avs_status.sil;
-			msg.azimuth = sensor_avs_status.azimuth_deg;
-			msg.elevation = sensor_avs_status.elevation_deg;
-			msg.intensity = sensor_avs_status.active_intensity;
-			msg.q_factor = sensor_avs_status.q_factor;
+			msg.time_boot_ms = sensor_avs_status.timestamp / 1000;			// uint32
+			msg.histcnt = (uint16_t) sensor_avs_status.histogram_count;		// uint16
+			msg.srcidx = (uint8_t) sensor_avs_status.source_index;			// uint8
+			msg.nodeid = (uint8_t)sensor_avs_status.device_id;			// uint8
+			msg.azim = sensor_avs_status.azimuth_deg;				// float
+			msg.elev = sensor_avs_status.elevation_deg;				// float
+			msg.intensity = (uint8_t) (sensor_avs_status.active_intensity * 2);	// uint8 [0 128 dB in 0.5 dB steps]
+			msg.qfac = (uint8_t) (sensor_avs_status.q_factor + 0.5f);		// uint8
 
+			for (unsigned int i = 0; i < sensor_avs_status.FFT_MEL_BANDS; i++) {
+				if (sensor_avs_status.mel_intensity[i] < 128)
+					msg.melint[i] = (uint8_t) (sensor_avs_status.mel_intensity[i] * 2);  // uint8 [0 128 dB in 0.5 dB steps]
+				else
+					msg.melint[i] = (uint8_t) 128;
+			}
 			mavlink_msg_avs_status_send_struct(_mavlink->get_channel(), &msg);
 
 			return true;

@@ -1639,12 +1639,11 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 
 	/* fallthrough */
 	case MAVLINK_MODE_CUSTOM:
-		configure_stream_local("AVS_STATUS", unlimited_rate); //2.0f);
-		configure_stream_local("AVS_MFC", unlimited_rate); //2.0f);
-		configure_stream_local("ATTITUDE", 1.0f);		// node is not moving, just need to average pos and orientation
-		configure_stream_local("GLOBAL_POSITION_INT", 1.0f);
-		configure_stream_local("SYSTEM_TIME", 1.0f);
-		break;
+		configure_stream_local("AVS_STATUS", 20.0f);		// 20 * ( 46 bytes payload + 12 bytes overhead) = 1160 bytes/sec
+		configure_stream_local("ATTITUDE", 1.0f);		// node is not moving, just need to average
+		configure_stream_local("GLOBAL_POSITION_INT", 1.0f);	// position (28+12) and orientation (28+12) size = 80 bytes/sec
+		configure_stream_local("SYSTEM_TIME", 1.0f);		// time (12+12) = 24 bytes/sec
+		break;							// total expected bandwidth = 1264 bytes/sec, + heartbeat, others?
 
 	case MAVLINK_MODE_CONFIG: // USB
 		// Note: streams requiring low latency come first
@@ -2219,7 +2218,7 @@ Mavlink::task_main(int argc, char *argv[])
 	}
 
 	/* add default streams depending on mode */
-	if (_mode != MAVLINK_MODE_IRIDIUM) {
+	if ((_mode != MAVLINK_MODE_IRIDIUM) && (_mode != MAVLINK_MODE_MAGIC)){
 
 		/* HEARTBEAT is constant rate stream, rate never adjusted */
 		configure_stream("HEARTBEAT", 1.0f);

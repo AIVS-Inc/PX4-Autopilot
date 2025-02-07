@@ -1080,7 +1080,7 @@ int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
 	peak.node_bot = aresNodeId_bot;
 	peak.fft_enable = fftEnable;
 
-	PX4_INFO("Send event parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
+	PX4_INFO("Send peak parameters to ARES nodes: %hd, %hd", aresNodeId_top, aresNodeId_bot);
 	orb_publish(ORB_ID(sensor_avs_peak_control), peak_pub, &peak);
 
 	return 0;

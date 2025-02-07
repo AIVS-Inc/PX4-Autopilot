@@ -64,8 +64,6 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("external_ins_local_position");
 	add_optional_topic("esc_status", 250);
 	add_optional_topic("sensor_avs", 50);
-	add_optional_topic("sensor_avs_mel", 50);
-	add_optional_topic("sensor_avs_mel", 50);
 	add_topic_multi("sensor_gnss_relative", 250, 1);
 	add_topic("failure_detector_status", 100);
 	add_topic("failsafe_flags");
@@ -518,7 +516,11 @@ bool LoggedTopics::initialize_logged_topics(SDLogProfileMask profile)
 		PX4_INFO("logging %d topics from logger_topics.txt", ntopics);
 
 	} else {
-		initialize_configured_topics(profile);
+		//initialize_configured_topics(profile);
+		add_topic("sensor_avs", 50);
+		add_topic("vehicle_attitude", 1000);
+		add_topic("vehicle_global_position", 1000);
+		add_topic("vehicle_local_position", 1000);
 	}
 
 	return _subscriptions.count > 0;

@@ -81,8 +81,6 @@ public:
 		uint64_t utc_us = aresevent.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
 		uint16_t idx = aresevent.m_iSourceIndex;
 		uint16_t cnt = aresevent.m_iHistogramCnt;
-		double spl = aresevent.m_fSplDb;
-		double sil = aresevent.m_fSilDb;
 		double qfac = aresevent.m_fQfac;
 		double acti = aresevent.m_fActiveI;
 		double azim = aresevent.m_fAzimuth;
@@ -95,8 +93,6 @@ public:
 		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;
 		bearings.time_utc_usec = utc_us;
-		bearings.spl = spl;
-		bearings.sil = sil;
 		bearings.q_factor = qfac;
 		bearings.active_intensity = acti;
 		bearings.azimuth_deg = azim;
@@ -105,7 +101,13 @@ public:
 		bearings.source_index = idx;
 		bearings.histogram_count = cnt;
 
-		orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
+		for (unsigned int i = 0; i < ares_Bearings_0_1_m_fMelI_ARRAY_CAPACITY_; i++) {
+			if (aresevent.m_fMelI[i] > 0)
+				bearings.mel_intensity[i] = aresevent.m_fMelI[i];
+			else
+				bearings.mel_intensity[i] = 0;
+		}
+	orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
 	};
 private:
 	CanardPortID _portID;
