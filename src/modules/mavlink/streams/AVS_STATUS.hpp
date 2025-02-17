@@ -61,43 +61,50 @@ private:
 	{
 		sensor_avs_s sensor_avs_status;
 		int32_t sync_time;
+		int32_t bg_db_threshold;
 
 		if (_sensor_avs_sub.update(&sensor_avs_status)) {
 			mavlink_avs_status_t msg{};
 
-			// Use time_usec to communicate planned sync time prior to the sync
-			// There is a 3-5 second period when the sync time will be transmitted
-			param_get(param_find("AVS_TARGET_SYNC"), &sync_time);
-			if ((sync_time == 0) || (sensor_avs_status.time_utc_usec/1e6 > sync_time))
-			{
-				msg.time_usec = sensor_avs_status.time_utc_usec;		// uint64
-				msg.adcidx = sensor_avs_status.timestamp_sample;		// uint32
-			}
-			else
-			{
-				msg.time_usec = sync_time*1e6;
-				msg.adcidx = 0;
-			}
-			msg.time_boot_ms = sensor_avs_status.timestamp / 1000;			// uint32
-			msg.histcnt = (uint16_t) sensor_avs_status.histogram_count;		// uint16
-			msg.srcidx = (uint8_t) sensor_avs_status.source_index;			// uint8
-			msg.nodeid = (uint8_t)sensor_avs_status.device_id;			// uint8
-			msg.azim = sensor_avs_status.azimuth_deg;				// float
-			msg.elev = sensor_avs_status.elevation_deg;				// float
-			msg.intensity = (uint8_t) (sensor_avs_status.active_intensity * 2);	// uint8 [0 128 dB in 0.5 dB steps]
-			msg.qfac = (uint8_t) (sensor_avs_status.q_factor + 0.5f);		// uint8
+			// Limit mavlink Tx by sending pkts only above a specified dB threshold
+			param_get(param_find("AVS_EVT_BGSIL_DB"), &bg_db_threshold);
 
-			for (unsigned int i = 0; i < sensor_avs_status.FFT_MEL_BANDS; i++) {
-				if (sensor_avs_status.mel_intensity[i] < 128)
-					msg.melint[i] = (uint8_t) (sensor_avs_status.mel_intensity[i] * 2);  // uint8 [0 128 dB in 0.5 dB steps]
+			if ((int32_t)sensor_avs_status.active_intensity > bg_db_threshold) {
+				// Use time_usec to communicate planned sync time prior to the sync
+				// There is a 3-5 second period when the sync time will be transmitted
+				param_get(param_find("AVS_TARGET_SYNC"), &sync_time);
+				if ((sync_time == 0) || (sensor_avs_status.time_utc_usec/1e6 > sync_time))
+				{
+					msg.time_usec = sensor_avs_status.time_utc_usec;		// uint64
+					msg.adcidx = sensor_avs_status.timestamp_sample;		// uint32
+				}
 				else
-					msg.melint[i] = (uint8_t) 128;
-			}
-			mavlink_msg_avs_status_send_struct(_mavlink->get_channel(), &msg);
+				{
+					msg.time_usec = sync_time*1e6;
+					msg.adcidx = 0;
+				}
+				msg.time_boot_ms = sensor_avs_status.timestamp / 1000;			// uint32
+				msg.histcnt = (uint16_t) sensor_avs_status.histogram_count;		// uint16
+				msg.srcidx = (uint8_t) sensor_avs_status.source_index;			// uint8
+				msg.nodeid = (uint8_t)sensor_avs_status.device_id;			// uint8
+				msg.azim = sensor_avs_status.azimuth_deg;				// float
+				msg.elev = sensor_avs_status.elevation_deg;				// float
+				msg.intensity = (uint8_t) (sensor_avs_status.active_intensity * 2);	// uint8 [0 128 dB in 0.5 dB steps]
+				msg.qfac = (uint8_t) (sensor_avs_status.q_factor + 0.5f);		// uint8
 
+				for (unsigned int i = 0; i < sensor_avs_status.FFT_MEL_BANDS; i++) {
+					if (sensor_avs_status.mel_intensity[i] < 128)
+						msg.melint[i] = (uint8_t) (sensor_avs_status.mel_intensity[i] * 2);  // uint8 [0 128 dB in 0.5 dB steps]
+					else
+						msg.melint[i] = (uint8_t) 128;
+				}
+				mavlink_msg_avs_status_send_struct(_mavlink->get_channel(), &msg);
+			}
+			else {
+				return false;
+			}
 			return true;
 		}
-
 		return false;
 	}
 };

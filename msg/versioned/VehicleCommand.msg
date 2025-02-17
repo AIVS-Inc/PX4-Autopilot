@@ -107,6 +107,12 @@ uint16 VEHICLE_CMD_DO_WINCH = 42600			# Command to operate winch.
 uint16 VEHICLE_CMD_EXTERNAL_POSITION_ESTIMATE = 43003 # external reset of estimator global position when deadreckoning
 uint16 VEHICLE_CMD_EXTERNAL_WIND_ESTIMATE = 43004
 
+uint16 VEHICLE_CMD_AVS_CAPTURE = 31020			# Start and Stop an ADC capture to SD card
+uint16 VEHICLE_CMD_AVS_EVENT = 31021			# Set/get event parameters
+uint16 VEHICLE_CMD_AVS_PEAK = 31022			# Set/get peak parameters
+uint16 VEHICLE_CMD_AVS_DEC = 31023			# Set/get decimation parameters
+uint16 VEHICLE_CMD_AVS_LIN = 31024			# Set/get FFT linear parameters
+
 # PX4 vehicle commands (beyond 16 bit mavlink commands)
 uint32 VEHICLE_CMD_PX4_INTERNAL_START    = 65537        # start of PX4 internal only vehicle commands (> UINT16_MAX)
 uint32 VEHICLE_CMD_SET_GPS_GLOBAL_ORIGIN = 100000       # Sets the GPS coordinates of the vehicle local origin (0,0,0) position. |Empty|Empty|Empty|Empty|Latitude|Longitude|Altitude|

@@ -102,10 +102,10 @@ public:
 		bearings.histogram_count = cnt;
 
 		for (unsigned int i = 0; i < ares_Bearings_0_1_m_fMelI_ARRAY_CAPACITY_; i++) {
-			if (aresevent.m_fMelI[i] > 0)
+			if (aresevent.m_fMelI[i] > 0.0f)
 				bearings.mel_intensity[i] = aresevent.m_fMelI[i];
 			else
-				bearings.mel_intensity[i] = 0;
+				bearings.mel_intensity[i] = 0.0f;
 		}
 	orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
 	};

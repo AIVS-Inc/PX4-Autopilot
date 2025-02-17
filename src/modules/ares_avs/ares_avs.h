@@ -57,6 +57,7 @@
 #include <uORB/topics/manual_control_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_command.h>
+#include <uORB/topics/vehicle_command_ack.h>
 
 //#include "ares/AdcFrame_0_1.h"
 #include "ares/GnssImu_0_1.h"
@@ -93,7 +94,9 @@ typedef enum: int32_t {
 	AVS_LAND,
 	AVS_DISARMED,
 	AVS_FFT_DIS_ACK,
+	AVS_CAPTURE_ON,
 	AVS_CAPTURE_OFF,
+	AVS_PARAM_CHANGE,
 	AVS_END
 } avs_state;
 
@@ -119,7 +122,9 @@ const char* avs_state_str::statestr[] = {
 	"AVS_LAND",
 	"AVS_DISARMED",
 	"AVS_FFT_DISABLE_ACK",
+	"AVS_CAPTURE_ON",
 	"AVS_CAPTURE_OFF",
+	"AVS_PARAM_CHANGE",
 	"AVS_END"
 	};
 
@@ -147,6 +152,10 @@ public:
 
 	/** @see ModuleBase::print_status() */
 	int print_status() override;
+
+	int handle_command(struct vehicle_command_s cmd);
+
+	int send_ack_mav( uint8_t cmd_ack_result);
 
 	int send_fft_params( ares_fft_ParamId param_id);
 
@@ -293,5 +302,8 @@ private:
 
 	// Subscriptions
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
+	uORB::Publication<vehicle_command_ack_s> _command_ack_pub{ORB_ID(vehicle_command_ack)};
+	vehicle_command_ack_s _ack{};
+	bool _mav_cmd_ack_pending;
 };
 

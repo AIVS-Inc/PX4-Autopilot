@@ -91,37 +91,37 @@ void AresServiceManager::HandleAresResponse(const CanardRxTransfer &receive)
 				_fft_param.reset_command_active( receive.metadata.remote_node_id);	// everything good, we got the response we were looking for
 				param_get(param_find("AVS_EVT_NUM_SRC"), &i32val);
 				if ((uint16_t)i32val != event.m_numSources) {
-					PX4_INFO("evt.m_numSources not confirmed, id: %d", receive.metadata.remote_node_id);
+					PX4_INFO("evt.m_numSources not confirmed, id: %d, value: %hd", receive.metadata.remote_node_id, (uint16_t)i32val);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BG_TC"),   &i32val);
 				if ((uint16_t)i32val != event.m_bkgndSILtc) {
-					PX4_INFO("evt.m_bkgndSILtc not confirmed id: %d", receive.metadata.remote_node_id);
+					PX4_INFO("evt.m_bkgndSILtc not confirmed id: %d, value: %hd", receive.metadata.remote_node_id, (uint16_t)i32val);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_REL_DB"),  &fVal);
-				if (abs(fVal - event.m_relativeDb) > 1e-2) {
-					PX4_INFO("evt.m_relativeDb not confirmed id: %d", receive.metadata.remote_node_id);
+				if (abs(fVal - (float)event.m_relativeDb) > 1e-2) {
+					PX4_INFO("evt.m_relativeDb not confirmed id: %d, value: %f", receive.metadata.remote_node_id, (double)fVal);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_ANG_RES"), &i32val);
 				if ((uint8_t)i32val != event.m_angularRes) {
-					PX4_INFO("evt.m_angularRes not confirmed id: %d", receive.metadata.remote_node_id);
+					PX4_INFO("evt.m_angularRes not confirmed id: %d, value: %hhd", receive.metadata.remote_node_id, (uint8_t)i32val);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_EVT_WIN"), &i32val);
 				if ((uint8_t)i32val != event.m_eventWindow) {
-					PX4_INFO("evt.m_eventWindow not confirmed id: %d", receive.metadata.remote_node_id);
+					PX4_INFO("evt.m_eventWindow not confirmed id: %d, value: %hhd", receive.metadata.remote_node_id, (uint8_t)i32val);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BGSIL"),   &i32val);
-				if ((bool)i32val != event.m_selfMeasureBg) {
-					PX4_INFO("evt.m_selfMeasureBg not confirmed id: %d", receive.metadata.remote_node_id);
+				if ((uint8_t)i32val != event.m_selfMeasureBg) {
+					PX4_INFO("evt.m_selfMeasureBg not confirmed id: %d, value: %hhd", receive.metadata.remote_node_id, (uint8_t)i32val);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 				param_get(param_find("AVS_EVT_BGSIL_DB"),&fVal);
-				if (abs(fVal - event.m_bgDbThreshold) > 1e-2) {
-					PX4_INFO("evt.m_bgDbThreshold not confirmed id: %d", receive.metadata.remote_node_id);
+				if (abs(fVal - (float)event.m_bgDbThreshold) > 1e-2) {
+					PX4_INFO("evt.m_bgDbThreshold not confirmed id: %d, value: %f", receive.metadata.remote_node_id, (double)fVal);
 					command_result_param1 = sensor_avs_cmd_ack_s::VEHICLE_CMD_RESULT_FAILED;
 				}
 			}
