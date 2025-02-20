@@ -228,24 +228,6 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "begin")) {
-		if (is_running()) {
-			object = _object.load();
-
-			if (object) {
-				if (object->current_state <= AVS_ARM_WAIT) {
-					return object->begin_command();	// begin a flight sequence
-				}
-				else {
-					PX4_INFO("must disarm system to perform this action");
-					return 0;
-				}
-			} else {
-				PX4_INFO("begin: task not running");
-				return 1;
-			}
-		}
-	}
 	else if (!strcmp(argv[0], "arm")) {
 		if (is_running()) {
 			object = _object.load();
@@ -282,19 +264,15 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "end")) {
+	else if (!strcmp(argv[0], "reset")) {
 		if (is_running()) {
 			object = _object.load();
 
 			if (object) {
-				if (object->current_state == AVS_DISARMED) {
-					return object->end_command();	// end a flight sequence
-				}
-				else {
-					PX4_INFO("system must disarmed to perform this action");
-					return 0;
-				}
-			} else {
+				object->reset_command();
+				return 0;
+			}
+			else {
 				PX4_INFO("end: task not running");
 				return 1;
 			}
@@ -469,6 +447,7 @@ void AresAvs::run()
 	bool veh_status = false;
 	bool veh_command = false;
 	bool gps_rcvd = false;
+	hb_count = 0;
 
 	struct sensor_avs_cmd_ack_s cmd_ack;
 	struct manual_control_setpoint_s setpoint;
@@ -513,6 +492,7 @@ void AresAvs::run()
 			case vehicle_command_s::VEHICLE_CMD_AVS_PEAK:
 			case vehicle_command_s::VEHICLE_CMD_AVS_LIN:
 			case vehicle_command_s::VEHICLE_CMD_AVS_DEC:
+			case vehicle_command_s::VEHICLE_CMD_AVS_RESET:
 				veh_command = true;
 				break;
 			default:
@@ -600,7 +580,7 @@ void AresAvs::run()
 		// Run ARES measurement state machine
 		switch (current_state) {
 		case AVS_CONNECT:
-			if (nodes_operational() == true) {
+			if (nodes_operational() && hb_count > 0) {
 				PX4_INFO("Nodes operational, wait for GNSS PPS");
 				//rtcm_command(true);
 				set_next_state(AVS_PPS_WAIT);
@@ -671,6 +651,7 @@ void AresAvs::run()
 			// 	}
 			// }
 			if (veh_command == true) {
+				// These are "user commands, passed on because Commander didn't know about it
 				_mav_cmd_ack_pending = false;
 				handle_command(vehicle_command);
 				veh_command = false;
@@ -1027,10 +1008,9 @@ CLI usage (parameter should be one of the following):
 $ ares_avs help		// display this help
 	   start	// start the ARES app, begin monitoring CAN messages
 	   stop		// stop the ARES application
-	   begin	// begin a flight sequence
 	   arm		// arm the vehicle
 	   disarm	// disarm the vehicle
-	   end		// end the current flight sequence
+	   reset	// reset ares_avs (same as stop/start)
 	   status	// reply with run status
 	   cap1		// enable SD raw data capture
 	   cap0		// disable SD raw data capture
@@ -1056,10 +1036,9 @@ $ ares_avs start
 	PRINT_MODULE_USAGE_NAME("ares_avs", "template");
 	PRINT_MODULE_USAGE_COMMAND("start");	// start app
 	PRINT_MODULE_USAGE_COMMAND("stop");	// stop app
-	PRINT_MODULE_USAGE_COMMAND("begin");	// begin flight sequence
 	PRINT_MODULE_USAGE_COMMAND("arm");	// arm vehicle
 	PRINT_MODULE_USAGE_COMMAND("disarm");	// disarm vehicle
-	PRINT_MODULE_USAGE_COMMAND("end");	// end mission
+	PRINT_MODULE_USAGE_COMMAND("reset");	// reset ares_avs applicstion
 	PRINT_MODULE_USAGE_COMMAND("status");	// reply if running or not
 	PRINT_MODULE_USAGE_COMMAND("cap1");	// SD capture on
 	PRINT_MODULE_USAGE_COMMAND("cap0");	// SD capture off
@@ -1129,7 +1108,7 @@ int AresAvs::handle_command(struct vehicle_command_s cmd)
 
 		set_next_state(AVS_MEAS_INIT);
 		send_ack_mav(vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED);
-		PX4_INFO("Event threshold change command %ld, level: %d dB", cmd.command, bg_db_threshold);
+		PX4_INFO("Event change command %ld, level: %ld dB, mode: %ld", cmd.command, bg_db_threshold, self_measure_bg);
 	}
 
 	else if (cmd.command == vehicle_command_s::VEHICLE_CMD_AVS_PEAK) {
@@ -1142,6 +1121,14 @@ int AresAvs::handle_command(struct vehicle_command_s cmd)
 
 	else if (cmd.command == vehicle_command_s::VEHICLE_CMD_AVS_LIN) {
 
+	}
+	else if (cmd.command == vehicle_command_s::VEHICLE_CMD_AVS_RESET) {
+		_ack.command = cmd.command;
+		_ack.target_system = cmd.source_system;
+		_ack.target_component = cmd.source_component;
+		reset_command();
+		send_ack_mav(vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED);
+		PX4_INFO("ares_avs RESET command complete %ld", cmd.command);
 	}
 	return 0;
 }
@@ -1369,12 +1356,6 @@ int AresAvs::cal_command()			// recompute FFT correction vectors
 	return 0;
 }
 
-int AresAvs::begin_command()			// begin a flight sequence manually
-{
-	PX4_INFO("Begin command is obsolete");
-	return 0;
-}
-
 int AresAvs::arm_command()
 {
 	PX4_INFO("Arm vehicle");
@@ -1403,17 +1384,14 @@ int AresAvs::disarm_command()
 	return 0;
 }
 
-int AresAvs::end_command()			// end a flight sequence
+int AresAvs::reset_command()			// end a flight sequence
 {
-	PX4_INFO("End mission, force landing and subsequent disarm");
-
-	// we have to land first
-	send_vehicle_command(vehicle_command_s::VEHICLE_CMD_NAV_LAND);
-
-	// update meas state
-	struct vehicle_status_s stat;
-	int vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
-	set_next_state(arm_action( false, stat, vehicle_status_sub));
+	PX4_INFO("Reset ares_avs and stop FFT (if running), go to CONNECT state");
+	if (fftEnable == true){
+		fft_command( false);	// FFT must be diabled to make these changes
+	}
+	disarm_command();
+	set_next_state(AVS_CONNECT);	// overrides AVS_FFT_DIS_ACK which was set in fft_command()
 	return 0;
 }
 

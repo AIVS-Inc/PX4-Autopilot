@@ -112,6 +112,7 @@ uint16 VEHICLE_CMD_AVS_EVENT = 31021			# Set/get event parameters
 uint16 VEHICLE_CMD_AVS_PEAK = 31022			# Set/get peak parameters
 uint16 VEHICLE_CMD_AVS_DEC = 31023			# Set/get decimation parameters
 uint16 VEHICLE_CMD_AVS_LIN = 31024			# Set/get FFT linear parameters
+uint16 VEHICLE_CMD_AVS_RESET = 31025			# Reset ares_avs to CONNECT state (same as ares_avs stop(), followed by ares_avsstart() )
 
 # PX4 vehicle commands (beyond 16 bit mavlink commands)
 uint32 VEHICLE_CMD_PX4_INTERNAL_START    = 65537        # start of PX4 internal only vehicle commands (> UINT16_MAX)

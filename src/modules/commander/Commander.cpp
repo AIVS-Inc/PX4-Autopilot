@@ -1522,6 +1522,7 @@ Commander::handle_command(const vehicle_command_s &cmd)
 	case vehicle_command_s::VEHICLE_CMD_AVS_PEAK:
 	case vehicle_command_s::VEHICLE_CMD_AVS_DEC:
 	case vehicle_command_s::VEHICLE_CMD_AVS_LIN:
+	case vehicle_command_s::VEHICLE_CMD_AVS_RESET:
 		/* ignore commands that are handled by other parts of the system */
 		break;
 

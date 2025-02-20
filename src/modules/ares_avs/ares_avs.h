@@ -175,13 +175,11 @@ public:
 
 	int cal_command();
 
-	int begin_command();
-
 	int arm_command();
 
 	int disarm_command();
 
-	int end_command();
+	int reset_command();
 
 	int sync_command_now();
 
