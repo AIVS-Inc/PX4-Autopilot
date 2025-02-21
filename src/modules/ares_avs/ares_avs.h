@@ -274,6 +274,7 @@ private:
 		(ParamInt<px4::params::AVS_FFT_WINDOW>)	 _fft_window,
 
 		(ParamInt<px4::params::AVS_EVT_REL_DB>)  _evt_rel_dB,
+		(ParamInt<px4::params::AVS_EVT_TRG_HOLD>)_evt_trigger_hold,
 		(ParamInt<px4::params::AVS_EVT_NUM_SRC>) _evt_num_src,
 		(ParamInt<px4::params::AVS_EVT_ANG_RES>) _evt_ang_res,
 		(ParamInt<px4::params::AVS_EVT_BG_TC>) 	 _evt_bg_tc,

@@ -1088,15 +1088,15 @@ int AresAvs::handle_command(struct vehicle_command_s cmd)
 
 		int32_t relative_db = static_cast<int32_t>(cmd.param1 + 0.5f);
 		int32_t num_sources = static_cast<int32_t>(cmd.param2 + 0.5f);
-		int32_t angular_resln = static_cast<int32_t>(cmd.param3 + 0.5f);
+		int32_t trg_hold_cnt = static_cast<int32_t>(cmd.param3 + 0.5f);
 		int32_t bg_timeconst = static_cast<int32_t>(cmd.param4 + 0.5f);
 		int32_t event_window = static_cast<int32_t>(cmd.param5 + 0.5);
 		int32_t self_measure_bg = static_cast<int32_t>(cmd.param6 + 0.5);
 		int32_t bg_db_threshold = static_cast<int32_t>(cmd.param7 + 0.5f);
 
 		param_set(param_find("AVS_EVT_REL_DB"), &relative_db);
+		param_set(param_find("AVS_EVT_TRG_HOLD"), &trg_hold_cnt);
 		param_set(param_find("AVS_EVT_NUM_SRC"), &num_sources);
-		param_set(param_find("AVS_EVT_ANG_RES"), &angular_resln);
 		param_set(param_find("AVS_EVT_BG_TC"), &bg_timeconst);
 		param_set(param_find("AVS_EVT_EVT_WIN"), &event_window);
 		param_set(param_find("AVS_EVT_BGSIL"), &self_measure_bg);
@@ -1108,7 +1108,8 @@ int AresAvs::handle_command(struct vehicle_command_s cmd)
 
 		set_next_state(AVS_MEAS_INIT);
 		send_ack_mav(vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED);
-		PX4_INFO("Event change command %ld, level: %ld dB, mode: %ld", cmd.command, bg_db_threshold, self_measure_bg);
+		PX4_INFO("Event change command %ld, level: %ld dB, mode: %ld, hold: %ld",
+			cmd.command, bg_db_threshold, self_measure_bg, trg_hold_cnt);
 	}
 
 	else if (cmd.command == vehicle_command_s::VEHICLE_CMD_AVS_PEAK) {

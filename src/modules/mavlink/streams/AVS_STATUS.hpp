@@ -63,11 +63,13 @@ private:
 	float bg_db_threshold = 0.0f;
 	float initial_bg_db_threshold = 0.0f;
 	float fSmoothBG = 0.0f;
+	int32_t trigger_hold_cnt;
 	uint16_t average_cnt;
 
 	bool send() override
 	{
 		bool sendMsg = false;
+
 		sensor_avs_s sensor_avs_status;
 		int32_t sync_time;
 		int32_t bg_time_constant;
@@ -118,6 +120,12 @@ private:
 					}
 					if (sensor_avs_status.active_intensity > using_this_threshold + rel_dB) {
 						sendMsg = true;
+						param_get(param_find("AVS_EVT_TRG_HOLD"), &trigger_hold_cnt);
+					}
+					else if (--trigger_hold_cnt > 0) {
+						sendMsg = true;
+					}
+					if (sendMsg) {
 						// Use time_usec to communicate planned sync time prior to the sync
 						// There is a 3-5 second period when the sync time will be transmitted
 						param_get(param_find("AVS_TARGET_SYNC"), &sync_time);
@@ -165,6 +173,7 @@ private:
 							bg_db_threshold = 10.0f * log10f(acti_sum / IntDbRef);
 							initial_bg_db_threshold = bg_db_threshold;
 							PX4_INFO("Initial Background SIL = %.1f dB", (double)initial_bg_db_threshold);
+							trigger_hold_cnt = 0;
 						}
 					}
 				}

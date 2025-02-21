@@ -75,6 +75,16 @@ parameters:
         increment: 1
         default: 1
 
+      AVS_EVT_TRG_HOLD:
+        description:
+          short: Event trigger hold
+          long: Event remains active for this number of event windows (50 ms periods)
+        type: int32
+        min: 1
+        max: 100
+        increment: 1
+        default: 10
+
       AVS_EVT_NUM_SRC:
         description:
           short: Number sources
