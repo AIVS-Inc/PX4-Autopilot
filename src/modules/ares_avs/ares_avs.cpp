@@ -637,8 +637,9 @@ void AresAvs::run()
 			if (veh_status == true) {
 				if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
 					PX4_INFO("remote (ground control) command to arm");
-					fft_command( true);
+					//fft_command( true);
 					//set_next_state(AVS_FFT_EN_ACK);  // set in fft_command()
+					set_next_state(AVS_ARMED);
 				}
 				veh_status = false;
 			}
@@ -716,7 +717,16 @@ void AresAvs::run()
 			break;
 		case AVS_ARMED:
 			//PX4_INFO("AVS armed");
-			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
+//			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
+			if (veh_status == true) {
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
+					PX4_INFO("remote (ground control) command to disarm");
+					//fft_command( true);
+					//set_next_state(AVS_FFT_EN_ACK);  // set in fft_command()
+					set_next_state(AVS_MEAS_INIT);
+				}
+				veh_status = false;
+			}
 			break;
 		case AVS_TAKEOFF:
 			//PX4_INFO("AVS takeoff");
@@ -735,14 +745,15 @@ void AresAvs::run()
 			set_next_state(arm_action(veh_status, stat, vehicle_status_sub));
 			break;
 		case AVS_DISARMED:
-			if (veh_status == true) {
-				if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
-					PX4_INFO("remote (ground control) command to disarm");
-					fft_command( false);
-					//set_next_state(AVS_FFT_DIS_ACK);  // set in fft_command()
-				}
-				veh_status = false;
-			}
+			// if (veh_status == true) {
+			// 	if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+			// 		PX4_INFO("remote (ground control) command to disarm");
+			// 		//fft_command( false);
+			// 		//set_next_state(AVS_FFT_DIS_ACK);  // set in fft_command()
+			// 		set_next_state(AVS_MEAS_INIT);
+			// 	}
+			// 	veh_status = false;
+			// }
 			// else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
 			// 	// Check if the vehicle is armed
 			// 	if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
@@ -751,6 +762,12 @@ void AresAvs::run()
 			// 		//set_next_state(AVS_FFT_DIS_ACK);  // set in fft_command()
 			// 	}
 			// }
+			if (veh_status == true) {
+				if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
+					set_next_state(AVS_MEAS_INIT);
+					veh_status = false;
+				}
+			}
 			break;
 		case AVS_FFT_DIS_ACK:
 			if (hb_count > 5) {	// timeout if ACK never received
@@ -949,7 +966,8 @@ int32_t AresAvs::arm_action(bool veh_status, vehicle_status_s stat, int vehicle_
 	if (veh_status == true) {
 		if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
 			PX4_INFO("Disarmed after armed since vehicle state indicates DISARM");
-			next_state = AVS_DISARMED;
+//			next_state = AVS_DISARMED;
+			next_state = AVS_MEAS_INIT;
 		}
 		else if (stat.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
 			next_state = get_next_nav_state(stat.nav_state);
@@ -958,7 +976,8 @@ int32_t AresAvs::arm_action(bool veh_status, vehicle_status_s stat, int vehicle_
 	}
 	else if (orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat) == PX4_OK) {
 		if (stat.arming_state == vehicle_status_s::ARMING_STATE_DISARMED) {
-			next_state = AVS_DISARMED;
+			//next_state = AVS_DISARMED;
+			next_state = AVS_MEAS_INIT;
 		}
 	}
 	return next_state;
@@ -1109,7 +1128,7 @@ int AresAvs::handle_command(struct vehicle_command_s cmd)
 		set_next_state(AVS_MEAS_INIT);
 		send_ack_mav(vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED);
 		PX4_INFO("Event change command %ld, level: %ld dB, mode: %ld, hold: %ld",
-			cmd.command, bg_db_threshold, self_measure_bg, trg_hold_cnt);
+			cmd.command, bg_db_threshold, self_measure_bg, trg_hold_cnt );
 	}
 
 	else if (cmd.command == vehicle_command_s::VEHICLE_CMD_AVS_PEAK) {
