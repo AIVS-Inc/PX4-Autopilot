@@ -235,6 +235,13 @@
 
 #define GPIO_SPIX_SYNC                  /* PE9  */ (GPIO_INPUT|GPIO_PULLDOWN|GPIO_PORTE|GPIO_PIN9)
 
+/* Tone alarm output */
+#define TONE_ALARM_TIMER        14  /* Timer 14 */
+#define TONE_ALARM_CHANNEL      1  /* PF9 GPIO_TIM14_CH1OUT_2 */
+#define GPIO_BUZZER_1           /* PF9 */ (GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTF|GPIO_PIN9)
+#define GPIO_TONE_ALARM_IDLE	GPIO_BUZZER_1
+#define GPIO_TONE_ALARM         GPIO_TIM14_CH1OUT_2
+
 /* Power supply control and monitoring GPIOs */
 
 #define GPIO_VDD_5V_PGOOD         	/* PF13 */ (GPIO_INPUT |GPIO_FLOAT|GPIO_PORTF|GPIO_PIN13)
@@ -333,6 +340,7 @@
 		GPIO_VDD_3V3_SD_CARD_EN,          \
 		GPIO_nARMED_INIT,                 \
 		SPI6_nRESET_EXTERNAL1,            \
+		GPIO_TONE_ALARM_IDLE,	    	  \
 		GPIO_FMU_CH1,     	          \
 		GPIO_FMU_CH2,     	          \
 		GPIO_FMU_CH3,     	          \

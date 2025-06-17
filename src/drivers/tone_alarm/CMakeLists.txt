@@ -35,7 +35,7 @@ px4_add_module(
 	MODULE drivers__tone_alarm
 	MAIN tone_alarm
 	COMPILE_FLAGS
-		#-DDEBUG_BUILD
+		-DDEBUG_BUILD
 	SRCS
 		ToneAlarm.cpp
 		ToneAlarm.h
