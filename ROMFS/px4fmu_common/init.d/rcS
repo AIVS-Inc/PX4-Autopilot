@@ -602,6 +602,7 @@ else
 	then
 		cyphal start
 		ares_avs start
+		tune_control play -m "MBT120a0P4"
 	fi
 	#fi
 	if param greater -s ZENOH_ENABLE 0

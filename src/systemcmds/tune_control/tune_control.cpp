@@ -54,7 +54,7 @@
 
 #include <drivers/drv_hrt.h>
 
-#define MAX_NOTE_ITERATION 50
+#define MAX_NOTE_ITERATION 2147483648	//50
 
 static void usage();
 
@@ -147,7 +147,7 @@ extern "C" __EXPORT int tune_control_main(int argc, char *argv[])
 
 	unsigned frequency, duration, silence;
 	uint8_t volume;
-	int exit_counter = 0;
+	uint32_t exit_counter = 0;
 
 	if (!strcmp(argv[myoptind], "play")) {
 		if (argc > 2 && !strcmp(argv[2], "error")) {
