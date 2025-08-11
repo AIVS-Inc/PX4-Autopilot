@@ -60,7 +60,7 @@
 #include <uORB/topics/vehicle_command_ack.h>
 
 //#include "ares/AdcFrame_0_1.h"
-#include "ares/GnssImu_0_1.h"
+//#include "ares/GnssImu_0_1.h"
 #include "ares/Bearings_0_1.h"
 #include "ares/GnssPos_0_1.h"
 #include "ares/GnssRelPosNed_0_1.h"
