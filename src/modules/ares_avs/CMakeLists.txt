@@ -42,7 +42,7 @@ px4_add_module(
 		${LIBCANARD_DIR}/libcanard/
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${CMAKE_CURRENT_BINARY_DIR}
-		"/home/ares/PX4-Autopilot/build/px4_fmu-v6xrt_default/src/drivers/cyphal/dsdlc_generated/"
+		"~/PX4-Autopilot/build/ark_fpv_default/src/drivers/cyphal/dsdlc_generated/"
 	STACK_MAIN 2048
 	SRCS
 		ares_avs.cpp
