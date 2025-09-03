@@ -38,6 +38,7 @@ RoverAckermann::RoverAckermann() :
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::rate_ctrl)
 {
 	_rover_ackermann_setpoint_pub.advertise();
+	_sensor_avs_pub.advertise();
 	_ax_filter.setAlpha(0.05);
 	_ay_filter.setAlpha(0.05);
 	_az_filter.setAlpha(0.05);
@@ -62,6 +63,26 @@ void RoverAckermann::Run()
 		exit_and_cleanup();
 		return;
 	}
+
+	// publish a constant value in sensor_avs
+	sensor_avs_s sensor_avs_data{};
+
+	sensor_avs_data.timestamp=hrt_absolute_time();
+	sensor_avs_data.time_utc_usec= 1600;
+	sensor_avs_data.timestamp_sample= 1800;
+	sensor_avs_data.device_id= 41;
+	sensor_avs_data.azimuth_deg= 25.0f;
+	sensor_avs_data.elevation_deg= 30.0f;
+	sensor_avs_data.active_intensity= 5.0f;
+	sensor_avs_data.q_factor= 2.0f;
+	sensor_avs_data.source_index= 3;
+	sensor_avs_data.histogram_count= 120;
+
+	for (unsigned i = 0; i < 16; ++i) {
+		sensor_avs_data.mel_intensity[i] = 1;
+	}
+
+	_sesnor_avs_pub.publish(sensor_avs_data)
 
 	updateSubscriptions();
 

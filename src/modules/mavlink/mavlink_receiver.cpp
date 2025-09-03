@@ -288,6 +288,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		handle_message_open_drone_id_system(msg);
 		break;
 
+	case MAVLINK_MSG_ID_SENSOR_AVS:
+		handle_message_sensor_avs(msg);
+		break;
+
 #if !defined(CONSTRAINED_FLASH)
 
 	case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
@@ -3037,6 +3041,33 @@ MavlinkReceiver::handle_message_gimbal_manager_set_attitude(mavlink_message_t *m
 	gimbal_attitude.angular_velocity_z = set_attitude_msg.angular_velocity_z;
 
 	_gimbal_manager_set_attitude_pub.publish(gimbal_attitude);
+}
+void
+MavlinkReceiver::handle_message_sensor_avs(mavlink_message_t *msg)
+{
+	mavlink_sensor_avs_t sensor_avs_msg;
+	mavlink_msg_sensor_avs_decode(msg, &sensor_avs_msg);
+
+	sensor_avs_s sensor_avs_data{};
+
+	sensor_avs_data.timestamp=hrt_absolute_time();
+	sensor_avs_data.time_utc_usec= sensor_avs_msg.time_utc_usec;
+	sensor_avs_data.timestamp_sample= sensor_avs_msg.timestamp_sample;
+	sensor_avs_data.device_id= sensor_avs_msg.device_id;
+	sensor_avs_data.azimuth_deg= sensor_avs_msg.azimuth_deg;
+	sensor_avs_data.elevation_deg= sensor_avs_msg.elevation_deg;
+	sensor_avs_data.active_intensity= sensor_avs_msg.active_intensity;
+	sensor_avs_data.q_factor= sensor_avs_msg.q_factor;
+	sensor_avs_data.source_index= sensor_avs_msg.source_index;
+	sensor_avs_data.histogram_count= sensor_avs_msg.histogram_count;
+
+	for (unsigned i = 0; i < 16; ++i) {
+		sensor_avs_data.mel_intensity[i] = sensor_avs_msg.mel_intensity[i];
+	}
+	//sensor_avs_data.mel_intensity= sensor_avs_msg.mel_intensity;
+
+
+	_sensor_avs_pub.publish(sensor_avs_data);
 }
 
 void

@@ -50,7 +50,7 @@
 #include <uORB/topics/rover_ackermann_setpoint.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_attitude.h>
-
+#include <uORB/topics/sensor_avs.h> //added
 
 // Standard library includes
 #include <math.h>
@@ -108,9 +108,12 @@ private:
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _vehicle_local_position_sub{ORB_ID(vehicle_local_position)};
 	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
+	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
+
 
 	// uORB publications
 	uORB::Publication<rover_ackermann_setpoint_s> _rover_ackermann_setpoint_pub{ORB_ID(rover_ackermann_setpoint)};
+	uORB::Publication<rover_sensor_avs_s> _sensor_avs_pub{ORB_ID(sensor_avs)}
 
 	// Class instances
 	RoverAckermannGuidance _ackermann_guidance{this};
