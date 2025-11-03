@@ -523,11 +523,16 @@ void AresAvs::run()
 							aresNodeId_bot = (uint8_t)val;
 							PX4_INFO("node %hhu registered as bottom", aresNodeId_bot);
 						}
-						else if (aresNodeId_top == 0) {
-							aresNodeId_top = (uint8_t)val;
+					}
+					if (aresNodeId_top == 0) {
+						int32_t val2;
+						param_get(param_find("AVS_TOP_NODE_ID"),  &val2);
+						if (cyphal_param.node_id == (uint8_t)val2) {
+							aresNodeId_top = (uint8_t)val2;
 							PX4_INFO("node %hhu registered as top", aresNodeId_top);
 						}
 					}
+
 					if (bot_node_hb_reported == false)
 					{
 						if (cyphal_param.int_value == 0 ){		// operational mode, has transitioned from init

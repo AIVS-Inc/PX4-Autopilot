@@ -266,6 +266,7 @@ private:
 	DEFINE_PARAMETERS(
 
 		(ParamInt<px4::params::AVS_BOT_NODE_ID>) _nodeid_bot,
+		(ParamInt<px4::params::AVS_TOP_NODE_ID>) _nodeid_top,
 		(ParamInt<px4::params::AVS_FFT_DEC>)  	 _fft_dec,
 		(ParamInt<px4::params::AVS_FFT_LONG>)  	 _fft_long,
 		(ParamInt<px4::params::AVS_FFT_ENCRYPT>) _fft_encrypt,

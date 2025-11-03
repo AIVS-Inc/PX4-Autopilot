@@ -12,7 +12,17 @@ parameters:
         min: 1
         max: 127
         increment: 1
-        default: 20
+        default: 41
+
+      AVS_TOP_NODE_ID:
+        description:
+          short: Node ID of upward looking AVS node
+          long: Node ID of the AVS sensor mounted atop the drone body
+        type: int32
+        min: 1
+        max: 127
+        increment: 1
+        default: 40
 
       AVS_FFT_DEC:
         description:
