@@ -1,0 +1,27 @@
+# Kconfig file is part of PX4's build configuration system. It serves several purposes:
+# 	1. make module selectable: creates menu option that allows you to enable/disable
+#	   the driver when the configuring the firmware buld
+# 	2. creates a CONFIG variable: CONFIG_DRIVERS_DRV2605L_HAPTIC=y/n  (compiled into/exluded from firmware)
+# 	3. controls what gets built: when add CONFIG_DRIVERS_DRV2605L_HAPTIC=y
+#	   in boards/ark/fpv/default.px4board
+# 	   The build system sees the Kconfig file & knows to compile the driver into the ARK FPV firmware.
+
+
+# Kconfig file exists → Build system creates CONFIG_DRIVERS_DRV2605L_HAPTIC option
+# 	↓
+# Board config sets CONFIG_DRIVERS_DRV2605L_HAPTIC=y
+# 	↓
+# CMakeLists.txt gets processed
+# 	↓
+# drv2605l_haptic.cpp gets compiled
+# 	↓
+# Binary includes your driver
+
+# Without the Kconfig file, the build system wouldn't know the module exists or
+# how to enable it, even if you set the CONFIG variable in the board file.
+
+menuconfig DRIVERS_DRV2605L_HAPTIC  # create configuration variable
+	bool "drv2605l_haptic"
+	default n
+	---help---
+		Enable support for DRV2605L Haptic Driver

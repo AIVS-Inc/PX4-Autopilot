@@ -1,0 +1,343 @@
+// //-----------------------------------------------------------------------------
+// /**
+//  * @file drv2605l_haptic.cpp
+//  * Haptic feedback driver for DRV2605L on ARK FPV - Regular Task Version
+//  *
+//  * @author Your Name
+//  */
+
+// #include <px4_platform_common/px4_config.h>
+// #include <px4_platform_common/defines.h>
+// #include <px4_platform_common/module.h>
+// #include <px4_platform_common/getopt.h>
+// #include <px4_platform_common/log.h>
+// #include <drivers/device/i2c.h>
+// #include <drivers/drv_sensor.h>
+// #include <lib/parameters/param.h>
+// #include <uORB/Subscription.hpp>
+// #include <uORB/topics/vehicle_attitude.h>
+
+// // Device type for DRV2605L
+// #define DRV_HAPTIC_DEVTYPE_DRV2605L 0x60
+
+// // DRV2605L Register addresses
+// #define DRV2605L_ADDR           0x5A
+// #define DRV2605L_REG_STATUS     0x00
+// #define DRV2605L_REG_MODE       0x01
+// #define DRV2605L_REG_RTPIN      0x02
+// #define DRV2605L_REG_LIBRARY    0x03
+// #define DRV2605L_REG_WAVESEQ1   0x04
+// #define DRV2605L_REG_GO         0x0C
+// #define DRV2605L_REG_FEEDBACK   0x1A
+
+// // Mode register values
+// #define DRV2605L_MODE_INTTRIG   0x00  // Internal trigger mode
+// #define DRV2605L_MODE_STANDBY   0x40  // Standby mode
+
+// // Library values
+// #define DRV2605L_LIB_ERM        0x01  // ERM library
+// #define DRV2605L_LIB_LRA        0x06  // LRA library
+
+// // Waveform effects
+// #define DRV2605L_EFFECT_STRONG_CLICK    1
+// #define DRV2605L_EFFECT_MEDIUM_CLICK    10
+// #define DRV2605L_EFFECT_BUZZ            47
+
+// // declares new class DRV2605L
+// // : public ModuleBase<DRV2605L>
+// // class inherits publicly from the px4 template class ModuleBAse
+// // 	ModuleBase<T> is a template that helpts standardize how px4 modules work
+// //		gives driver features like:
+// // 			- start,stop, status shell commands
+// //			- thread creation and management
+// // 			- automatic registration in px4 module system
+// // 		in PX4 shell,
+// // 			haptic_drv2605l start
+// // 			haptic_drv2605l stop
+// // 			haptic_drv2605l status
+// //		ModuleBase inheritance
+// // , public device::I2C
+// // 	inherits publicly from I2C class, which provides:
+// //		- low-level I2C commm methods (transfer(), set_bus_frequency(), etc)
+// //		- handling of bus numbers and addresses
+// //		- error handling for I2C transactons
+// // 	essentially, this make the drv2605l class an I2C device in px4 hardware abstraction layer
+
+// // “Define a driver class named DRV2605L that behaves like a PX4 module (via ModuleBase)
+// // and communicates over I2C (via device::I2C).”
+
+// class DRV2605L : public ModuleBase<DRV2605L>, public device::I2C
+// {
+// public:
+// 	// public functions and constructor/destructor
+// 	// public - accessible from outside the class
+// 	DRV2605L(int bus, int address);  // constructor that takes in I2C bus number and device address; initializes the driver
+// 	virtual ~DRV2605L();  //Virtual destructor (allows proper cleanup in inheritance hierarchies); called when object is destroyed/stop module
+
+// 	/** @see ModuleBase */
+// 	static int task_spawn(int argc, char *argv[]); // Creates and starts the driver as a separate task (common in real-time OS environments)
+// 	static DRV2605L *instantiate(int argc, char *argv[]); // Factory method that creates a new instance of the driver
+// 	static int custom_command(int argc, char *argv[]); // Handles custom command-line commands for this driver
+// 	static int print_usage(const char *reason = nullptr); // Prints help/usage information
+// 	void run() override; //Main execution loop (overrides base class method); runs continuously in own thread
+// 	int print_status() override; // Prints current driver status (overrides base class method)
+
+// private:
+// 	// internal helper functions and member variables
+// 	// private - only accesssible within the class
+// 	int init(); // intializes the hardware
+// 	int probe() override; //Checks if the device is present/responds (overrides base class); Returns PX4_OK if the device responds, else an error.
+// 	// Helper functions for low-level I2C communication.
+// 	//These use `transfer()` from `device::I2C` internally.You’ll use them to talk to the DRV2605L chip.
+// 	int write_register(uint8_t reg, uint8_t value); // Writes a value to a device register
+// 	int read_register(uint8_t reg, uint8_t &value); //  Reads a value from a device register (value returned by reference)
+// 	int trigger_effect(uint8_t effect); // Triggers a haptic effect
+
+// 	bool _initialized{false}; // Tracks whether device is initialized (default: false)
+// 	uint32_t _loop_interval_us{100000}; // 100ms; loop timing interval
+// };
+
+// DRV2605L::DRV2605L(int bus, int address) :
+// 	I2C(DRV_HAPTIC_DEVTYPE_DRV2605L, MODULE_NAME, bus, address, 400000)
+// {
+// }
+
+// DRV2605L::~DRV2605L()
+// {
+// 	// Ensure we put device in standby before exit
+// 	if (_initialized) {
+// 		write_register(DRV2605L_REG_MODE, DRV2605L_MODE_STANDBY);
+// 	}
+// }
+
+// int DRV2605L::probe()
+// {
+// 	uint8_t status;
+// 	int ret = read_register(DRV2605L_REG_STATUS, status);
+
+// 	if (ret == OK) {
+// 		PX4_INFO("DRV2605L found, status: 0x%02X", status);
+// 		return OK;
+// 	}
+
+// 	PX4_ERR("DRV2605L not found");
+// 	return -EIO;
+// }
+
+// int DRV2605L::write_register(uint8_t reg, uint8_t value)
+// {
+// 	uint8_t cmd[2] = {reg, value};
+// 	return transfer(cmd, 2, nullptr, 0);
+// }
+
+// int DRV2605L::read_register(uint8_t reg, uint8_t &value)
+// {
+// 	return transfer(&reg, 1, &value, 1);
+// }
+
+// int DRV2605L::init()
+// {
+// 	int ret = I2C::init();
+
+// 	if (ret != OK) {
+// 		PX4_ERR("I2C init failed");
+// 		return ret;
+// 	}
+
+// 	// Probe the device
+// 	ret = probe();
+
+// 	if (ret != OK) {
+// 		return ret;
+// 	}
+
+// 	// Take out of standby mode
+// 	ret = write_register(DRV2605L_REG_MODE, DRV2605L_MODE_INTTRIG);
+
+// 	if (ret != OK) {
+// 		PX4_ERR("Failed to set mode");
+// 		return ret;
+// 	}
+
+// 	px4_usleep(1000);
+
+// 	// Set to ERM library (change to DRV2605L_LIB_LRA if using LRA motor)
+// 	ret = write_register(DRV2605L_REG_LIBRARY, DRV2605L_LIB_ERM);
+
+// 	if (ret != OK) {
+// 		PX4_ERR("Failed to set library");
+// 		return ret;
+// 	}
+
+// 	// Configure feedback control (optional, for ERM)
+// 	ret = write_register(DRV2605L_REG_FEEDBACK, 0x36);
+
+// 	if (ret != OK) {
+// 		PX4_WARN("Failed to set feedback control");
+// 	}
+
+// 	_initialized = true;
+// 	PX4_INFO("DRV2605L initialized successfully");
+
+// 	return OK;
+// }
+
+// int DRV2605L::trigger_effect(uint8_t effect)
+// {
+// 	// Set waveform sequence
+// 	int ret = write_register(DRV2605L_REG_WAVESEQ1, effect);
+
+// 	if (ret != OK) {
+// 		return ret;
+// 	}
+
+// 	// End waveform sequence
+// 	ret = write_register(DRV2605L_REG_WAVESEQ1 + 1, 0);
+
+// 	if (ret != OK) {
+// 		return ret;
+// 	}
+
+// 	// Trigger the GO command
+// 	ret = write_register(DRV2605L_REG_GO, 1);
+
+// 	return ret;
+// }
+
+// void DRV2605L::run()
+// {
+// 	// Initialize the device
+// 	if (init() != OK) {
+// 		PX4_ERR("Initialization failed");
+// 		return;
+// 	}
+
+// 	PX4_INFO("Haptic task started");
+
+// 	// Main loop
+// 	while (!should_exit()) {
+
+// 		// Trigger continuous haptic feedback with a strong click effect
+// 		int ret = trigger_effect(DRV2605L_EFFECT_STRONG_CLICK);
+
+// 		if (ret != OK) {
+// 			PX4_ERR("Failed to trigger effect");
+// 		}
+
+// 		// Sleep for the loop interval
+// 		px4_usleep(_loop_interval_us);
+// 	}
+
+// 	PX4_INFO("Haptic task exiting");
+// }
+
+// int DRV2605L::print_status()
+// {
+// 	PX4_INFO("Running: %s", _initialized ? "YES" : "NO");
+// 	PX4_INFO("Loop interval: %" PRIu32 " us", _loop_interval_us);
+// 	PX4_INFO("I2C bus: %d, address: 0x%02X", get_device_bus(), get_device_address());
+
+// 	return OK;
+// }
+
+// DRV2605L *DRV2605L::instantiate(int argc, char *argv[])
+// {
+// 	int bus = 1;  // Default to external I2C bus 1 (GPS port)
+// 	int address = DRV2605L_ADDR;
+
+// 	int myoptind = 1;
+// 	int ch;
+// 	const char *myoptarg = nullptr;
+
+// 	while ((ch = px4_getopt(argc, argv, "b:a:", &myoptind, &myoptarg)) != EOF) {
+// 		switch (ch) {
+// 		case 'b':
+// 			bus = atoi(myoptarg);
+// 			break;
+
+// 		case 'a':
+// 			address = strtol(myoptarg, nullptr, 16);
+// 			break;
+
+// 		default:
+// 			return nullptr;
+// 		}
+// 	}
+
+// 	return new DRV2605L(bus, address);
+// }
+
+// int DRV2605L::task_spawn(int argc, char *argv[])
+// {
+// 	DRV2605L *instance = instantiate(argc, argv);
+
+// 	if (instance == nullptr) {
+// 		PX4_ERR("Failed to allocate DRV2605L");
+// 		return PX4_ERROR;
+// 	}
+
+// 	_object.store(instance);
+// 	_task_id = px4_task_spawn_cmd("drv2605l_haptic",
+// 				      SCHED_DEFAULT,
+// 				      SCHED_PRIORITY_DEFAULT,
+// 				      2000,
+// 				      (px4_main_t)&run_trampoline,
+// 				      (char *const *)argv);
+
+// 	if (_task_id < 0) {
+// 		_object.store(nullptr);
+// 		delete instance;
+// 		PX4_ERR("Task start failed");
+// 		return PX4_ERROR;
+// 	}
+
+// 	return PX4_OK;
+// }
+
+// int DRV2605L::custom_command(int argc, char *argv[])
+// {
+// 	return print_usage("unknown command");
+// }
+
+// int DRV2605L::print_usage(const char *reason)
+// {
+// 	if (reason) {
+// 		PX4_WARN("%s\n", reason);
+// 	}
+
+// 	PRINT_MODULE_DESCRIPTION(
+// 		R"DESCR_STR(
+// ### Description
+// DRV2605L Haptic Feedback Driver for ARK FPV
+
+// This driver provides continuous haptic feedback using the DRV2605L haptic driver chip.
+// Connected via I2C on the remapped GPS port. Runs as a dedicated task.
+
+// ### Examples
+// Start the driver on I2C bus 1 (GPS port):
+// $ drv2605l_haptic start -b 1
+
+// Start on custom bus and address:
+// $ drv2605l_haptic start -b 2 -a 0x5A
+
+// Stop the driver:
+// $ drv2605l_haptic stop
+
+// Check status:
+// $ drv2605l_haptic status
+// )DESCR_STR");
+
+// 	PRINT_MODULE_USAGE_NAME("drv2605l_haptic", "driver");
+// 	PRINT_MODULE_USAGE_COMMAND("start");
+// 	PRINT_MODULE_USAGE_PARAM_INT('b', 1, 0, 10, "I2C bus", true);
+// 	PRINT_MODULE_USAGE_PARAM_INT('a', 0x5A, 0, 0xFF, "I2C address (hex)", true);
+// 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
+
+// 	return PX4_OK;
+// }
+
+// extern "C" __EXPORT int drv2605l_haptic_main(int argc, char *argv[])
+// {
+// 	return DRV2605L::main(argc, argv);
+// }
+

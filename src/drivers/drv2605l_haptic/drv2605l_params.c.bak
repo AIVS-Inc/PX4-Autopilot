@@ -1,0 +1,82 @@
+
+#include <parameters/param.h>
+
+/**
+ * Right side Yaw angle
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_R, 135.0f);
+
+/**
+ * Left Yaw degree
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_L, 225.0f);
+
+/**
+ * Minimum right Yaw angle
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_RMIN, 90.0f);
+
+/**
+ * Maximum right Yaw degree
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_RMAX, 225.0f);
+
+/**
+ * Minimum left Yaw degree
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_LMIN, 135.0f);
+
+/**
+ * Maximum left Yaw degree
+ *
+ * @unit deg
+ * @min 0.0
+ * @max 360.0
+ * @increment 1.0
+ * @decimal 1
+ * @group DRV2605L Haptic
+ * @reboot_required false
+ */
+PARAM_DEFINE_FLOAT(DRV_YAW_LMAX, 270.0f);
+
+PARAM_DEFINE_FLOAT(HAPTIC_TEST_1, 135.0f);

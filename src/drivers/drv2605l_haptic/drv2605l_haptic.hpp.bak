@@ -1,0 +1,139 @@
+//The .hpp file is your header file - it contains the class declaration for your DRV2605L driver.
+
+#pragma once
+
+#include <px4_platform_common/px4_config.h>
+#include <px4_platform_common/defines.h>
+
+// This is the key - include this EARLY
+//#include <px4_platform_common/param.h>
+#include <parameters/param.h>
+
+#include <px4_platform_common/module_params.h>
+#include <px4_platform_common/module.h>
+#include <px4_platform_common/getopt.h>
+#include <px4_platform_common/log.h>
+#include <drivers/device/i2c.h>
+#include <drivers/drv_sensor.h>
+#include <matrix/math.hpp>
+#include <uORB/Subscription.hpp>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/sensor_avs.h>
+
+// Device type for DRV2605L
+#define DRV_HAPTIC_DEVTYPE_DRV2605L 0x60
+
+// PCA9548A I2C Multiplexer
+#define PCA9548A_ADDR           0x70
+
+// DRV2605L Register addresses
+#define DRV2605L_ADDR           0x5A
+#define DRV2605L_REG_STATUS     0x00
+#define DRV2605L_REG_MODE       0x01
+#define DRV2605L_REG_RTPIN      0x02
+#define DRV2605L_REG_LIBRARY    0x03
+#define DRV2605L_REG_WAVESEQ1   0x04
+#define DRV2605L_REG_GO         0x0C
+#define DRV2605L_REG_FEEDBACK   0x1A
+
+// Mode register values
+#define DRV2605L_MODE_INTTRIG   0x00  // Internal trigger mode
+#define DRV2605L_MODE_STANDBY   0x40  // Standby mode
+
+// Library values
+#define DRV2605L_LIB_ERM        0x01  // ERM library
+#define DRV2605L_LIB_LRA        0x06  // LRA library
+
+// Waveform effects
+#define DRV2605L_EFFECT_STRONG_CLICK    1
+#define DRV2605L_EFFECT_MEDIUM_CLICK    10
+#define DRV2605L_EFFECT_BUZZ            47
+
+// //Yaw range for haptic feedback (degrees)
+// #define YAW_R_DEG  135.0f
+// #define YAW_L_DEG  225.0f
+
+// #define YAW_RMIN_DEG  90.0f
+// #define YAW_RMAX_DEG  225.0f
+
+// #define YAW_LMIN_DEG  135.0f
+// #define YAW_LMAX_DEG  270.0f
+
+
+//ModuleBase<DRV2605L> → gives it PX4’s module framework (start/stop/status commands)
+//device::I2C → gives it I2C communication capabilities (transfer(), bus setup, etc).
+class DRV2605L : public ModuleParams, public ModuleBase<DRV2605L>, public device::I2C
+{
+public:
+	//lifecycle
+	DRV2605L(int bus, int drv_address, int multiplex_address, int multiplex_channel1, int multiplex_channel2);
+	virtual ~DRV2605L();
+
+	/** @see ModuleBase */
+	// PX4 integration
+	static int task_spawn(int argc, char *argv[]);
+	static DRV2605L *instantiate(int argc, char *argv[]);
+	static int custom_command(int argc, char *argv[]);
+	static int print_usage(const char *reason = nullptr);
+	void run() override; // core logic
+	int print_status() override;
+
+private:
+	// member functions (methods) - performs actions/ things the object does
+	//lifecycle
+	int init();
+	int probe() override;
+
+	int select_multiplex_channel(uint8_t channel);
+
+	// I2C comm
+	int write_register(uint8_t reg, uint8_t value);
+	int read_register(uint8_t reg, uint8_t &value);
+
+	int trigger_effect(uint8_t channel, uint8_t effect); //core logic
+	int init_drv2605l(uint8_t channel);
+	//float get_active_intensity(const sensor_avs_s &sensor_avs_data)
+	float get_q_factor(const sensor_avs_s &sensor_avs_data);
+	bool check_act_int_threshold(float active_int);
+	float get_yaw_from_quaternion(const vehicle_attitude_s &att);
+	char is_yaw_in_range(float yaw_deg);
+	//
+
+	//sensor_avs_data.q_factor
+	//sensor_avs_data.active_intensity
+
+	// float yaw_r = _yaw_r_deg.get();
+	// float yaw_l = _yaw_l_deg.get();
+
+	// param_t _param_yaw_r;
+    	// param_t _param_yaw_l;
+    	// float _yaw_r;
+    	// float _yaw_l;
+
+	// member variables (data members) with "_" - things the object stoes
+	// uORB subscription for vehicle attitude and sensor avs data
+	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
+	//uORB::Subscription _sensor_avs{ORB_ID(sensor_avs)};
+	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
+
+	bool _initialized{false};
+	bool _use_multiplex{false};
+	uint8_t _multiplex_addr{PCA9548A_ADDR};
+	uint8_t _multiplex_channel1{0};  // Channel for first DRV2605L
+	uint8_t _multiplex_channel2{1};  // Channel for second DRV2605L
+	uint32_t _loop_interval_us{100000}; // 100ms
+	//
+
+	DEFINE_PARAMETERS(
+		(ParamFloat<px4::params::HAP_YAW_R>) _yaw_r,
+		(ParamFloat<px4::params::HAP_YAW_L>) _yaw_l,
+		(ParamFloat<px4::params::HAP_YAW_RMIN>) _yaw_rmin,
+		(ParamFloat<px4::params::HAP_YAW_RMAX>) _yaw_rmax,
+		(ParamFloat<px4::params::HAP_YAW_LMIN>) _yaw_lmin,
+		(ParamFloat<px4::params::HAP_YAW_LMAX>) _yaw_lmax,
+		(ParamFloat<px4::params::HAP_ACT_INT>) _act_int,
+		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor
+	)
+};
+
+

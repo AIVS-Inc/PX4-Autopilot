@@ -117,6 +117,8 @@
  * Note that these are unshifted addresses.
  */
 #define PX4_I2C_OBDEV_SE050         0x48
+#define PX4_I2C_BUS_EXPANSION   1    /* I2C1 on PB6/PB7 (was GPS UART) */
+#define BOARD_NUMBER_I2C_BUSES  2    /* Adjust based on your existing buses */
 
 /*
  * ADC channels
