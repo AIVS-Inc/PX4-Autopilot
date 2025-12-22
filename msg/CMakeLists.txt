@@ -187,6 +187,7 @@ set(msg_files
 	SensorAccel.msg
 	SensorAccelFifo.msg
 	SensorAvs.msg
+	SensorAvsLite.msg
 	SensorAvsMel.msg
 	SensorAvsAdc.msg
 	SensorAvsCmdAck.msg

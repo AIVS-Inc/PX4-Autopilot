@@ -42,6 +42,7 @@
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/sensor_avs.h>
+#include <uORB/topics/sensor_avs_lite.h>
 #include <uORB/topics/sensor_avs_mel.h>
 #include <uORB/topics/sensor_gnss_relative.h>
 #include <uORB/topics/sensor_gps.h>

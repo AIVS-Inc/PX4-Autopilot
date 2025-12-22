@@ -43,6 +43,7 @@
 
 #include <uORB/uORB.h>
 #include <uORB/topics/sensor_avs.h>
+#include <uORB/topics/sensor_avs_lite.h>
 #include "ares/Bearings_0_1.h"
 #include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
@@ -50,7 +51,9 @@
 class AresEventSubscriber : public UavcanBaseSubscriber
 {
 	struct sensor_avs_s bearings;
+	struct sensor_avs_lite_s bearings_lite;
 	orb_advert_t avs_pub;
+	orb_advert_t avs_lite_pub;
 public:
 	AresEventSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
 		UavcanBaseSubscriber(handle, "ares.", "bearings", instance), _portID(portID) { };
@@ -67,6 +70,11 @@ public:
 		/* advertise bearings topic */
 		memset(&this->bearings, 0, sizeof(this->bearings));
 		this->avs_pub = orb_advertise(ORB_ID(sensor_avs), &this->bearings);
+
+		/* advertise bearings lite topic */
+		memset(&this->bearings_lite, 0, sizeof(this->bearings_lite));
+		this->avs_lite_pub = orb_advertise(ORB_ID(sensor_avs_lite), &this->bearings_lite);
+
 		PX4_INFO("subscribed to BearingAngles, port %d", _portID);
 	};
 
@@ -108,6 +116,15 @@ public:
 				bearings.mel_intensity[i] = 0.0f;
 		}
 	orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
+
+	// Publish lite version
+	bearings_lite.timestamp = bearings.timestamp;
+	bearings_lite.azimuth_deg = bearings.azimuth_deg;
+	bearings_lite.elevation_deg = bearings.elevation_deg;
+	bearings_lite.active_intensity = bearings.active_intensity;
+	bearings_lite.q_factor = bearings.q_factor;
+	bearings_lite.histogram_count = bearings.histogram_count;
+	orb_publish(ORB_ID(sensor_avs_lite), this->avs_lite_pub, &this->bearings_lite);
 	};
 private:
 	CanardPortID _portID;

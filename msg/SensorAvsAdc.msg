@@ -14,7 +14,7 @@ float32 eph			# GPS horizontal position accuracy (metres)
 float32 epv			# GPS vertical position accuracy (metres)
 
 float32 pitch			# AVS sensor pitch, radians
-float32 roll 			# AVS sensor roll, radians
+float32 roll			# AVS sensor roll, radians
 float32 yaw			# AVS sensor yaw, radians
 
 int32[384] adc_frame		# 4 real ADC columns x 96 samples, segmented in rows (not interleaved)
