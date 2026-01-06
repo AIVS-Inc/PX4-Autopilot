@@ -3081,6 +3081,7 @@ MavlinkReceiver::handle_message_sensor_avs_lite(mavlink_message_t *msg)
 	sensor_avs_lite_s sensor_avs_lite_data{};
 
 	sensor_avs_lite_data.timestamp=hrt_absolute_time();
+	sensor_avs_lite_data.timestamp_sample= sensor_avs_lite_msg.timestamp_sample;
 	sensor_avs_lite_data.azimuth_deg= sensor_avs_lite_msg.azimuth_deg;
 	sensor_avs_lite_data.elevation_deg= sensor_avs_lite_msg.elevation_deg;
 	sensor_avs_lite_data.active_intensity= sensor_avs_lite_msg.active_intensity;

@@ -65,6 +65,7 @@ private:
 		mavlink_sensor_avs_lite_t msg{};
 
 		msg.timestamp = sensor_avs_lite_data.timestamp;
+		msg.timestamp_sample = sensor_avs_lite_data.timestamp_sample;
 		msg.azimuth_deg= sensor_avs_lite_data.azimuth_deg;
 		msg.elevation_deg= sensor_avs_lite_data.elevation_deg;
 		msg.active_intensity= sensor_avs_lite_data.active_intensity;

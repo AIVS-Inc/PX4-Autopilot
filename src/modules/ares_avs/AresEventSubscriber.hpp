@@ -119,6 +119,7 @@ public:
 
 	// Publish lite version
 	bearings_lite.timestamp = bearings.timestamp;
+	bearings_lite.timestamp_sample = bearings.timestamp_sample;
 	bearings_lite.azimuth_deg = bearings.azimuth_deg;
 	bearings_lite.elevation_deg = bearings.elevation_deg;
 	bearings_lite.active_intensity = bearings.active_intensity;
