@@ -1,0 +1,114 @@
+module_name: Haptic Driver
+
+parameters:
+  - group: Haptic
+    definitions:
+
+      HAP_YAW_R:
+        description:
+          short: Right side Yaw angle
+          long: right side angle in degrees of the vehicles Yaw attitude to trigger haptic effect on both motors simultanesouly
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 135.0
+
+      HAP_YAW_L:
+        description:
+          short: Left side Yaw angle
+          long: left side angle in degrees of the vehicles Yaw attitude to trigger haptic effect on both motors simultanesouly
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 225.0
+
+
+      HAP_YAW_RMIN:
+        description:
+          short: Minimum right side Yaw angle
+          long: Right side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on rigt side only
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 90.0
+
+      HAP_YAW_RMAX:
+        description:
+          short: Maximum right side Yaw angle
+          long: Right side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on rigt side only
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 225.0
+
+      HAP_YAW_LMIN:
+        description:
+          short: Minimum left side Yaw angle
+          long: left side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on left side only
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 135.0
+
+      HAP_YAW_LMAX:
+        description:
+          short: Maximum left side Yaw angle
+          long: left side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on left side only
+        type: float
+        unit: deg
+        min: 0.0
+        max: 360.0
+        increment: 1.0
+        default: 270.0
+
+      HAP_ACT_INT:
+        description:
+          short: Active Intensity, how loud sound is
+        type: float
+        min: 0.0
+        max: 100.00
+        increment: 1.0
+        default: 70.0
+
+      HAP_Q_FACTOR:
+        description:
+          short: Q-factor, diffusion/concentration of sound
+        type: float
+        min: 0.0
+        max: 100.00
+        increment: 1.0
+        default: 70.0
+
+      HAP_DRV_EFFECT_R:
+        description:
+          short: rigth side waveform effect (1-123)
+        type: int32
+        min: 1
+        max: 123
+        increment: 1
+        default: 1
+
+      HAP_DRV_EFFECT_L:
+        description:
+          short: left side waveform effect (1-123)
+        type: int32
+        min: 1
+        max: 123
+        increment: 1
+        default: 1
+
+      HAP_MULTIPLEX:
+        description:
+          short: using multiplexer?
+        type: boolean
+        default: true

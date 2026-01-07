@@ -1,0 +1,5 @@
+menuconfig DRIVERS_DRV2605L_HAPTIC
+	bool "drv2605l_haptic"
+	default n
+	---help---
+		Enable support for DRV2605L Haptic Driver

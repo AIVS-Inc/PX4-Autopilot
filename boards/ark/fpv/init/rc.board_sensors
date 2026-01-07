@@ -16,3 +16,7 @@ iis2mdc -R 0 -I -b 4 start
 
 # Internal Baro on I2C
 bmp388 -I -b 2 start
+
+# Start DRV2605L haptic driver
+# drv2605l_haptic start -b 1
+drv2605l_haptic start -b 1 -c 0 -C 1
