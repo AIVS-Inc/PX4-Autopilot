@@ -1,5 +1,6 @@
 # Acoustic Vector Sensor Lite event
 
+uint64 time_utc_usec            # Timestamp (microseconds, UTC)
 uint64 timestamp		# time since system start (microseconds)
 uint32 timestamp_sample         # AVS sensor sample index since system SYNC</field>
 float32 azimuth_deg		# azimuth in degrees

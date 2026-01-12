@@ -86,7 +86,14 @@ public:
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_Bearings_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
 
-		uint64_t utc_us = aresevent.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
+		//uint64_t utc_us = aresevent.m_u64JulianMicrosecond - 3506716800000000;	// difference between modified Julian and UTC microseconds
+
+		// Get UTC time from PX4's synchronized clock instead of ARES sensor's Julian time
+		// from SYSTEM_TIME.hpp (line 58-63)
+		timespec tv;
+		px4_clock_gettime(CLOCK_REALTIME, &tv);
+		uint64_t utc_us = (uint64_t)tv.tv_sec * 1000000 + tv.tv_nsec / 1000;
+
 		uint16_t idx = aresevent.m_iSourceIndex;
 		uint16_t cnt = aresevent.m_iHistogramCnt;
 		double qfac = aresevent.m_fQfac;
@@ -118,6 +125,7 @@ public:
 	orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
 
 	// Publish lite version
+	bearings_lite.time_utc_usec = utc_us;
 	bearings_lite.timestamp = bearings.timestamp;
 	bearings_lite.timestamp_sample = bearings.timestamp_sample;
 	bearings_lite.azimuth_deg = bearings.azimuth_deg;
