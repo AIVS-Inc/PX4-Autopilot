@@ -64,6 +64,7 @@ private:
 	if (_sensor_avs_lite_sub.update(&sensor_avs_lite_data)) {
 		mavlink_sensor_avs_lite_t msg{};
 
+		msg.device_id= sensor_avs_lite_data.device_id;
 		msg.time_utc_usec= sensor_avs_lite_data.time_utc_usec;
 		msg.timestamp = sensor_avs_lite_data.timestamp;
 		msg.timestamp_sample = sensor_avs_lite_data.timestamp_sample;

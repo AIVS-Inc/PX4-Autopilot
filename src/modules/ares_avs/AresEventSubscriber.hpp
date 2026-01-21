@@ -125,6 +125,7 @@ public:
 	orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
 
 	// Publish lite version
+	bearings_lite.device_id = node;
 	bearings_lite.time_utc_usec = utc_us;
 	bearings_lite.timestamp = bearings.timestamp;
 	bearings_lite.timestamp_sample = bearings.timestamp_sample;

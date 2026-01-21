@@ -1,5 +1,6 @@
 # Acoustic Vector Sensor Lite event
 
+uint32 device_id		# unique device ID for the sensor that does not change between power cycles
 uint64 time_utc_usec            # Timestamp (microseconds, UTC)
 uint64 timestamp		# time since system start (microseconds)
 uint32 timestamp_sample         # AVS sensor sample index since system SYNC</field>

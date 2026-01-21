@@ -3080,6 +3080,7 @@ MavlinkReceiver::handle_message_sensor_avs_lite(mavlink_message_t *msg)
 
 	sensor_avs_lite_s sensor_avs_lite_data{};
 
+	sensor_avs_lite_data.device_id= sensor_avs_lite_msg.device_id;
 	sensor_avs_lite_data.time_utc_usec= sensor_avs_lite_msg.time_utc_usec;
 	sensor_avs_lite_data.timestamp=hrt_absolute_time();
 	sensor_avs_lite_data.timestamp_sample= sensor_avs_lite_msg.timestamp_sample;
