@@ -115,6 +115,7 @@
 #include <uORB/topics/velocity_limits.h>
 #include <uORB/topics/sensor_avs.h>
 #include <uORB/topics/sensor_avs_lite.h>
+#include <uORB/topics/sensor_avs_lite_ext.h>
 
 #if !defined(CONSTRAINED_FLASH)
 # include <uORB/topics/debug_array.h>
@@ -208,6 +209,7 @@ private:
 	void handle_message_utm_global_position(mavlink_message_t *msg);
 	void handle_message_sensor_avs(mavlink_message_t *msg);
 	void handle_message_sensor_avs_lite(mavlink_message_t *msg);
+	void handle_message_sensor_avs_lite_ext(mavlink_message_t *msg);
 #if defined(MAVLINK_MSG_ID_SET_VELOCITY_LIMITS) // For now only defined if development.xml is used
 	void handle_message_set_velocity_limits(mavlink_message_t *msg);
 #endif
@@ -337,6 +339,7 @@ private:
 	uORB::Publication<vehicle_trajectory_waypoint_s>	_trajectory_waypoint_pub{ORB_ID(vehicle_trajectory_waypoint)};
 	uORB::Publication<sensor_avs_s>	                        _sensor_avs_pub{ORB_ID(sensor_avs)};
 	uORB::Publication<sensor_avs_lite_s>	                _sensor_avs_lite_pub{ORB_ID(sensor_avs_lite)};
+	uORB::Publication<sensor_avs_lite_ext_s>	        _sensor_avs_lite_ext_pub{ORB_ID(sensor_avs_lite_ext)};
 
 #if !defined(CONSTRAINED_FLASH)
 	uORB::Publication<debug_array_s>			_debug_array_pub {ORB_ID(debug_array)};

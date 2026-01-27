@@ -80,6 +80,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/sensor_avs.h>
 #include <uORB/topics/sensor_avs_lite.h>
+#include <uORB/topics/sensor_avs_lite_ext.h>
 
 #include "mavlink_command_sender.h"
 #include "mavlink_events.h"

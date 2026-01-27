@@ -295,6 +295,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		handle_message_sensor_avs_lite(msg);
 		break;
 
+	case MAVLINK_MSG_ID_SENSOR_AVS_LITE_EXT:
+		handle_message_sensor_avs_lite_ext(msg);
+		break;
+
 #if !defined(CONSTRAINED_FLASH)
 
 	case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
@@ -3091,6 +3095,32 @@ MavlinkReceiver::handle_message_sensor_avs_lite(mavlink_message_t *msg)
 	sensor_avs_lite_data.histogram_count= sensor_avs_lite_msg.histogram_count;
 
 	_sensor_avs_lite_pub.publish(sensor_avs_lite_data);
+}
+void
+MavlinkReceiver::handle_message_sensor_avs_lite_ext(mavlink_message_t *msg)
+{
+	mavlink_sensor_avs_lite_ext_t sensor_avs_lite_ext_msg;
+	mavlink_msg_sensor_avs_lite_ext_decode(msg, &sensor_avs_lite_ext_msg);
+
+	sensor_avs_lite_ext_s sensor_avs_lite_ext_data{};
+
+	sensor_avs_lite_ext_data.device_id= sensor_avs_lite_ext_msg.device_id;
+	sensor_avs_lite_ext_data.time_utc_usec= sensor_avs_lite_ext_msg.time_utc_usec;
+	sensor_avs_lite_ext_data.timestamp=hrt_absolute_time();
+	sensor_avs_lite_ext_data.timestamp_sample= sensor_avs_lite_ext_msg.timestamp_sample;
+	sensor_avs_lite_ext_data.azimuth_deg= sensor_avs_lite_ext_msg.azimuth_deg;
+	sensor_avs_lite_ext_data.elevation_deg= sensor_avs_lite_ext_msg.elevation_deg;
+	sensor_avs_lite_ext_data.active_intensity= sensor_avs_lite_ext_msg.active_intensity;
+	sensor_avs_lite_ext_data.q_factor= sensor_avs_lite_ext_msg.q_factor;
+	sensor_avs_lite_ext_data.histogram_count= sensor_avs_lite_ext_msg.histogram_count;
+	sensor_avs_lite_ext_data.north= sensor_avs_lite_ext_msg.north;
+	sensor_avs_lite_ext_data.east= sensor_avs_lite_ext_msg.east;
+	sensor_avs_lite_ext_data.down= sensor_avs_lite_ext_msg.down;
+	sensor_avs_lite_ext_data.yaw= sensor_avs_lite_ext_msg.yaw;
+	sensor_avs_lite_ext_data.pitch= sensor_avs_lite_ext_msg.pitch;
+	sensor_avs_lite_ext_data.roll= sensor_avs_lite_ext_msg.roll;
+
+	_sensor_avs_lite_ext_pub.publish(sensor_avs_lite_ext_data);
 }
 void
 MavlinkReceiver::handle_message_gimbal_device_information(mavlink_message_t *msg)

@@ -125,6 +125,7 @@
 #include "streams/WIND_COV.hpp"
 #include "streams/SENSOR_AVS.hpp"
 #include "streams/SENSOR_AVS_LITE.hpp"
+#include "streams/SENSOR_AVS_LITE_EXT.hpp"
 #if defined(MAVLINK_MSG_ID_FIGURE_EIGHT_EXECUTION_STATUS)
 #include "streams/FIGURE_EIGHT_EXECUTION_STATUS.hpp"
 #endif // MAVLINK_MSG_ID_FIGURE_EIGHT_EXECUTION_STATUS
@@ -534,6 +535,9 @@ static const StreamListItem streams_list[] = {
 #if defined(SENSOR_AVS_LITE_HPP)
 	create_stream_list_item<MavlinkStreamSensorAvsLite>(),
 #endif // SENSOR_AVS_LITE_HPP
+#if defined(SENSOR_AVS_LITE_EXT_HPP)
+	create_stream_list_item<MavlinkStreamSensorAvsLiteExt>(),
+#endif // SENSOR_AVS_LITE_EXT_HPP
 };
 
 const char *get_stream_name(const uint16_t msg_id)

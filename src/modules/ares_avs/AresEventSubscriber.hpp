@@ -42,18 +42,29 @@
 #pragma once
 
 #include <uORB/uORB.h>
+#include <uORB/Subscription.hpp>
 #include <uORB/topics/sensor_avs.h>
 #include <uORB/topics/sensor_avs_lite.h>
+#include <uORB/topics/sensor_avs_lite_ext.h>
+
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topics/vehicle_attitude.h>
 #include "ares/Bearings_0_1.h"
 #include "UavCanId.h"
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
+#include <lib/matrix/matrix/math.hpp>
 
 class AresEventSubscriber : public UavcanBaseSubscriber
 {
 	struct sensor_avs_s bearings;
 	struct sensor_avs_lite_s bearings_lite;
+	struct sensor_avs_lite_ext_s bearings_lite_ext;
 	orb_advert_t avs_pub;
 	orb_advert_t avs_lite_pub;
+	orb_advert_t avs_lite_ext_pub;
+
+	uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};
+	uORB::Subscription _lpos_sub{ORB_ID(vehicle_local_position)};
 public:
 	AresEventSubscriber(CanardHandle &handle, CanardPortID portID, uint8_t instance = 0) :
 		UavcanBaseSubscriber(handle, "ares.", "bearings", instance), _portID(portID) { };
@@ -74,6 +85,11 @@ public:
 		/* advertise bearings lite topic */
 		memset(&this->bearings_lite, 0, sizeof(this->bearings_lite));
 		this->avs_lite_pub = orb_advertise(ORB_ID(sensor_avs_lite), &this->bearings_lite);
+
+		/* advertise bearings lite ext topic */
+		memset(&this->bearings_lite_ext, 0, sizeof(this->bearings_lite_ext));
+		this->avs_lite_ext_pub = orb_advertise(ORB_ID(sensor_avs_lite_ext), &this->bearings_lite_ext);
+
 
 		PX4_INFO("subscribed to BearingAngles, port %d", _portID);
 	};
@@ -135,6 +151,36 @@ public:
 	bearings_lite.q_factor = bearings.q_factor;
 	bearings_lite.histogram_count = bearings.histogram_count;
 	orb_publish(ORB_ID(sensor_avs_lite), this->avs_lite_pub, &this->bearings_lite);
+
+	// Publish lite extended version
+	bearings_lite_ext.device_id = node;
+	bearings_lite_ext.time_utc_usec = utc_us;
+	bearings_lite_ext.timestamp = bearings.timestamp;
+	bearings_lite_ext.timestamp_sample = bearings.timestamp_sample;
+	bearings_lite_ext.azimuth_deg = bearings.azimuth_deg;
+	bearings_lite_ext.elevation_deg = bearings.elevation_deg;
+	bearings_lite_ext.active_intensity = bearings.active_intensity;
+	bearings_lite_ext.q_factor = bearings.q_factor;
+	bearings_lite_ext.histogram_count = bearings.histogram_count;
+
+	// Vehicle attitude (roll, pitch, yaw from quaternion)
+	vehicle_attitude_s att{};
+	if (_att_sub.copy(&att)) {
+		const matrix::Eulerf euler = matrix::Quatf(att.q);
+		bearings_lite_ext.roll = euler.phi();
+		bearings_lite_ext.pitch = euler.theta();
+		bearings_lite_ext.yaw = euler.psi();
+	}
+
+	// Local position NED (north, east, down)
+	vehicle_local_position_s lpos{};
+	if (_lpos_sub.copy(&lpos)) {
+		bearings_lite_ext.north = lpos.x;
+		bearings_lite_ext.east = lpos.y;
+		bearings_lite_ext.down = lpos.z;
+	}
+
+	orb_publish(ORB_ID(sensor_avs_lite_ext), this->avs_lite_ext_pub, &this->bearings_lite_ext);
 	};
 private:
 	CanardPortID _portID;
