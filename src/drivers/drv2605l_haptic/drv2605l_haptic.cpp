@@ -481,15 +481,15 @@ float DRV2605L::get_yaw_from_quaternion(const vehicle_attitude_s &att)
 char DRV2605L::is_yaw_in_range(float yaw_deg)  // bool DRV2605L
 {
 	// Check if yaw is within range
-	char cY = 'N'; // declare once
+	char c = 'N'; // declare once
 
 	// if btwn 135-225
 	if (yaw_deg >= _yaw_min.get() && yaw_deg <= _yaw_max.get()){
-		cY = 'B'; //assign
+		c = 'B'; //assign
 	} else {
-		cY = 'N'; // no haptic effect
+		c = 'N'; // no haptic effect
 	}
-	return cY;
+	return c;
 }
 
 float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
@@ -512,15 +512,15 @@ float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
 char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
 {
 	// Check if pitch is within range
-	char cP = 'N'; // declare once
+	char c = 'N'; // declare once
 
 	// if btwn 135-225
 	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
-		cP = 'T'; //assign
+		c = 'T'; //assign
 	} else {
-		cP = 'N'; // no haptic effect
+		c = 'N'; // no haptic effect
 	}
-	return cP;
+	return c;
 }
 
 void DRV2605L::run()
