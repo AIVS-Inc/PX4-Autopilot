@@ -4,21 +4,9 @@ parameters:
   - group: Haptic
     definitions:
 
-      HAP_YAW_R:
+      HAP_YAW_MAX:
         description:
-          short: Right side Yaw angle
-          long: right side angle in degrees of the vehicles Yaw attitude to trigger haptic effect on both motors simultanesouly
-        type: float
-        unit: deg
-        min: 0.0
-        max: 360.0
-        increment: 1.0
-        default: 135.0
-
-      HAP_YAW_L:
-        description:
-          short: Left side Yaw angle
-          long: left side angle in degrees of the vehicles Yaw attitude to trigger haptic effect on both motors simultanesouly
+          short: Maximum Yaw angle
         type: float
         unit: deg
         min: 0.0
@@ -26,50 +14,15 @@ parameters:
         increment: 1.0
         default: 225.0
 
-
-      HAP_YAW_RMIN:
+      HAP_YAW_MIN:
         description:
-          short: Minimum right side Yaw angle
-          long: Right side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on rigt side only
-        type: float
-        unit: deg
-        min: 0.0
-        max: 360.0
-        increment: 1.0
-        default: 90.0
-
-      HAP_YAW_RMAX:
-        description:
-          short: Maximum right side Yaw angle
-          long: Right side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on rigt side only
-        type: float
-        unit: deg
-        min: 0.0
-        max: 360.0
-        increment: 1.0
-        default: 225.0
-
-      HAP_YAW_LMIN:
-        description:
-          short: Minimum left side Yaw angle
-          long: left side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on left side only
+          short: Minimum Yaw angle
         type: float
         unit: deg
         min: 0.0
         max: 360.0
         increment: 1.0
         default: 135.0
-
-      HAP_YAW_LMAX:
-        description:
-          short: Maximum left side Yaw angle
-          long: left side min angle in degrees of the vehicles Yaw attitude to trigger haptic effect on left side only
-        type: float
-        unit: deg
-        min: 0.0
-        max: 360.0
-        increment: 1.0
-        default: 270.0
 
       HAP_ACT_INT:
         description:
@@ -80,6 +33,42 @@ parameters:
         increment: 1.0
         default: 70.0
 
+      HAP_ELEV_MAX:
+        description:
+          short: Maximum elevation angle
+        type: float
+        min: -90.0
+        max: 90.0
+        increment: 1.0
+        default: 45.0
+
+      HAP_ELEV_MIN:
+        description:
+          short: Minimum elevation angle
+        type: float
+        min: -90.0
+        max: 90.0
+        increment: 1.0
+        default: -45.0
+
+      HAP_PITCH_MIN:
+        description:
+          short: Minimum pitch angle
+        type: float
+        min: -90.0
+        max: 90.0
+        increment: 1.0
+        default: -5.0
+
+      HAP_PITCH_MAX:
+        description:
+          short: Maximum pitch angle
+        type: float
+        min: -90.0
+        max: 90.0
+        increment: 1.0
+        default: 5.0
+
       HAP_Q_FACTOR:
         description:
           short: Q-factor, diffusion/concentration of sound
@@ -89,18 +78,18 @@ parameters:
         increment: 1.0
         default: 70.0
 
-      HAP_DRV_EFFECT_R:
+      HAP_DRV_EFFECT_T:
         description:
-          short: rigth side waveform effect (1-123)
+          short: top haptic waveform effect (1-123)
         type: int32
         min: 1
         max: 123
         increment: 1
         default: 1
 
-      HAP_DRV_EFFECT_L:
+      HAP_DRV_EFFECT_B:
         description:
-          short: left side waveform effect (1-123)
+          short: bottom haptic waveform effect (1-123)
         type: int32
         min: 1
         max: 123

@@ -131,14 +131,10 @@ private:
 	int trigger_effect(uint8_t channel, uint8_t effect); //core logic
 	int init_drv2605l(uint8_t channel);
 	//float get_active_intensity(const sensor_avs_s &sensor_avs_data);
-	float get_elevation(const sensor_avs_s &sensor_avs_data);
 	float get_q_factor(const sensor_avs_s &sensor_avs_data);
 	bool check_act_int_threshold(float active_int);
 	float get_yaw_from_quaternion(const vehicle_attitude_s &att);
-	float get_pitch_from_quaternion(const vehicle_attitude_s &att);
-	char is_elevation_in_range(float elevation);
 	char is_yaw_in_range(float yaw_deg);
-	char is_pitch_in_range(float pitch);
 	//
 
 	//sensor_avs_data.q_factor
@@ -154,9 +150,6 @@ private:
 
 	// member variables (data members) with "_" - things the object stoes
 	// uORB subscription for vehicle attitude and sensor avs data
-
-	//uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};
-
 	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
 
@@ -169,16 +162,16 @@ private:
 	//
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::HAP_YAW_MIN>) _yaw_min,
-		(ParamFloat<px4::params::HAP_YAW_MAX>) _yaw_max,
+		(ParamFloat<px4::params::HAP_YAW_R>) _yaw_r,
+		(ParamFloat<px4::params::HAP_YAW_L>) _yaw_l,
+		(ParamFloat<px4::params::HAP_YAW_RMIN>) _yaw_rmin,
+		(ParamFloat<px4::params::HAP_YAW_RMAX>) _yaw_rmax,
+		(ParamFloat<px4::params::HAP_YAW_LMIN>) _yaw_lmin,
+		(ParamFloat<px4::params::HAP_YAW_LMAX>) _yaw_lmax,
 		(ParamFloat<px4::params::HAP_ACT_INT>) _act_int,
-		(ParamFloat<px4::params::HAP_ELEV_MAX>) _elevation_max,
-		(ParamFloat<px4::params::HAP_ELEV_MIN>) _elevation_min,
-		(ParamFloat<px4::params::HAP_PITCH_MAX>) _pitch_max,
-		(ParamFloat<px4::params::HAP_PITCH_MIN>) _pitch_min,
 		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor,
-		(ParamInt<px4::params::HAP_DRV_EFFECT_B>) _drv_effect_b,
-		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t,
+		(ParamInt<px4::params::HAP_DRV_EFFECT_R>) _drv_effect_r,
+		(ParamInt<px4::params::HAP_DRV_EFFECT_L>) _drv_effect_l,
 		(ParamBool<px4::params::HAP_MULTIPLEX>) _multiplexer_flag
 	)
 };
@@ -419,6 +412,7 @@ int DRV2605L::trigger_effect(uint8_t channel, uint8_t effect)
 // float DRV2605L::get_active_intensity(const sensor_avs_s &sensor_avs_data)
 // {
 // 	float active_int = sensor_avs_data.active_intensity;
+
 // 	// implement threshold check
 
 // 	if (active_int <= _act_int.get()){
@@ -433,26 +427,6 @@ bool DRV2605L::check_act_int_threshold(float active_int)
 {
 	// Check if active intensity greater than 70
 	return (active_int >= _act_int.get());
-}
-
-float DRV2605L::get_elevation(const sensor_avs_s &sensor_avs_data)
-{
-	float elevation= sensor_avs_data.elevation_deg;
-	return elevation;
-}
-
-char DRV2605L::is_elevation_in_range(float elevation)
-{
-	// Check if elevation is within range
-	char c = 'N'; // declare once
-
-	// if btwn -45 to +45
-	if (elevation >= _elevation_min.get() && elevation <= _elevation_max.get()){
-		c = 'B'; //assign
-	} else {
-		c = 'N'; // no haptic effect
-	}
-	return c;
 }
 
 float DRV2605L::get_q_factor(const sensor_avs_s &sensor_avs_data)
@@ -475,52 +449,31 @@ float DRV2605L::get_yaw_from_quaternion(const vehicle_attitude_s &att)
 	if (yaw_deg < 0.0f) {
 		yaw_deg += 360.0f;
 	}
+
 	return yaw_deg;
 }
 
 char DRV2605L::is_yaw_in_range(float yaw_deg)  // bool DRV2605L
 {
 	// Check if yaw is within range
-	char cY = 'N'; // declare once
 
-	// if btwn 135-225
-	if (yaw_deg >= _yaw_min.get() && yaw_deg <= _yaw_max.get()){
-		cY = 'B'; //assign
-	} else {
-		cY = 'N'; // no haptic effect
+	char c = 'N'; // declare once
+
+	// Both sides if btwn 135-225
+	if (yaw_deg >= _yaw_r.get() && yaw_deg <= _yaw_l.get()){
+		c = 'B'; //assign
 	}
-	return cY;
-}
-
-float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
-{
-	// Convert quaternion to Euler angles using PX4 matrix library
-	matrix::Quatf q(att.q);
-	matrix::Eulerf euler(q);
-
-	// euler.theta() returns pitch in radians, convert to degrees
-	// Range: -180 to +180 degrees
-	float pitch = math::degrees(euler.theta());
-
-	// // Normalize to 0-360 range
-	// if (pitch < 0.0f) {
-	// 	pitch += 360.0f;
-	// }
-	return pitch;
-}
-
-char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
-{
-	// Check if pitch is within range
-	char cP = 'N'; // declare once
-
-	// if btwn 135-225
-	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
-		cP = 'T'; //assign
-	} else {
-		cP = 'N'; // no haptic effect
+	// L side if btwn 135-270
+	else if (yaw_deg <= _yaw_lmax.get() && yaw_deg >= _yaw_lmin.get() ) {
+		c = 'L';
 	}
-	return cP;
+	// R side if btwn 90-225
+	else if (yaw_deg <= _yaw_rmax.get() && yaw_deg >= _yaw_rmin.get()) {
+		c = 'R';
+	} else {
+		c = 'N'; // no haptic effect
+	}
+	return c;
 }
 
 void DRV2605L::run()
@@ -543,65 +496,65 @@ void DRV2605L::run()
 		bool avs_updated = _sensor_avs_sub.update(&sensor_avs_data);
 
 		// Static variables to preserve latest values across loop iterations
-		static char back_side = 'N';
-		static char top_side = 'N';
+		static char which_side = 'N';
 		static bool greater_threshold = false;
 		//static float q_factor = 0.0f;
 
 		if (att_updated)  {
 
 			float yaw_deg = get_yaw_from_quaternion(attitude); 	// Get yaw angle from quaternion
-			float pitch = get_pitch_from_quaternion(attitude); 	// Get pitch angle from quaternion
-			back_side = is_yaw_in_range(yaw_deg); 		// Check and determine if yaw is in target range
-			top_side = is_pitch_in_range(pitch); 		// Check and determine if pitch is in target range
+			which_side = is_yaw_in_range(yaw_deg); 		// Check and determine if yaw is in target range
 
 			// Print yaw continuously with haptic side status
-			// Haptic: %s.  (back_side != 'N') ? "ACTIVE" : "INACTIVE"
-			PX4_INFO("Yaw: %.2f deg | Pitch: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (double)yaw_deg,  (double)pitch, back_side, top_side);
+			// Haptic: %s.  (which_side != 'N') ? "ACTIVE" : "INACTIVE"
+			PX4_INFO("Yaw: %.2f deg | Haptic Side: %c", (double)yaw_deg, which_side);
 		}
-
 		if (avs_updated){
 
 			float active_int = sensor_avs_data.active_intensity;  // get active insensity value
-			float elevation = sensor_avs_data.elevation_deg;  // get active insensity value
 			greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
 
 			//float q_factor = get_q_factor(sensor_avs_data);
 			//| Q Factor: %.2f", (double)q_factor(double)active_int,
-			PX4_INFO("Active Intensity: %.2f | Elevation: %.2f", (double)active_int, (double)elevation);
+			PX4_INFO("Active Intensity: %.2f", (double)active_int);
 		}
 		//
-		//Only trigger if in haptic yaw range, haptic pitch range, & exceed active intensity threshold
-		if ((back_side != 'N' || top_side != 'N') && greater_threshold) {
+		//Only trigger if in haptic yaw range & exceed active intensity threshold
+		if (which_side != 'N' && greater_threshold) {
 
 			// Get the effect number from parameter
-			uint8_t effectT = static_cast<uint8_t>(_drv_effect_t.get());
-			uint8_t effectB = static_cast<uint8_t>(_drv_effect_b.get());
+			uint8_t effectR = static_cast<uint8_t>(_drv_effect_r.get());
+			uint8_t effectL = static_cast<uint8_t>(_drv_effect_l.get());
 
 			// Print the effect value being used
 			//PX4_INFO("Triggering haptic effect right: %d | left: %d", effectR, effectL);
 
 			if (_use_multiplex){ // if using multiplexer
-				if (back_side == 'B'){
-					// Trigger backside haptic
-					int ret1 = trigger_effect(_multiplex_channel1, effectB);
-					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
+				if (which_side == 'B'){
+					// Trigger both right and left haptic motors
+					int ret1 = trigger_effect(_multiplex_channel1, effectR);
+					int ret2 = trigger_effect(_multiplex_channel2, effectL);
 
-					if (ret1 != OK) {
+					if (ret1 != OK || ret2 != OK) {
 						PX4_ERR("Failed to trigger effect");
 					}
 				}
-				if (top_side == 'T'){
-					// Trigger backside haptic
-					int ret2 = trigger_effect(_multiplex_channel2, effectT);
-					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
-
-					if (ret2 != OK) {
+				// trigger right side motor
+				else if (which_side == 'R'){
+					int ret2 = trigger_effect(_multiplex_channel2, effectR);
+					if (ret2 != OK){
+						PX4_ERR("Failed to trigger effect");
+					}
+				}
+				//trigger left side motor
+				else if (which_side == 'L'){
+					int ret1 = trigger_effect(_multiplex_channel1,effectL);
+					if (ret1 != OK){
 						PX4_ERR("Failed to trigger effect");
 					}
 				}
 			} else {  // if no multiplexer just a single driver
-				uint8_t effect = effectB; // Default to backside effect for single mode
+				uint8_t effect = effectR; // Default to right effect for single mode
 				int ret = trigger_effect(0, effect);
 				if (ret != OK) {
 					PX4_ERR("Failed to trigger effect");
@@ -631,8 +584,7 @@ int DRV2605L::print_status()
 	}
 
 	PX4_INFO("Loop interval: %" PRIu32 " us", _loop_interval_us);
-	PX4_INFO("Yaw trigger range: %.0f-%.0f degrees", (double)_yaw_min.get(), (double)_yaw_max.get());
-	PX4_INFO("Pitch trigger range: %.0f-%.0f degrees", (double)_pitch_min.get(), (double)_pitch_max.get());
+	PX4_INFO("Yaw trigger range: %.0f-%.0f degrees", (double)_yaw_rmin.get(), (double)_yaw_lmax.get());
 	PX4_INFO("I2C bus: %d, DRV address: 0x%02X", get_device_bus(), get_device_address());
 
 	return OK;
