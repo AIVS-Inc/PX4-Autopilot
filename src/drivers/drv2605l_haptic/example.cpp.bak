@@ -138,13 +138,11 @@ private:
 	float get_q_factor(const sensor_avs_s &sensor_avs_data);
 	bool check_act_int_threshold(float active_int);
 	float get_yaw_from_quaternion(const vehicle_attitude_s &att);
-	//float get_pitch_from_quaternion(const vehicle_attitude_s &att);
-	float get_roll_from_quaternion(const vehicle_attitude_s &att);
+	float get_pitch_from_quaternion(const vehicle_attitude_s &att);
 	char is_elevation_in_range(float elevation);
 	char is_yaw_in_range(float yaw_deg);
-	char is_roll_in_range(float roll);
-	//char is_pitch_in_range(float pitch);
-
+	char is_pitch_in_range(float pitch);
+	//
 
 	//sensor_avs_data.q_factor
 	//sensor_avs_data.active_intensity
@@ -157,7 +155,11 @@ private:
     	// float _yaw_r;
     	// float _yaw_l;
 
+	// member variables (data members) with "_" - things the object stoes
 	// uORB subscription for vehicle attitude and sensor avs data
+
+	//uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};
+
 	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
@@ -222,7 +224,21 @@ void DRV2605L::parameters_update()
 	// Update all parameters from storage
 	updateParams();
 
-	// add validation logic ??
+	// Optional: Add validation logic
+	if (_yaw_min.get() >= _yaw_max.get()) {
+		PX4_WARN("HAP_YAW_MIN (%.1f) must be less than HAP_YAW_MAX (%.1f)",
+		         (double)_yaw_min.get(), (double)_yaw_max.get());
+	}
+
+	if (_pitch_min.get() >= _pitch_max.get()) {
+		PX4_WARN("HAP_PITCH_MIN (%.1f) must be less than HAP_PITCH_MAX (%.1f)",
+		         (double)_pitch_min.get(), (double)_pitch_max.get());
+	}
+
+	if (_elevation_min.get() >= _elevation_max.get()) {
+		PX4_WARN("HAP_ELEV_MIN (%.1f) must be less than HAP_ELEV_MAX (%.1f)",
+		         (double)_elevation_min.get(), (double)_elevation_max.get());
+	}
 }
 
 int DRV2605L::select_multiplex_channel(uint8_t channel)
@@ -426,6 +442,18 @@ int DRV2605L::trigger_effect(uint8_t channel, uint8_t effect)
 	return ret;
 }
 
+// float DRV2605L::get_active_intensity(const sensor_avs_s &sensor_avs_data)
+// {
+// 	float active_int = sensor_avs_data.active_intensity;
+// 	// implement threshold check
+
+// 	if (active_int <= _act_int.get()){
+
+// 	}
+
+// 	return active_int;
+// }
+
 
 bool DRV2605L::check_act_int_threshold(float active_int)
 {
@@ -440,8 +468,6 @@ float DRV2605L::get_elevation(const sensor_avs_s &sensor_avs_data)
 }
 
 char DRV2605L::is_elevation_in_range(float elevation)
-
-	// here elevation is "roll" for up/down motion
 {
 	// Check if elevation is within range
 	char c = 'N'; // declare once
@@ -492,62 +518,30 @@ char DRV2605L::is_yaw_in_range(float yaw_deg)  // bool DRV2605L
 	return c;
 }
 
-// float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
-// {
-// 	// Convert quaternion to Euler angles using PX4 matrix library
-// 	matrix::Quatf q(att.q);
-// 	matrix::Eulerf euler(q);
-
-// 	// euler.theta() returns pitch in radians, convert to degrees
-// 	//rotation around Y-axis
-// 	// Range: -180 to +180 degrees
-// 	float pitch = math::degrees(euler.theta());
-
-// 	// // Normalize to 0-360 range
-// 	// if (pitch < 0.0f) {
-// 	// 	pitch += 360.0f;
-// 	// }
-// 	return pitch;
-// }
-
-// char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
-// {
-// 	// Check if pitch is within range
-// 	char c = 'N'; // declare once
-
-// 	// if btwn 135-225
-// 	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
-// 		c = 'T'; //assign
-// 	} else {
-// 		c = 'N'; // no haptic effect
-// 	}
-// 	return c;
-// }
-
-float DRV2605L::get_roll_from_quaternion(const vehicle_attitude_s &att)
+float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
 {
-	// for our case, "roll" is up/down motion (aka elevation)
-
 	// Convert quaternion to Euler angles using PX4 matrix library
 	matrix::Quatf q(att.q);
 	matrix::Eulerf euler(q);
 
-	// euler.phi() returns roll (rotation around x-axis)
-	//in radians, convert to degrees
-	float roll = math::degrees(euler.phi());
+	// euler.theta() returns pitch in radians, convert to degrees
+	// Range: -180 to +180 degrees
+	float pitch = math::degrees(euler.theta());
 
-	return roll;
+	// // Normalize to 0-360 range
+	// if (pitch < 0.0f) {
+	// 	pitch += 360.0f;
+	// }
+	return pitch;
 }
 
-char DRV2605L::is_roll_in_range(float roll)  // bool DRV2605L
+char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
 {
-	// for our case, "roll" is up/down motion (aka elevation)
-
 	// Check if pitch is within range
 	char c = 'N'; // declare once
 
 	// if btwn 135-225
-	if (roll >= _elevation_min.get() && roll <= _elevation_max.get()){
+	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
 		c = 'T'; //assign
 	} else {
 		c = 'N'; // no haptic effect
@@ -594,14 +588,13 @@ void DRV2605L::run()
 		if (att_updated)  {
 
 			float yaw_deg = get_yaw_from_quaternion(attitude); 	// Get yaw angle from quaternion
-			//float pitch = get_pitch_from_quaternion(attitude); 	// Get pitch angle from quaternion
-			float roll = get_roll_from_quaternion(attitude); 	// Get roll angle from quaternion
+			float pitch = get_pitch_from_quaternion(attitude); 	// Get pitch angle from quaternion
 			back_side = is_yaw_in_range(yaw_deg); 		// Check and determine if yaw is in target range
-			top_side = is_roll_in_range(roll); 		// Check and determine if roll is in target range
+			top_side = is_pitch_in_range(pitch); 		// Check and determine if pitch is in target range
 
 			// Print yaw continuously with haptic side status
 			// Haptic: %s.  (back_side != 'N') ? "ACTIVE" : "INACTIVE"
-			PX4_INFO("Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (double)yaw_deg,  (double)roll, back_side, top_side);
+			PX4_INFO("Yaw: %.2f deg | Pitch: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (double)yaw_deg,  (double)pitch, back_side, top_side);
 		}
 
 		if (avs_updated){
@@ -811,3 +804,5 @@ extern "C" __EXPORT int drv2605l_haptic_main(int argc, char *argv[])
 {
 	return DRV2605L::main(argc, argv);
 }
+// In practice: When you type drv2605l_haptic xyz in the PX4 console, it triggers this flow:
+// drv2605l_haptic_main() → DRV2605L::main() → custom_command() → print_usage("unknown command") → help text displayed.
