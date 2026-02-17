@@ -20,13 +20,24 @@ parameters:
             1: AVS
         default: 0
 
+      HAP_TRIG_TIMER:
+        description:
+          short: Time between haptic triggers
+        type: float
+        unit: s
+        min: 0.0
+        max: 10.0
+        increment: 0.05
+        decimal: 2
+        default: 0.25
+
       HAP_OFFSET:
         description:
           short: Offset angle
         type: float
         unit: deg
         min: 0
-        max: 360.0
+        max: 360
         increment: 1.0
         default: 0.0
 

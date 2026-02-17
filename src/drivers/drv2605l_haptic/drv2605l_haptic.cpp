@@ -179,7 +179,8 @@ private:
 		(ParamFloat<px4::params::HAP_AZIMUTH_MAX>) _azimuth_max,
 		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor,
 		(ParamInt<px4::params::HAP_DRV_EFFECT_B>) _drv_effect_b,
-		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t
+		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t,
+		(ParamFloat<px4::params::HAP_TRIG_TIMER>) _trig_timer
 	)
 };
 
@@ -640,6 +641,8 @@ void DRV2605L::run()
 		static char back_side = 'N';
 		static char top_side = 'N';
 		static bool greater_threshold = false;
+
+		float trig_timer = _trig_timer.get();
 		//static float q_factor = 0.0f;
 
 		if (att_updated)  {
@@ -702,6 +705,7 @@ void DRV2605L::run()
 					if (ret1 != OK) {
 						PX4_ERR("Failed to trigger effect");
 					}
+					px4_usleep((useconds_t)(trig_timer * 1000000));
 				}
 				if (top_side == 'T'){
 					// Trigger backside haptic
@@ -711,6 +715,7 @@ void DRV2605L::run()
 					if (ret2 != OK) {
 						PX4_ERR("Failed to trigger effect");
 					}
+					px4_usleep((useconds_t)(trig_timer * 1000000));
 				}
 			} else {  // if no multiplexer just a single driver
 				uint8_t effect = effectB; // Default to backside effect for single mode
@@ -718,6 +723,7 @@ void DRV2605L::run()
 				if (ret != OK) {
 					PX4_ERR("Failed to trigger effect");
 				}
+				px4_usleep((useconds_t)(trig_timer * 1000000));
 			}
 		}
 		// Sleep for the loop interval
