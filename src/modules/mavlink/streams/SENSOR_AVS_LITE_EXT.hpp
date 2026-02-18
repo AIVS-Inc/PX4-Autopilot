@@ -51,59 +51,62 @@ public:
 	const char *get_name() const override { return MavlinkStreamSensorAvsLiteExt::get_name_static(); }
 	uint16_t get_id() override { return get_id_static(); }
 
-	unsigned get_size() override
+	unsigned get_size() override  //get_size checks if stream is active or not (if there is any data)
 	{
-		return _sensor_avs_lite_ext_sub.advertised() ?  MAVLINK_MSG_ID_SENSOR_AVS_LITE_EXT_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
+		return _sensor_avs_lite_ext_sub_0.advertised() ?  MAVLINK_MSG_ID_SENSOR_AVS_LITE_EXT_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
 	}
 
 private:
 	explicit MavlinkStreamSensorAvsLiteExt(Mavlink *mavlink) : MavlinkStream(mavlink) {}
 
-	uORB::Subscription _sensor_avs_lite_ext_sub{ORB_ID(sensor_avs_lite_ext)};
-	uORB::Subscription _att_sub{ORB_ID(vehicle_attitude)};
-	uORB::Subscription _lpos_sub{ORB_ID(vehicle_local_position)};
+	uORB::Subscription _sensor_avs_lite_ext_sub_0{ORB_ID(sensor_avs_lite_ext),0};
+	uORB::Subscription _sensor_avs_lite_ext_sub_1{ORB_ID(sensor_avs_lite_ext),1};
 
 	bool send() override
 	{
-		sensor_avs_lite_ext_s sensor_avs_lite_ext_data;
+		bool sent = false;
+		sensor_avs_lite_ext_s data;
 
-		if (_sensor_avs_lite_ext_sub.update(&sensor_avs_lite_ext_data)) {
-			mavlink_sensor_avs_lite_ext_t msg{};
-
-			// AVS lite sensor data
-			msg.device_id = sensor_avs_lite_ext_data.device_id;
-			msg.time_utc_usec = sensor_avs_lite_ext_data.time_utc_usec;
-			msg.timestamp = sensor_avs_lite_ext_data.timestamp;
-			msg.timestamp_sample = sensor_avs_lite_ext_data.timestamp_sample;
-			msg.azimuth_deg = sensor_avs_lite_ext_data.azimuth_deg;
-			msg.elevation_deg = sensor_avs_lite_ext_data.elevation_deg;
-			msg.active_intensity = sensor_avs_lite_ext_data.active_intensity;
-			msg.q_factor = sensor_avs_lite_ext_data.q_factor;
-			msg.histogram_count = sensor_avs_lite_ext_data.histogram_count;
-
-			// Vehicle attitude (roll, pitch, yaw from quaternion)
-			vehicle_attitude_s att{};
-			if (_att_sub.copy(&att)) {
-				const matrix::Eulerf euler = matrix::Quatf(att.q);
-				msg.roll = euler.phi();
-				msg.pitch = euler.theta();
-				msg.yaw = euler.psi();
-			}
-
-			// Local position NED (x, y, z)
-			vehicle_local_position_s lpos{};
-			if (_lpos_sub.copy(&lpos)) {
-				msg.north = lpos.x;
-				msg.east = lpos.y;
-				msg.down = lpos.z;
-			}
-
-			mavlink_msg_sensor_avs_lite_ext_send_struct(_mavlink->get_channel(), &msg);
-			return true;
+		// Check instance 0
+		if (_sensor_avs_lite_ext_sub_0.update(&data)) {
+			send_msg(data);
+			sent = true;
 		}
 
-		return false;
+		// Check instance 1
+		if (_sensor_avs_lite_ext_sub_1.update(&data)) {
+			send_msg(data);
+			sent = true;
+		}
+
+		return sent;
 	}
+
+	void send_msg(const sensor_avs_lite_ext_s &data)
+	{
+		mavlink_sensor_avs_lite_ext_t msg{};
+
+		// AVS lite ext sensor data
+		msg.device_id = data.device_id;
+		msg.time_utc_usec = data.time_utc_usec;
+		msg.timestamp = data.timestamp;
+		msg.timestamp_sample = data.timestamp_sample;
+		msg.azimuth_deg = data.azimuth_deg;
+		msg.elevation_deg = data.elevation_deg;
+		msg.active_intensity = data.active_intensity;
+		msg.q_factor = data.q_factor;
+		msg.histogram_count = data.histogram_count;
+		msg.roll = data.roll;
+		msg.pitch = data.pitch;
+		msg.yaw = data.yaw;
+		msg.north = data.north;
+		msg.east = data.east;
+		msg.down = data.down;
+
+		mavlink_msg_sensor_avs_lite_ext_send_struct(_mavlink->get_channel(), &msg);
+	}
+
 };
+
 
 #endif // SENSOR_AVS_LITE_EXT_HPP

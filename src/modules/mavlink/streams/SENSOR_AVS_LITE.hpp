@@ -51,33 +51,48 @@ public:
 
 	unsigned get_size() override
 	{
-	return MAVLINK_MSG_ID_SENSOR_AVS_LITE_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+		return _sensor_avs_lite_sub_0.advertised() ? MAVLINK_MSG_ID_SENSOR_AVS_LITE_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES : 0;
 	}
 private:
 	explicit MavlinkStreamSensorAvsLite(Mavlink *mavlink) : MavlinkStream(mavlink) {}
-    	uORB::Subscription _sensor_avs_lite_sub{ORB_ID(sensor_avs_lite)};
+
+	uORB::Subscription _sensor_avs_lite_sub_0{ORB_ID(sensor_avs_lite),0};
+	uORB::Subscription _sensor_avs_lite_sub_1{ORB_ID(sensor_avs_lite),1};
 
 	bool send() override
-    	{
-	sensor_avs_lite_s sensor_avs_lite_data;
+	{
+		bool sent = false;
+		sensor_avs_lite_s data;
 
-	if (_sensor_avs_lite_sub.update(&sensor_avs_lite_data)) {
+		// Check instance 0
+		if (_sensor_avs_lite_sub_0.update(&data)) {
+			send_msg(data);
+			sent = true;
+		}
+
+		// Check instance 1
+		if (_sensor_avs_lite_sub_1.update(&data)) {
+			send_msg(data);
+			sent = true;
+		}
+
+		return sent;
+	}
+	void send_msg(const sensor_avs_lite_s &data)
+	{
 		mavlink_sensor_avs_lite_t msg{};
 
-		msg.device_id= sensor_avs_lite_data.device_id;
-		msg.time_utc_usec= sensor_avs_lite_data.time_utc_usec;
-		msg.timestamp = sensor_avs_lite_data.timestamp;
-		msg.timestamp_sample = sensor_avs_lite_data.timestamp_sample;
-		msg.azimuth_deg= sensor_avs_lite_data.azimuth_deg;
-		msg.elevation_deg= sensor_avs_lite_data.elevation_deg;
-		msg.active_intensity= sensor_avs_lite_data.active_intensity;
-		msg.q_factor= sensor_avs_lite_data.q_factor;
-		msg.histogram_count= sensor_avs_lite_data.histogram_count;
+		msg.device_id= data.device_id;
+		msg.time_utc_usec= data.time_utc_usec;
+		msg.timestamp = data.timestamp;
+		msg.timestamp_sample = data.timestamp_sample;
+		msg.azimuth_deg= data.azimuth_deg;
+		msg.elevation_deg= data.elevation_deg;
+		msg.active_intensity= data.active_intensity;
+		msg.q_factor= data.q_factor;
+		msg.histogram_count= data.histogram_count;
 
         	mavlink_msg_sensor_avs_lite_send_struct(_mavlink->get_channel(),&msg);
-			return true;
-		}
-	return false;
 
 	}
 };
