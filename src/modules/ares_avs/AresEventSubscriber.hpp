@@ -60,10 +60,6 @@ class AresEventSubscriber : public UavcanBaseSubscriber
 	struct sensor_avs_lite_s bearings_lite;
 	struct sensor_avs_lite_ext_s bearings_lite_ext;
 
-	// orb_advert_t avs_pub;
-	// orb_advert_t avs_lite_pub;
-	// orb_advert_t avs_lite_ext_pub;
-
 	// create arrays of 2 and add node tracking; per-node arrays (previously it was single publishers)
 	static constexpr int MAX_NODES = 2;
 	uint32_t _node_ids[MAX_NODES] = {0, 0};
@@ -88,27 +84,13 @@ public:
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
 
-		// /* advertise bearings topic */
 		memset(&this->bearings, 0, sizeof(this->bearings));
-		// this->avs_pub = orb_advertise(ORB_ID(sensor_avs), &this->bearings);
-
-		// /* advertise bearings lite topic */
 		memset(&this->bearings_lite, 0, sizeof(this->bearings_lite));
-		// this->avs_lite_pub = orb_advertise(ORB_ID(sensor_avs_lite), &this->bearings_lite);
-
-		// /* advertise bearings lite ext topic */
 		memset(&this->bearings_lite_ext, 0, sizeof(this->bearings_lite_ext));
-		// this->avs_lite_ext_pub = orb_advertise(ORB_ID(sensor_avs_lite_ext), &this->bearings_lite_ext);
-
-
-		// PX4_INFO("subscribed to BearingAngles, port %d", _portID);
 	};
 
 	void callback(const CanardRxTransfer &receive) override
 	{
-		//PX4_INFO("AresEventCallback");
-		//PX4_INFO("bearings from node %u", receive.metadata.remote_node_id);
-
 		ares_Bearings_0_1 aresevent {};
 		size_t msg_size_in_bits = receive.payload_size;
 		ares_Bearings_0_1_deserialize_(&aresevent, (const uint8_t *)receive.payload, &msg_size_in_bits);
@@ -130,7 +112,6 @@ public:
 		uint32_t node = receive.metadata.remote_node_id; //get node ID
 
 		// Track the two node IDs
-
 		// Check if we've seen this node before
 		int node_idx = -1;
 		for (int i = 0; i < MAX_NODES; i++) {
@@ -154,8 +135,7 @@ public:
 		}
 
 		// advertise multi-instance topics
-
-		//if the publisher doesn't exist yet, create it:
+		//if the publisher doesn't exist yet, create it
 		if (_avs_pub[node_idx] == nullptr) {
 			int inst = node_idx;
 			_avs_pub[node_idx] = orb_advertise_multi(ORB_ID(sensor_avs), &bearings, &inst);
@@ -187,8 +167,7 @@ public:
 			else
 				bearings.mel_intensity[i] = 0.0f;
 		}
-	//orb_publish( ORB_ID(sensor_avs), this->avs_pub, &this->bearings);	///< uORB pub for AVS events
-	orb_publish(ORB_ID(sensor_avs), _avs_pub[node_idx], &bearings); // use the indexed publisher
+	orb_publish(ORB_ID(sensor_avs), _avs_pub[node_idx], &bearings); // use the indexed publisher ///< uORB pub for AVS events
 
 	// Publish lite version
 	bearings_lite.device_id = node;
@@ -200,7 +179,6 @@ public:
 	bearings_lite.active_intensity = bearings.active_intensity;
 	bearings_lite.q_factor = bearings.q_factor;
 	bearings_lite.histogram_count = bearings.histogram_count;
-	//orb_publish(ORB_ID(sensor_avs_lite), this->avs_lite_pub, &this->bearings_lite);
 	orb_publish(ORB_ID(sensor_avs_lite), _avs_lite_pub[node_idx], &bearings_lite); //use the indexed publisher
 
 	// Publish lite extended version
@@ -230,8 +208,6 @@ public:
 		bearings_lite_ext.east = lpos.y;
 		bearings_lite_ext.down = lpos.z;
 	}
-
-	//orb_publish(ORB_ID(sensor_avs_lite_ext), this->avs_lite_ext_pub, &this->bearings_lite_ext);
 	orb_publish(ORB_ID(sensor_avs_lite_ext), _avs_lite_ext_pub[node_idx], &bearings_lite_ext); //use the indexed publisher
 	};
 private:
