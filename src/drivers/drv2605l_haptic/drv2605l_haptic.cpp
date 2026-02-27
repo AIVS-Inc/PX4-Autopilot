@@ -48,141 +48,8 @@
 // 	#define IDENTIFIER replacement_text
 // 	#define MACRO(parameters) replacement_text
 
-//#include "drv2605l_haptic.hpp"
+#include "drv2605l_haptic.h"
 
-#include <px4_platform_common/px4_config.h>
-#include <px4_platform_common/defines.h>
-
-#include <parameters/param.h>
-
-#include <px4_platform_common/module_params.h>
-#include <px4_platform_common/module.h>
-#include <px4_platform_common/getopt.h>
-#include <px4_platform_common/log.h>
-#include <drivers/device/i2c.h>
-#include <drivers/drv_sensor.h>
-#include <matrix/math.hpp>
-#include <uORB/Subscription.hpp>
-#include <uORB/topics/vehicle_attitude.h>
-#include <uORB/topics/sensor_avs.h>
-#include <uORB/topics/parameter_update.h>
-//#include <uORB/topics/sensor_avs_lite.h>
-#include <uORB/topics/sensor_avs_lite_ext.h>
-
-// Device type for DRV2605L
-#define DRV_HAPTIC_DEVTYPE_DRV2605L 0x60
-
-// PCA9548A I2C Multiplexer
-#define PCA9548A_ADDR           0x70
-
-// DRV2605L Register addresses
-#define DRV2605L_ADDR           0x5A
-#define DRV2605L_REG_STATUS     0x00
-#define DRV2605L_REG_MODE       0x01
-#define DRV2605L_REG_RTPIN      0x02
-#define DRV2605L_REG_LIBRARY    0x03
-#define DRV2605L_REG_WAVESEQ1   0x04
-#define DRV2605L_REG_GO         0x0C
-#define DRV2605L_REG_FEEDBACK   0x1A
-
-// Mode register values
-#define DRV2605L_MODE_INTTRIG   0x00  // Internal trigger mode
-#define DRV2605L_MODE_STANDBY   0x40  // Standby mode
-
-// Library values
-#define DRV2605L_LIB_ERM        0x01  // ERM library
-#define DRV2605L_LIB_LRA        0x06  // LRA library
-
-// Waveform effects
-// #define DRV2605L_EFFECT_STRONG_CLICK    1
-// #define DRV2605L_EFFECT_MEDIUM_CLICK    10
-// #define DRV2605L_EFFECT_BUZZ            47
-
-
-//ModuleBase<DRV2605L> → gives it PX4's module framework (start/stop/status commands)
-//device::I2C → gives it I2C communication capabilities (transfer(), bus setup, etc).
-class DRV2605L : public ModuleParams, public ModuleBase<DRV2605L>, public device::I2C
-{
-public:
-	//lifecycle
-	DRV2605L(int bus, int drv_address, int multiplex_address, int multiplex_channel1, int multiplex_channel2);
-	virtual ~DRV2605L();
-
-	/** @see ModuleBase */
-	// PX4 integration
-	static int task_spawn(int argc, char *argv[]);
-	static DRV2605L *instantiate(int argc, char *argv[]);
-	static int custom_command(int argc, char *argv[]);
-	static int print_usage(const char *reason = nullptr);
-	void run() override; // core logic
-	int print_status() override;
-
-private:
-	// member functions (methods) - performs actions/ things the object does
-	//lifecycle
-	int init();
-	int probe() override;
-
-	void parameters_update();
-
-	int select_multiplex_channel(uint8_t channel);
-
-	// I2C comm
-	int write_register(uint8_t reg, uint8_t value);
-	int read_register(uint8_t reg, uint8_t &value);
-
-	int trigger_effect(uint8_t channel, uint8_t effect); //core logic
-	int init_drv2605l(uint8_t channel);
-	//float get_active_intensity(const sensor_avs_s &sensor_avs_data);
-	float get_elevation(const sensor_avs_s &sensor_avs_data);
-	float get_q_factor(const sensor_avs_s &sensor_avs_data);
-	float get_azimuth(const sensor_avs_s &sensor_avs_data);
-	bool check_act_int_threshold(float active_int);
-	float get_yaw_from_quaternion(const vehicle_attitude_s &att);
-	//float get_pitch_from_quaternion(const vehicle_attitude_s &att);
-	float get_roll_from_quaternion(const vehicle_attitude_s &att);
-	char is_azimuth_in_range(float azimuth);
-	char is_elevation_in_range(float elevation);
-	char is_yaw_in_range(float yaw_deg);
-	char is_roll_in_range(float roll);
-	//char is_pitch_in_range(float pitch);
-
-	// uORB subscription for vehicle attitude and sensor avs data
-	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
-	uORB::Subscription _sensor_avs_sub{ORB_ID(sensor_avs)};
-	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
-
-	bool _initialized{false};
-	bool _use_multiplex{false};
-
-	uint8_t _multiplex_addr{PCA9548A_ADDR};
-	uint8_t _multiplex_channel1{0};  // Channel for first DRV2605L
-	uint8_t _multiplex_channel2{1};  // Channel for second DRV2605L
-	uint32_t _loop_interval_us{100000}; // 100ms
-	//
-
-	DEFINE_PARAMETERS(
-		(ParamBool<px4::params::HAP_MULTIPLEX>) _multiplexer_flag,
-		(ParamInt<px4::params::HAP_MODE>) _mode,
-		(ParamFloat<px4::params::HAP_OFFSET>) _offset,
-		(ParamInt<px4::params::HAP_SENSE>) _sense,
-		(ParamFloat<px4::params::HAP_YAW_MIN>) _yaw_min,
-		(ParamFloat<px4::params::HAP_YAW_MAX>) _yaw_max,
-		(ParamFloat<px4::params::HAP_ACT_INT>) _act_int,
-		(ParamFloat<px4::params::HAP_ELEV_MAX>) _elevation_max,
-		(ParamFloat<px4::params::HAP_ELEV_MIN>) _elevation_min,
-		(ParamFloat<px4::params::HAP_PITCH_MAX>) _pitch_max,
-		(ParamFloat<px4::params::HAP_PITCH_MIN>) _pitch_min,
-		(ParamFloat<px4::params::HAP_ROLL_MAX>) _roll_max,
-		(ParamFloat<px4::params::HAP_ROLL_MIN>) _roll_min,
-		(ParamFloat<px4::params::HAP_AZIMUTH_MIN>) _azimuth_min,
-		(ParamFloat<px4::params::HAP_AZIMUTH_MAX>) _azimuth_max,
-		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor,
-		(ParamInt<px4::params::HAP_DRV_EFFECT_B>) _drv_effect_b,
-		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t,
-		(ParamFloat<px4::params::HAP_TRIG_TIMER>) _trig_timer
-	)
-};
 
 DRV2605L::DRV2605L(int bus, int drv_address, int multiplex_address, int multiplex_channel1, int multiplex_channel2) :
 	ModuleParams(nullptr), I2C(DRV_HAPTIC_DEVTYPE_DRV2605L, MODULE_NAME, bus, drv_address, 400000),
@@ -440,21 +307,36 @@ int DRV2605L::trigger_effect(uint8_t channel, uint8_t effect)
 // 	}
 // }
 
+
+
+
 bool DRV2605L::check_act_int_threshold(float active_int)
 {
 	// Check if active intensity greater than 70
 	return (active_int >= _act_int.get());
 }
 
-float DRV2605L::get_elevation(const sensor_avs_s &sensor_avs_data)
+float DRV2605L::get_elevation(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
 {
-	float elevation= sensor_avs_data.elevation_deg;
+	float elevation= sensor_avs_lite_ext_data.elevation_deg;
+
+	//elevation = (elevation - _offset.get()) * _sense.get();
+
+	// >0.001f instead of != 0 to account for floating point precision issues
+	if ((fabsf(_offset_avs_l.get()) > 0.001f) || (_sense_avs_l.get() != 1)) {
+		elevation = (elevation  - _offset_avs_l.get()) * _sense_avs_l.get();
+	} else if ((fabsf(_offset_avs_r.get()) > 0.001f) || (_sense_avs_r.get() != 1)) {
+		elevation  = (elevation  - _offset_avs_r.get()) * _sense_avs_r.get();
+	}else{
+		elevation = elevation;
+	}
+
 	return elevation;
 }
 
 char DRV2605L::is_elevation_in_range(float elevation)  // up/down
 {
-	//float elevation= sensor_avs_data.elevation_deg;
+	//float elevation= sensor_avs_lite_ext_data.elevation_deg;
 
 	// Check if elevation is within range
 	char c = 'N'; // declare once
@@ -469,9 +351,9 @@ char DRV2605L::is_elevation_in_range(float elevation)  // up/down
 }
 
 
-float DRV2605L::get_azimuth(const sensor_avs_s &sensor_avs_data)
+float DRV2605L::get_azimuth(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
 {
-	float azimuth= sensor_avs_data.azimuth_deg;
+	float azimuth= sensor_avs_lite_ext_data.azimuth_deg;
 
 	// // Normalize to 0-360 range
 	// if (azimuth < 0.0f) {
@@ -482,14 +364,22 @@ float DRV2605L::get_azimuth(const sensor_avs_s &sensor_avs_data)
 	// apply offset and sense correction
 	//azimuth = fmodf(azimuth + 360.0f, 360.0f);
 
-	azimuth = fmodf((azimuth - _offset.get()) * _sense.get() + 360.0f, 360.0f);
+	//azimuth = fmodf((azimuth - _offset.get()) * _sense.get() + 360.0f, 360.0f);
+
+	if ((fabsf(_offset_avs_l.get()) > 0.001f) || (_sense_avs_l.get() != 1)) {
+		azimuth = fmodf((azimuth - _offset_avs_l.get()) * _sense_avs_l.get() + 360.0f, 360.0f);
+	} else if ((fabsf(_offset_avs_r.get()) > 0.001f) || (_sense_avs_r.get() != 1)) {
+		azimuth = fmodf((azimuth - _offset_avs_r.get()) * _sense_avs_r.get() + 360.0f, 360.0f);
+	}else{
+		azimuth = fmodf(azimuth + 360.0f, 360.0f);
+	}
 
 	return azimuth;
 }
 
 char DRV2605L::is_azimuth_in_range(float azimuth) //float azimuth
 {
-	//float azimuth= sensor_avs_data.azimuth_deg;
+	//float azimuth= sensor_avs_lite_ext_data.azimuth_deg;
 
 	// Check if azimuth is in range
 	char c = 'N'; // declare once
@@ -503,9 +393,9 @@ char DRV2605L::is_azimuth_in_range(float azimuth) //float azimuth
 	return c;
 }
 
-float DRV2605L::get_q_factor(const sensor_avs_s &sensor_avs_data)
+float DRV2605L::get_q_factor(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
 {
-	float q_factor= sensor_avs_data.q_factor;
+	float q_factor= sensor_avs_lite_ext_data.q_factor;
 	return q_factor;
 }
 
@@ -523,8 +413,22 @@ float DRV2605L::get_yaw_from_quaternion(const vehicle_attitude_s &att)
 	// if (yaw_deg < 0.0f) {
 	// 	yaw_deg += 360.0f;
 	// }
-	yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
 
+	//yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
+
+	// if ((fabsf(_offset_imu_l.get()) > 0.001f) || (_sense_imu_l.get() != 1)) {
+	// 	yaw_deg = fmodf((yaw_deg - _offset_imu_l.get()) * _sense_imu_l.get() + 360.0f, 360.0f);
+	// } else if ((fabsf(_offset_imu_r.get()) > 0.001f) || (_sense_imu_r.get() != 1)) {
+	// 	yaw_deg = fmodf((yaw_deg - _offset_imu_r.get()) * _sense_imu_r.get() + 360.0f, 360.0f);
+	// }else {
+	// 	yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
+	// }
+
+	if ((fabsf(_offset_imu.get()) > 0.001f) || (_sense_imu.get() != 1)) {
+		yaw_deg = fmodf((yaw_deg - _offset_imu.get()) * _sense_imu.get() + 360.0f, 360.0f);
+	}else {
+		yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
+	}
 	return yaw_deg;
 }
 
@@ -588,6 +492,27 @@ float DRV2605L::get_roll_from_quaternion(const vehicle_attitude_s &att)
 	//in radians, convert to degrees
 	float roll = math::degrees(euler.phi());
 
+	//roll = (roll - _offset.get()) * _sense.get();
+
+	// if ((fabsf(_offset_imu_l.get()) > 0.001f) || (_sense_imu_l.get() != 1)) {
+	// 	roll = (roll - _offset_imu_l.get()) * _sense_imu_l.get();
+	// } else if ((fabsf(_offset_imu_r.get()) > 0.001f) || (_sense_imu_r.get() != 1)) {
+	// 	roll = (roll - _offset_imu_r.get()) * _sense_imu_r.get();
+	// }else{
+	// 	roll = roll;
+	// }
+
+	if ((fabsf(_offset_imu.get()) > 0.001f) || (_sense_imu.get() != 1)) {
+		roll = (roll - _offset_imu.get()) * _sense_imu.get();
+	}else{
+		roll = roll;
+	}
+
+	// PX4_INFO("sense=%ld offset=%.2f raw_roll=%.2f transformed=%.2f",
+	// 	_sense.get(), (double)_offset.get(),
+	// 	(double)math::degrees(euler.phi()),
+	// 	(double)roll);
+
 	return roll;
 }
 
@@ -606,7 +531,30 @@ char DRV2605L::is_roll_in_range(float roll)  // bool DRV2605L
 	}
 	return c;
 }
+//   // read top/bottom node IDs from params
+//   int32_t top_node_id, bot_node_id;
+//   param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
+//   param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
 
+//   sensor_avs_lite_ext_s data0, data1;
+//   bool updated0 = _sensor_avs_lite_ext_sub_0.update(&data0);
+//   bool updated1 = _sensor_avs_lite_ext_sub_1.update(&data1);
+
+//   if (updated0) {
+//       if (data0.device_id == (uint32_t)top_node_id) {
+//           // top node
+//       } else if (data0.device_id == (uint32_t)bot_node_id) {
+//           // bottom node
+//       }
+//   }
+
+//   if (updated1) {
+//       if (data1.device_id == (uint32_t)top_node_id) {
+//           // top node
+//       } else if (data1.device_id == (uint32_t)bot_node_id) {
+//           // bottom node
+//       }
+//   }
 void DRV2605L::run()
 {
 	// Initialize the device(s)
@@ -620,6 +568,11 @@ void DRV2605L::run()
 
 	PX4_INFO("Haptic task started");
 
+	// initialize and read top/bottom node IDs from params
+	int32_t top_node_id, bot_node_id;
+	param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
+	param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
+
 	// Main loop
 	while (!should_exit()) {
 
@@ -628,14 +581,22 @@ void DRV2605L::run()
 			parameter_update_s param_update;
 			_parameter_update_sub.copy(&param_update);
 			parameters_update();
+
+			// if updated, get new top/bottom node IDs
+			param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
+			param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
+
 			PX4_INFO("Parameters updated");
 		}
 
 		// Check for new vehicle attitude data
 		vehicle_attitude_s attitude;
-		sensor_avs_s sensor_avs_data;
+		sensor_avs_lite_ext_s sensor_avs_lite_ext_data;
 		bool att_updated = _vehicle_attitude_sub.update(&attitude);
-		bool avs_updated = _sensor_avs_sub.update(&sensor_avs_data);
+
+		//bool avs_updated = _sensor_avs_lite_ext_sub.update(&sensor_avs_lite_ext_data);
+		bool avs_updated0 = _sensor_avs_lite_ext_sub_0.update(&sensor_avs_lite_ext_data);
+		bool avs_updated1 = _sensor_avs_lite_ext_sub_1.update(&sensor_avs_lite_ext_data);
 
 		// Static variables to preserve latest values across loop iterations
 		static char back_side = 'N';
@@ -651,7 +612,7 @@ void DRV2605L::run()
 			//float pitch = get_pitch_from_quaternion(attitude); 	// Get pitch angle from quaternion
 			float roll = get_roll_from_quaternion(attitude); 	// Get roll angle from quaternion
 
-			if (_mode.get() == 0){
+			if (_mode.get() == 0){  //IMU
 				back_side = is_yaw_in_range(yaw_deg); 		// Check and determine if yaw is in target range
 				top_side = is_roll_in_range(roll); 		// Check and determine if roll is in target range
 				//PX4_INFO("using IMU mode");
@@ -664,14 +625,14 @@ void DRV2605L::run()
 
 		if (avs_updated){
 
-			float active_int = sensor_avs_data.active_intensity;  // get active intensity value
-			float elevation = get_elevation(sensor_avs_data); // get elevation value
-    			float azimuth = get_azimuth(sensor_avs_data);  // get azimuth value
+			float active_int = sensor_avs_lite_ext_data.active_intensity;  // get active intensity value
+			float elevation = get_elevation(sensor_avs_lite_ext_data); // get elevation value
+    			float azimuth = get_azimuth(sensor_avs_lite_ext_data);  // get azimuth value
 			greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
 
 			PX4_INFO("Active Intensity: %.2f",(double)active_int);
 
-			if (_mode.get() == 1){
+			if (_mode.get() == 1){  //AVS
 
 			//if (_use_avs_mode){
 				back_side = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
@@ -680,7 +641,7 @@ void DRV2605L::run()
 				PX4_INFO("Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (double)azimuth, (double)elevation, back_side, top_side);
 
 			}
-			//float q_factor = get_q_factor(sensor_avs_data);
+			//float q_factor = get_q_factor(sensor_avs_lite_ext_data);
 			//| Q Factor: %.2f", (double)q_factor(double)active_int,
 			//PX4_INFO("Active Intensity: %.2f",(double)active_int)
 			//PX4_INFO("Active Intensity: %.2f | Azimuth: %.2f | Elevation: %.2f", (double)azimuth,(double)active_int, (double)elevation);

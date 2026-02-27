@@ -31,7 +31,7 @@ parameters:
         decimal: 2
         default: 0.25
 
-      HAP_OFFSET:
+      HAP_OFFSET_AVS_R:
         description:
           short: Offset angle
         type: float
@@ -41,7 +41,83 @@ parameters:
         increment: 1.0
         default: 0.0
 
-      HAP_SENSE:
+      HAP_OFFSET_AVS_L:
+        description:
+          short: Offset angle
+        type: float
+        unit: deg
+        min: 0
+        max: 360
+        increment: 1.0
+        default: 0.0
+
+      HAP_OFFSET_IMU:
+        description:
+          short: Offset angle
+        type: float
+        unit: deg
+        min: 0
+        max: 360
+        increment: 1.0
+        default: 0.0
+
+      HAP_OFFSET_IMU_R:
+        description:
+          short: Offset angle
+        type: float
+        unit: deg
+        min: 0
+        max: 360
+        increment: 1.0
+        default: 0.0
+
+      HAP_OFFSET_IMU_L:
+        description:
+          short: Offset angle
+        type: float
+        unit: deg
+        min: 0
+        max: 360
+        increment: 1.0
+        default: 0.0
+
+      HAP_SENSE_AVS_R:
+        description:
+          short: Sense
+        type: enum
+        values:
+            -1: Negative
+            1: Positive
+        default: 1
+
+      HAP_SENSE_AVS_L:
+        description:
+          short: Sense
+        type: enum
+        values:
+            -1: Negative
+            1: Positive
+        default: 1
+
+      HAP_SENSE_IMU:
+        description:
+          short: Sense
+        type: enum
+        values:
+            -1: Negative
+            1: Positive
+        default: 1
+
+      HAP_SENSE_IMU_L:
+        description:
+          short: Sense
+        type: enum
+        values:
+            -1: Negative
+            1: Positive
+        default: 1
+
+      HAP_SENSE_IMU_R:
         description:
           short: Sense
         type: enum
