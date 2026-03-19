@@ -54,8 +54,26 @@
 #include "../../drivers/cyphal/Subscribers/BaseSubscriber.hpp"
 #include <lib/matrix/matrix/math.hpp>
 
-#include "ares_avs.h"  // to access top/bottom node
-#include "drv2605l_haptic.h" // to access haptic feedback parameters
+#include <parameters/param.h>
+//#include "ares_avs.h"  // to access top/bottom node
+//#include "drv2605l_haptic.h" // to access haptic feedback parameters
+
+// # Get the handle to the parameter
+// param_t my_param_handle = PARAM_INVALID;
+// my_param_handle = param_find("PARAM_NAME");
+
+// # Query the value of the parameter when needed
+// int32_t my_param = 0;
+// param_get(my_param_handle, &my_param);
+
+
+// // Do the string search ONCE at startup, save the number
+// _param_offset_avs_l = param_find("HAP_OFFSET_AVS_L");  // returns e.g. 42
+
+// // Then each callback, just use the number directly - no string search
+// param_get(_param_offset_avs_l, &offset_avs_l);  // just goes to index 42
+
+
 
 class AresEventSubscriber : public UavcanBaseSubscriber
 {
@@ -87,6 +105,18 @@ public:
 					   CANARD_DEFAULT_TRANSFER_ID_TIMEOUT_USEC,
 					   &_subj_sub._canard_sub);
 
+		// string search once at startup
+		_param_left_node_id = param_find("AVS_BOT_NODE_ID");
+		_param_right_node_id = param_find("AVS_TOP_NODE_ID");
+
+		_param_offset_avs_l = param_find("HAP_OFFSET_AVS_L");
+		_param_sense_avs_l  = param_find("HAP_SENSE_AVS_L");
+		_param_offset_avs_r = param_find("HAP_OFFSET_AVS_R");
+		_param_sense_avs_r  = param_find("HAP_SENSE_AVS_R");
+
+		_param_sense_imu  = param_find("HAP_SENSE_IMU");
+		_param_offset_imu = param_find("HAP_OFFSET_IMU");
+
 		memset(&this->bearings, 0, sizeof(this->bearings));
 		memset(&this->bearings_lite, 0, sizeof(this->bearings_lite));
 		memset(&this->bearings_lite_ext, 0, sizeof(this->bearings_lite_ext));
@@ -108,11 +138,29 @@ public:
 
 		uint16_t idx = aresevent.m_iSourceIndex;
 		uint16_t cnt = aresevent.m_iHistogramCnt;
-		double qfac = aresevent.m_fQfac;
-		double acti = aresevent.m_fActiveI;
-		double azim = aresevent.m_fAzimuth;
-		double elev = aresevent.m_fElevation;
+		float qfac = (float)aresevent.m_fQfac;
+		float acti = (float)aresevent.m_fActiveI;
+		float azim = (float)aresevent.m_fAzimuth;
+		float elev = (float)aresevent.m_fElevation;
 		uint32_t node = receive.metadata.remote_node_id; //get node ID
+
+		// Read all param values once at top of callback
+		float offset_avs_l = 0.0f;
+		float offset_avs_r = 0.0f;
+		float offset_imu   = 0.0f;
+		int32_t sense_avs_l = 1, sense_avs_r = 1, sense_imu = 1;
+
+		int32_t left_node_id = 0, right_node_id = 0;
+
+		param_get(_param_left_node_id, &left_node_id);
+		param_get(_param_right_node_id, &right_node_id);
+
+		param_get(_param_offset_avs_l, &offset_avs_l);
+		param_get(_param_sense_avs_l,  &sense_avs_l);
+		param_get(_param_offset_avs_r, &offset_avs_r);
+		param_get(_param_sense_avs_r,  &sense_avs_r);
+		param_get(_param_offset_imu,   &offset_imu);
+		param_get(_param_sense_imu,    &sense_imu);
 
 		// Track the two node IDs
 		// Check if we've seen this node before
@@ -137,10 +185,9 @@ public:
 			return; // return if more than 2 nodes
 		}
 
-		// advertise multi-instance topics
-		//if the publisher doesn't exist yet, create it
+		// advertise multi-instance topics if not already done for this node
 		if (_avs_pub[node_idx] == nullptr) {
-			int inst = node_idx;
+			int inst = node_idx; //
 			_avs_pub[node_idx] = orb_advertise_multi(ORB_ID(sensor_avs), &bearings, &inst);
 			inst = node_idx;
 			_avs_lite_pub[node_idx] = orb_advertise_multi(ORB_ID(sensor_avs_lite), &bearings_lite, &inst);
@@ -152,6 +199,23 @@ public:
 
 		// PX4_INFO("node:%lu,idx:%hu,cnt:%hu,usec:%llu,spl:%.2f,sil:%.2f,q-fac:%.2f,acti:%.2f,az:%.2f,el:%.2f",
 		//   	  node,idx,cnt,utc_us,spl,sil,qfac,acti,azim,elev );
+
+
+		// azimuth correction
+		if ((node == (uint32_t)left_node_id) && ((fabsf(offset_avs_l) > 0.001f) || (sense_avs_l != 1))) {
+			azim = fmodf((azim - offset_avs_l) * sense_avs_l + 360.0f, 360.0f);
+		} else if ((node == (uint32_t)right_node_id) && ((fabsf(offset_avs_r) > 0.001f) || (sense_avs_r != 1))) {
+			azim = fmodf((azim - offset_avs_r) * sense_avs_r + 360.0f, 360.0f);
+		} else {
+			azim = fmodf(azim + 360.0f, 360.0f);
+		}
+
+		// elevation correction
+		if ((node == (uint32_t)left_node_id) && ((fabsf(offset_avs_l) > 0.001f) || (sense_avs_l != 1))) {
+			elev = (elev - offset_avs_l) * sense_avs_l;
+		} else if ((node == (uint32_t)right_node_id) && ((fabsf(offset_avs_r) > 0.001f) || (sense_avs_r != 1))) {
+			elev = (elev - offset_avs_r) * sense_avs_r;
+		}
 
 		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;
@@ -201,9 +265,28 @@ public:
 
 			//  math::degrees()
 			const matrix::Eulerf euler = matrix::Quatf(att.q);
-			bearings_lite_ext.roll = euler.phi();  //roll
-			bearings_lite_ext.pitch = euler.theta(); //pitch
-			bearings_lite_ext.yaw = euler.psi();  //yaw
+
+			float roll= math::degrees(euler.phi());
+			float pitch= math::degrees(euler.theta());
+			float yaw= math::degrees(euler.psi());
+
+			// apply corrections to yaw
+			if ((fabsf(offset_imu) > 0.001f) || (sense_imu != 1)) {
+				yaw = fmodf((yaw - offset_imu) * sense_imu + 360.0f, 360.0f);
+			}else {
+				yaw = fmodf(yaw + 360.0f, 360.0f);
+			}
+
+			// apply corrections to roll; roll in our case is up/down
+			if ((fabsf(offset_imu) > 0.001f) || (sense_imu != 1)) {
+				roll = (roll - offset_imu) * sense_imu;
+			}
+
+			bearings_lite_ext.roll = roll;  //roll
+			bearings_lite_ext.pitch = pitch; //pitch
+			bearings_lite_ext.yaw = yaw;  //yaw
+
+
 		}
 
 		// Local position NED (north, east, down)
@@ -217,4 +300,16 @@ public:
 	};
 private:
 	CanardPortID _portID;
+
+	// initilize parameter handles to invalid in case param_find fails
+	param_t _param_offset_avs_l {PARAM_INVALID};  // equivalent to {-1}
+	param_t _param_sense_avs_l  {PARAM_INVALID};
+	param_t _param_offset_avs_r {PARAM_INVALID};
+	param_t _param_sense_avs_r  {PARAM_INVALID};
+
+	param_t _param_sense_imu  {PARAM_INVALID};
+	param_t _param_offset_imu  {PARAM_INVALID};
+
+	param_t _param_left_node_id {PARAM_INVALID};
+	param_t _param_right_node_id {PARAM_INVALID};
 };

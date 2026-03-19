@@ -64,7 +64,7 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("external_ins_local_position");
 	add_optional_topic("esc_status", 250);
 	add_optional_topic("sensor_avs", 50);
-	add_optional_topic("sensor_avs_lite_ext", 50);
+	//add_optional_topic("sensor_avs_lite_ext", 50);
 	add_topic_multi("sensor_gnss_relative", 250, 1);
 	add_topic("failure_detector_status", 100);
 	add_topic("failsafe_flags");
@@ -152,6 +152,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("wind", 1000);
 
 	// multi topics
+	add_optional_topic_multi("sensor_avs_lite_ext",50, 2);
 	add_optional_topic_multi("actuator_outputs", 100, 3);
 	add_optional_topic_multi("airspeed_wind", 1000, 4);
 	add_optional_topic_multi("control_allocator_status", 200, 2);
@@ -519,7 +520,10 @@ bool LoggedTopics::initialize_logged_topics(SDLogProfileMask profile)
 	} else {
 		//initialize_configured_topics(profile);
 		//add_topic("sensor_avs", 50);
-		add_topic("sensor_avs_lite_ext", 50);
+
+		//add_topic("sensor_avs_lite_ext", 50);
+		add_topic_multi("sensor_avs_lite_ext", 50, 2);
+
 		//add_topic("vehicle_attitude", 1000);
 		//add_topic("vehicle_global_position", 1000);
 		//add_topic("vehicle_local_position", 1000);

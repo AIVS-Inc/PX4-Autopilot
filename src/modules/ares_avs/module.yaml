@@ -4,6 +4,14 @@ parameters:
   - group: AVS
     definitions:
 
+      AVS_ENABLE:
+        description:
+          short: Enable ARES AVS module (1=enable, 0=disable)
+        type: int32
+        default: 0
+        min: 0
+        max: 1
+
       AVS_BOT_NODE_ID:
         description:
           short: Node ID of downward looking AVS node
@@ -12,7 +20,7 @@ parameters:
         min: 1
         max: 127
         increment: 1
-        default: 41
+        default: 44
 
       AVS_TOP_NODE_ID:
         description:
@@ -22,7 +30,7 @@ parameters:
         min: 1
         max: 127
         increment: 1
-        default: 40
+        default: 41
 
       AVS_FFT_DEC:
         description:
@@ -45,6 +53,12 @@ parameters:
         description:
           short: FFT data encryption flag
           long: Flag to select data encryption for ARES data in motion or at rest
+        type: boolean
+        default: false
+
+      AVS_SEND_ARES:
+        description:
+          short: send commands to ARES
         type: boolean
         default: false
 

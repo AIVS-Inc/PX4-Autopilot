@@ -138,7 +138,7 @@ public:
 	virtual ~AresAvs() = default;
 
 	/** @see ModuleBase */
-	static int task_spawn(int argc, char *argv[]);
+	static int task_spawn(int argc, char *argv[]); //
 
 	/** @see ModuleBase */
 	static AresAvs *instantiate(int argc, char *argv[]);
@@ -188,6 +188,8 @@ public:
 	int sync_command( time_t time_sec);
 
 	int fft_command(bool flag);
+
+	int send_ares_command();
 
 	int rtcm_command(bool flag);
 
@@ -256,16 +258,19 @@ private:
 
 	uint8_t aresNodeId_top = 0;
 	uint8_t aresNodeId_bot = 0;
-	bool top_node_hb_reported = false;
+	bool top_node_hb_reported = false; //
 	bool bot_node_hb_reported = false;
 	bool top_node_ack_reported = false;
 	bool bot_node_ack_reported = false;
 	bool top_node_sync = false;
 	bool bot_node_sync = false;
 	uint8_t hb_count = 0;	// heartbeat counter used for implementing delays in the state machine
-	bool fftEnable = false;
+	bool fftEnable = false; //
 
 	DEFINE_PARAMETERS(
+
+		(ParamInt<px4::params::AVS_ENABLE>) _enable_avs,
+		(ParamInt<px4::params::AVS_SEND_ARES>) _send_ares_flag,
 
 		(ParamInt<px4::params::AVS_BOT_NODE_ID>) _nodeid_bot,
 		(ParamInt<px4::params::AVS_TOP_NODE_ID>) _nodeid_top,

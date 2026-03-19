@@ -89,7 +89,7 @@ int AresAvs::custom_command(int argc, char *argv[])
 			}
 		}
 	}
-	else if (!strcmp(argv[0], "dec")) {
+	else if (!strcmp(argv[0], "dec")) { //argv[0] is the first argument after 'ares_avs' in the command line
 		if (is_running()) {
 			object = _object.load();
 
@@ -418,6 +418,7 @@ AresAvs::AresAvs()
 	bot_node_hb_reported = false;
 	top_node_sync = false;
 	bot_node_sync = false;
+
 }
 
 void AresAvs::run()
@@ -580,7 +581,11 @@ void AresAvs::run()
 			orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &stat);
 			veh_status = true;
 		}
+
 		parameters_update();
+		if (current_state <= AVS_ARM_WAIT) {  // only run if in a safe state (not armed/flying)
+			send_ares_command();  // run send_ares_command if AVS_SEND_ARES is enabled
+		}
 
 		// Run ARES measurement state machine
 		switch (current_state) {
@@ -1357,6 +1362,25 @@ int AresAvs::fft_command( bool flag)		// update event params in ARES, enable/dis
 	orb_publish(ORB_ID(sensor_avs_fft_control), fft_pub, &fft);
 
 	return 0;
+}
+
+int AresAvs::send_ares_command()
+{
+    if (!_send_ares_flag.get()) {  // exit if false/disabled
+        return 0;
+    }
+
+    PX4_INFO("Sending ARES command with current parameters based on send_ares setting");
+    fft_command(false);   // 1. disable FFT
+    event_command();      // 2. send event params
+    peak_command();       // 3. send peak params
+    fft_command(true);    // 4. enable FFT
+
+    // reset flag after sending so it only fires once
+    int32_t reset_ares_flag = 0;
+    param_set(param_find("AVS_SEND_ARES"), &reset_ares_flag);
+
+    return 0;
 }
 
 int AresAvs::cal_command()			// recompute FFT correction vectors

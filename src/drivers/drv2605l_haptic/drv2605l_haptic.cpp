@@ -66,6 +66,9 @@ DRV2605L::DRV2605L(int bus, int drv_address, int multiplex_address, int multiple
 		PX4_INFO("Single driver mode (HAP_MULTIPLEX=false or channels not specified)");
 	}
 
+	// string search once at startup
+	_param_left_node_id  = param_find("AVS_BOT_NODE_ID");
+	_param_right_node_id = param_find("AVS_TOP_NODE_ID");
 }
 
 DRV2605L::~DRV2605L()
@@ -291,57 +294,17 @@ int DRV2605L::trigger_effect(uint8_t channel, uint8_t effect)
 	return ret;
 }
 
-// int DRV2605L::determine_mode()
-// {
-// 	if (_mode.get() == 0){
-// 		_use_imu_mode = true;
-// 		//_use_avs_mode == false;
-// 		PX4_INFO("using IMU mode");
-// 		return 0;
-
-// 	}else{
-// 		_use_avs_mode = true;
-// 		//_use_imu_mode == false;
-// 		PX4_INFO("using AVS mode");
-// 		return 1;
-// 	}
-// }
-
-
-
-
 bool DRV2605L::check_act_int_threshold(float active_int)
 {
 	// Check if active intensity greater than 70
 	return (active_int >= _act_int.get());
 }
 
-float DRV2605L::get_elevation(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
-{
-	float elevation= sensor_avs_lite_ext_data.elevation_deg;
-
-	//elevation = (elevation - _offset.get()) * _sense.get();
-
-	// >0.001f instead of != 0 to account for floating point precision issues
-	if ((fabsf(_offset_avs_l.get()) > 0.001f) || (_sense_avs_l.get() != 1)) {
-		elevation = (elevation  - _offset_avs_l.get()) * _sense_avs_l.get();
-	} else if ((fabsf(_offset_avs_r.get()) > 0.001f) || (_sense_avs_r.get() != 1)) {
-		elevation  = (elevation  - _offset_avs_r.get()) * _sense_avs_r.get();
-	}else{
-		elevation = elevation;
-	}
-
-	return elevation;
-}
-
 char DRV2605L::is_elevation_in_range(float elevation)  // up/down
 {
-	//float elevation= sensor_avs_lite_ext_data.elevation_deg;
-
 	// Check if elevation is within range
 	char c = 'N'; // declare once
 
-	// if btwn -45 to +45
 	if (elevation >= _elevation_min.get() && elevation <= _elevation_max.get()){
 		c = 'T'; //assign
 	} else {
@@ -351,85 +314,17 @@ char DRV2605L::is_elevation_in_range(float elevation)  // up/down
 }
 
 
-float DRV2605L::get_azimuth(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
-{
-	float azimuth= sensor_avs_lite_ext_data.azimuth_deg;
-
-	// // Normalize to 0-360 range
-	// if (azimuth < 0.0f) {
-	// 	azimuth += 360.0f;
-	// }
-
-	// Normalize to 0-360° range using modulus
-	// apply offset and sense correction
-	//azimuth = fmodf(azimuth + 360.0f, 360.0f);
-
-	//azimuth = fmodf((azimuth - _offset.get()) * _sense.get() + 360.0f, 360.0f);
-
-	if ((fabsf(_offset_avs_l.get()) > 0.001f) || (_sense_avs_l.get() != 1)) {
-		azimuth = fmodf((azimuth - _offset_avs_l.get()) * _sense_avs_l.get() + 360.0f, 360.0f);
-	} else if ((fabsf(_offset_avs_r.get()) > 0.001f) || (_sense_avs_r.get() != 1)) {
-		azimuth = fmodf((azimuth - _offset_avs_r.get()) * _sense_avs_r.get() + 360.0f, 360.0f);
-	}else{
-		azimuth = fmodf(azimuth + 360.0f, 360.0f);
-	}
-
-	return azimuth;
-}
-
 char DRV2605L::is_azimuth_in_range(float azimuth) //float azimuth
 {
-	//float azimuth= sensor_avs_lite_ext_data.azimuth_deg;
-
 	// Check if azimuth is in range
 	char c = 'N'; // declare once
 
-	// if btwn -45 to +45
 	if (azimuth >= _azimuth_min.get() && azimuth <= _azimuth_max.get()){
 		c = 'B'; //assign
 	} else {
 		c = 'N'; // no haptic effect
 	}
 	return c;
-}
-
-float DRV2605L::get_q_factor(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data)
-{
-	float q_factor= sensor_avs_lite_ext_data.q_factor;
-	return q_factor;
-}
-
-float DRV2605L::get_yaw_from_quaternion(const vehicle_attitude_s &att)
-{
-	// Convert quaternion to Euler angles using PX4 matrix library
-	matrix::Quatf q(att.q);
-	matrix::Eulerf euler(q);
-
-	// euler.psi() returns yaw in radians, convert to degrees
-	// Range: -180 to +180 degrees
-	float yaw_deg = math::degrees(euler.psi());
-
-	// Normalize to 0-360 range
-	// if (yaw_deg < 0.0f) {
-	// 	yaw_deg += 360.0f;
-	// }
-
-	//yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
-
-	// if ((fabsf(_offset_imu_l.get()) > 0.001f) || (_sense_imu_l.get() != 1)) {
-	// 	yaw_deg = fmodf((yaw_deg - _offset_imu_l.get()) * _sense_imu_l.get() + 360.0f, 360.0f);
-	// } else if ((fabsf(_offset_imu_r.get()) > 0.001f) || (_sense_imu_r.get() != 1)) {
-	// 	yaw_deg = fmodf((yaw_deg - _offset_imu_r.get()) * _sense_imu_r.get() + 360.0f, 360.0f);
-	// }else {
-	// 	yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
-	// }
-
-	if ((fabsf(_offset_imu.get()) > 0.001f) || (_sense_imu.get() != 1)) {
-		yaw_deg = fmodf((yaw_deg - _offset_imu.get()) * _sense_imu.get() + 360.0f, 360.0f);
-	}else {
-		yaw_deg = fmodf(yaw_deg + 360.0f, 360.0f);
-	}
-	return yaw_deg;
 }
 
 
@@ -447,75 +342,6 @@ char DRV2605L::is_yaw_in_range(float yaw_deg)  // bool DRV2605L
 	return c;
 }
 
-// float DRV2605L::get_pitch_from_quaternion(const vehicle_attitude_s &att)
-// {
-// 	// Convert quaternion to Euler angles using PX4 matrix library
-// 	matrix::Quatf q(att.q);
-// 	matrix::Eulerf euler(q);
-
-// 	// euler.theta() returns pitch in radians, convert to degrees
-// 	//rotation around Y-axis
-// 	// Range: -180 to +180 degrees
-// 	float pitch = math::degrees(euler.theta());
-
-// 	// // Normalize to 0-360 range
-// 	// if (pitch < 0.0f) {
-// 	// 	pitch += 360.0f;
-// 	// }
-// 	return pitch;
-// }
-
-// char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
-// {
-// 	// Check if pitch is within range
-// 	char c = 'N'; // declare once
-
-// 	// if btwn 135-225
-// 	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
-// 		c = 'T'; //assign
-// 	} else {
-// 		c = 'N'; // no haptic effect
-// 	}
-// 	return c;
-// }
-
-float DRV2605L::get_roll_from_quaternion(const vehicle_attitude_s &att)
-{
-	// for our case, "roll" is up/down motion (aka elevation)
-	// typically this up/down is pitch
-
-	// Convert quaternion to Euler angles using PX4 matrix library
-	matrix::Quatf q(att.q);
-	matrix::Eulerf euler(q);
-
-	// euler.phi() returns roll (rotation around x-axis)
-	//in radians, convert to degrees
-	float roll = math::degrees(euler.phi());
-
-	//roll = (roll - _offset.get()) * _sense.get();
-
-	// if ((fabsf(_offset_imu_l.get()) > 0.001f) || (_sense_imu_l.get() != 1)) {
-	// 	roll = (roll - _offset_imu_l.get()) * _sense_imu_l.get();
-	// } else if ((fabsf(_offset_imu_r.get()) > 0.001f) || (_sense_imu_r.get() != 1)) {
-	// 	roll = (roll - _offset_imu_r.get()) * _sense_imu_r.get();
-	// }else{
-	// 	roll = roll;
-	// }
-
-	if ((fabsf(_offset_imu.get()) > 0.001f) || (_sense_imu.get() != 1)) {
-		roll = (roll - _offset_imu.get()) * _sense_imu.get();
-	}else{
-		roll = roll;
-	}
-
-	// PX4_INFO("sense=%ld offset=%.2f raw_roll=%.2f transformed=%.2f",
-	// 	_sense.get(), (double)_offset.get(),
-	// 	(double)math::degrees(euler.phi()),
-	// 	(double)roll);
-
-	return roll;
-}
-
 char DRV2605L::is_roll_in_range(float roll)  // bool DRV2605L
 {
 	// for our case, "roll" is up/down motion (aka elevation)
@@ -531,30 +357,7 @@ char DRV2605L::is_roll_in_range(float roll)  // bool DRV2605L
 	}
 	return c;
 }
-//   // read top/bottom node IDs from params
-//   int32_t top_node_id, bot_node_id;
-//   param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
-//   param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
 
-//   sensor_avs_lite_ext_s data0, data1;
-//   bool updated0 = _sensor_avs_lite_ext_sub_0.update(&data0);
-//   bool updated1 = _sensor_avs_lite_ext_sub_1.update(&data1);
-
-//   if (updated0) {
-//       if (data0.device_id == (uint32_t)top_node_id) {
-//           // top node
-//       } else if (data0.device_id == (uint32_t)bot_node_id) {
-//           // bottom node
-//       }
-//   }
-
-//   if (updated1) {
-//       if (data1.device_id == (uint32_t)top_node_id) {
-//           // top node
-//       } else if (data1.device_id == (uint32_t)bot_node_id) {
-//           // bottom node
-//       }
-//   }
 void DRV2605L::run()
 {
 	// Initialize the device(s)
@@ -568,87 +371,101 @@ void DRV2605L::run()
 
 	PX4_INFO("Haptic task started");
 
-	// initialize and read top/bottom node IDs from params
-	int32_t top_node_id, bot_node_id;
-	param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
-	param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
+	// initial read of top/bottom node IDs
+	int32_t left_node_id = 44, right_node_id = 41;
+	param_get(_param_left_node_id, &left_node_id);
+	param_get(_param_right_node_id, &right_node_id);
 
 	// Main loop
 	while (!should_exit()) {
 
 		// Check for parameter updates
-		if (_parameter_update_sub.updated()) {
-			parameter_update_s param_update;
+		if (_parameter_update_sub.updated()) { // if any update to param_update uorb message (don't know which param changed yet)
+			parameter_update_s param_update;  // if updated, then copy it and update parameters to clear pending update
 			_parameter_update_sub.copy(&param_update);
+
+
 			parameters_update();
 
 			// if updated, get new top/bottom node IDs
-			param_get(param_find("AVS_TOP_NODE_ID"), &top_node_id);
-			param_get(param_find("AVS_BOT_NODE_ID"), &bot_node_id);
+			param_get(_param_left_node_id, &left_node_id);
+			param_get(_param_right_node_id, &right_node_id);
 
 			PX4_INFO("Parameters updated");
 		}
 
-		// Check for new vehicle attitude data
-		vehicle_attitude_s attitude;
-		sensor_avs_lite_ext_s sensor_avs_lite_ext_data;
-		bool att_updated = _vehicle_attitude_sub.update(&attitude);
-
-		//bool avs_updated = _sensor_avs_lite_ext_sub.update(&sensor_avs_lite_ext_data);
-		bool avs_updated0 = _sensor_avs_lite_ext_sub_0.update(&sensor_avs_lite_ext_data);
-		bool avs_updated1 = _sensor_avs_lite_ext_sub_1.update(&sensor_avs_lite_ext_data);
+		//Check for new AVS data on both instances
+		sensor_avs_lite_ext_s data0{}, data1{}; // {} initializes all fields to zero
+		bool avs_updated0 = _sensor_avs_lite_ext_sub_0.update(&data0);
+		bool avs_updated1 = _sensor_avs_lite_ext_sub_1.update(&data1);
 
 		// Static variables to preserve latest values across loop iterations
-		static char back_side = 'N';
-		static char top_side = 'N';
+		static char back_side0 = 'N';
+		static char top_side0 = 'N';
+		static char back_side1 = 'N';
+		static char top_side1 = 'N';
 		static bool greater_threshold = false;
 
 		float trig_timer = _trig_timer.get();
-		//static float q_factor = 0.0f;
 
-		if (att_updated)  {
+		if (avs_updated0){
 
-			float yaw_deg = get_yaw_from_quaternion(attitude); 	// Get yaw angle from quaternion
-			//float pitch = get_pitch_from_quaternion(attitude); 	// Get pitch angle from quaternion
-			float roll = get_roll_from_quaternion(attitude); 	// Get roll angle from quaternion
+			uint32_t node = data0.device_id;
+			float yaw  = data0.yaw;
+    			float roll = data0.roll;
 
-			if (_mode.get() == 0){  //IMU
-				back_side = is_yaw_in_range(yaw_deg); 		// Check and determine if yaw is in target range
-				top_side = is_roll_in_range(roll); 		// Check and determine if roll is in target range
-				//PX4_INFO("using IMU mode");
-				PX4_INFO("Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (double)yaw_deg,  (double)roll, back_side, top_side);
-			}
-			// Print yaw continuously with haptic side status
-			// Haptic: %s.  (back_side != 'N') ? "ACTIVE" : "INACTIVE"
-			//PX4_INFO("Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (double)yaw_deg,  (double)roll, back_side, top_side);
-		}
-
-		if (avs_updated){
-
-			float active_int = sensor_avs_lite_ext_data.active_intensity;  // get active intensity value
-			float elevation = get_elevation(sensor_avs_lite_ext_data); // get elevation value
-    			float azimuth = get_azimuth(sensor_avs_lite_ext_data);  // get azimuth value
+			float active_int = data0.active_intensity;  // get active intensity value
+			float elevation = data0.elevation_deg; // get elevation value
+    			float azimuth = data0.azimuth_deg;  // get azimuth value
 			greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
 
 			PX4_INFO("Active Intensity: %.2f",(double)active_int);
 
-			if (_mode.get() == 1){  //AVS
+			if (_mode.get() == 0){  //IMU
+				back_side0 = is_yaw_in_range(yaw); 		// Check and determine if yaw is in target range
+				top_side0 = is_roll_in_range(roll); 		// Check and determine if roll is in target range
+				//PX4_INFO("using IMU mode");
 
-			//if (_use_avs_mode){
-				back_side = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
-				top_side = is_elevation_in_range(elevation); // Check and determine if elevation is in range
-				//PX4_INFO("using AVS mode");
-				PX4_INFO("Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (double)azimuth, (double)elevation, back_side, top_side);
-
+				PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node,(double)yaw,  (double)roll, back_side0, top_side0);
 			}
-			//float q_factor = get_q_factor(sensor_avs_lite_ext_data);
-			//| Q Factor: %.2f", (double)q_factor(double)active_int,
-			//PX4_INFO("Active Intensity: %.2f",(double)active_int)
-			//PX4_INFO("Active Intensity: %.2f | Azimuth: %.2f | Elevation: %.2f", (double)azimuth,(double)active_int, (double)elevation);
+
+			if (_mode.get() == 1){  //AVS
+				back_side0 = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
+				top_side0 = is_elevation_in_range(elevation); // Check and determine if elevation is in range
+				//PX4_INFO("using AVS mode");
+				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node ,(double)azimuth, (double)elevation, back_side0, top_side0);
+			}
 		}
-		//
+
+		if (avs_updated1){
+
+			uint32_t node = data1.device_id;
+			float active_int = data1.active_intensity;  // get active intensity value
+			float elevation = data1.elevation_deg; // get elevation value
+    			float azimuth = data1.azimuth_deg;  // get azimuth value
+			//greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
+
+			PX4_INFO("Active Intensity: %.2f",(double)active_int);
+
+			// if (_mode.get() == 0){  //IMU
+			// 	back_side = is_yaw_in_range(yaw); 		// Check and determine if yaw is in target range
+			// 	top_side = is_roll_in_range(roll); 		// Check and determine if roll is in target range
+			// 	//PX4_INFO("using IMU mode");
+
+			// 	PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node,(double)yaw,  (double)roll, back_side, top_side);
+			// }
+
+			if (_mode.get() == 1){  //AVS
+				back_side1 = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
+				top_side1 = is_elevation_in_range(elevation); // Check and determine if elevation is in range
+				//PX4_INFO("using AVS mode");
+				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node ,(double)azimuth, (double)elevation, back_side1, top_side1);
+			}
+		}
+
 		//Only trigger if in haptic yaw range, haptic pitch range, & exceed active intensity threshold
-		if ((back_side != 'N' || top_side != 'N') && greater_threshold ) {
+		//if ((back_side != 'N' || top_side != 'N') && greater_threshold ) {
+		if ((back_side0 != 'N' || top_side0 != 'N' || back_side1 != 'N' || top_side1 != 'N') && greater_threshold ) {
 
 			// Get the effect number from parameter
 			uint8_t effectT = static_cast<uint8_t>(_drv_effect_t.get());
@@ -658,7 +475,7 @@ void DRV2605L::run()
 			//PX4_INFO("Triggering haptic effect right: %d | left: %d", effectR, effectL);
 
 			if (_use_multiplex){ // if using multiplexer
-				if (back_side == 'B'){
+				if (back_side0 == 'B' and back_side1 == 'B'){  // if either instance triggers backside haptic
 					// Trigger backside haptic
 					int ret1 = trigger_effect(_multiplex_channel1, effectB);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
@@ -668,7 +485,7 @@ void DRV2605L::run()
 					}
 					px4_usleep((useconds_t)(trig_timer * 1000000));
 				}
-				if (top_side == 'T'){
+				if (top_side0 == 'T' and top_side1 == 'T'){  // if either instance triggers topside haptic
 					// Trigger backside haptic
 					int ret2 = trigger_effect(_multiplex_channel2, effectT);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);

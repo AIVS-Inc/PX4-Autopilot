@@ -4,6 +4,14 @@ parameters:
   - group: Haptic
     definitions:
 
+      HAP_ENABLE:
+        description:
+          short: Enable haptic driver?(1=enable, 0=disable)
+        type: int32
+        default: 0
+        min: 0
+        max: 1
+
       HAP_MULTIPLEX:
         description:
           short: using multiplexer?
@@ -61,26 +69,6 @@ parameters:
         increment: 1.0
         default: 0.0
 
-      HAP_OFFSET_IMU_R:
-        description:
-          short: Offset angle
-        type: float
-        unit: deg
-        min: 0
-        max: 360
-        increment: 1.0
-        default: 0.0
-
-      HAP_OFFSET_IMU_L:
-        description:
-          short: Offset angle
-        type: float
-        unit: deg
-        min: 0
-        max: 360
-        increment: 1.0
-        default: 0.0
-
       HAP_SENSE_AVS_R:
         description:
           short: Sense
@@ -100,24 +88,6 @@ parameters:
         default: 1
 
       HAP_SENSE_IMU:
-        description:
-          short: Sense
-        type: enum
-        values:
-            -1: Negative
-            1: Positive
-        default: 1
-
-      HAP_SENSE_IMU_L:
-        description:
-          short: Sense
-        type: enum
-        values:
-            -1: Negative
-            1: Positive
-        default: 1
-
-      HAP_SENSE_IMU_R:
         description:
           short: Sense
         type: enum

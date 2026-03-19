@@ -117,22 +117,11 @@ private:
 
 	int trigger_effect(uint8_t channel, uint8_t effect); //core logic
 	int init_drv2605l(uint8_t channel);
-	//float get_active_intensity(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data);
-	float get_elevation(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data);
-	float get_q_factor(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data);
-	float get_azimuth(const sensor_avs_lite_ext_s &sensor_avs_lite_ext_data);
 	bool check_act_int_threshold(float active_int);
-	float get_yaw_from_quaternion(const vehicle_attitude_s &att);
-	//float get_pitch_from_quaternion(const vehicle_attitude_s &att);
-	float get_roll_from_quaternion(const vehicle_attitude_s &att);
 	char is_azimuth_in_range(float azimuth);
 	char is_elevation_in_range(float elevation);
 	char is_yaw_in_range(float yaw_deg);
 	char is_roll_in_range(float roll);
-	//char is_pitch_in_range(float pitch);
-
-	// uORB subscription for vehicle attitude and sensor avs data
-	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 
 	// subsribe to both instances of sensor_avs_lite_ext (account fot 2 AVS sensors)
 	uORB::Subscription _sensor_avs_lite_ext_sub_0{ORB_ID(sensor_avs_lite_ext),0};
@@ -151,22 +140,19 @@ private:
 	//
 
 	DEFINE_PARAMETERS(
+		(ParamInt<px4::params::HAP_ENABLE>) _enable_hap,
+		//(ParamInt<px4::params::HAP_AVS_ENABLE>) _enable_avs,
+
 		(ParamBool<px4::params::HAP_MULTIPLEX>) _multiplexer_flag,
 		(ParamInt<px4::params::HAP_MODE>) _mode,
 
-		//(ParamFloat<px4::params::HAP_OFFSET>) _offset,
 		(ParamFloat<px4::params::HAP_OFFSET_AVS_R>) _offset_avs_r,
 		(ParamFloat<px4::params::HAP_OFFSET_AVS_L>) _offset_avs_l,
 		(ParamFloat<px4::params::HAP_OFFSET_IMU>) _offset_imu,
-		//(ParamFloat<px4::params::HAP_OFFSET_IMU_R>) _offset_imu_r,
-		//(ParamFloat<px4::params::HAP_OFFSET_IMU_L>) _offset_imu_l,
 
-		//(ParamInt<px4::params::HAP_SENSE>) _sense,
 		(ParamInt<px4::params::HAP_SENSE_AVS_R>) _sense_avs_r,
 		(ParamInt<px4::params::HAP_SENSE_AVS_L>) _sense_avs_l,
 		(ParamInt<px4::params::HAP_SENSE_IMU>) _sense_imu,
-		//(ParamInt<px4::params::HAP_SENSE_IMU_R>) _sense_imu_r,
-		//(ParamInt<px4::params::HAP_SENSE_IMU_L>) _sense_imu_l,
 
 		(ParamFloat<px4::params::HAP_YAW_MIN>) _yaw_min,
 		(ParamFloat<px4::params::HAP_YAW_MAX>) _yaw_max,
@@ -184,4 +170,8 @@ private:
 		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t,
 		(ParamFloat<px4::params::HAP_TRIG_TIMER>) _trig_timer
 	)
+
+
+	param_t _param_left_node_id {PARAM_INVALID};
+	param_t _param_right_node_id {PARAM_INVALID};
 };
