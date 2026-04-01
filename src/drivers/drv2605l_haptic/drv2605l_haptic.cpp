@@ -296,8 +296,21 @@ int DRV2605L::trigger_effect(uint8_t channel, uint8_t effect)
 
 bool DRV2605L::check_act_int_threshold(float active_int)
 {
-	// Check if active intensity greater than 70
+	// Check if active intensity value greater
 	return (active_int >= _act_int.get());
+}
+
+bool DRV2605L::check_q_factor_threshold(float q_factor)
+{
+	// Check if q-factor value greater
+	return (q_factor >= _q_factor.get());
+}
+
+
+bool DRV2605L::check_histogram_threshold(float histogram)
+{
+	// Check if histogram value greater
+	return (histogram >= _histogram.get());
 }
 
 char DRV2605L::is_elevation_in_range(float elevation)  // up/down
@@ -344,13 +357,23 @@ char DRV2605L::is_yaw_in_range(float yaw_deg)  // bool DRV2605L
 
 char DRV2605L::is_roll_in_range(float roll)  // bool DRV2605L
 {
-	// for our case, "roll" is up/down motion (aka elevation)
+	// Check if roll is within range
+	char c = 'N'; // declare once
 
+	if (roll >= _roll_min.get() && roll <= _roll_max.get()){
+		c = 'T'; //assign
+	} else {
+		c = 'N'; // no haptic effect
+	}
+	return c;
+}
+
+char DRV2605L::is_pitch_in_range(float pitch)  // bool DRV2605L
+{
 	// Check if pitch is within range
 	char c = 'N'; // declare once
 
-	// if btwn 135-225
-	if (roll >= _roll_min.get() && roll <= _roll_max.get()){
+	if (pitch >= _pitch_min.get() && pitch <= _pitch_max.get()){
 		c = 'T'; //assign
 	} else {
 		c = 'N'; // no haptic effect
@@ -384,7 +407,6 @@ void DRV2605L::run()
 			parameter_update_s param_update;  // if updated, then copy it and update parameters to clear pending update
 			_parameter_update_sub.copy(&param_update);
 
-
 			parameters_update();
 
 			// if updated, get new top/bottom node IDs
@@ -404,68 +426,82 @@ void DRV2605L::run()
 		static char top_side0 = 'N';
 		static char back_side1 = 'N';
 		static char top_side1 = 'N';
-		static bool greater_threshold = false;
+		static bool greater_act_int_threshold0 = false;
+		static bool greater_q_fact_threshold0 = false;
+		static bool greater_hist_threshold0 = false;
+		static bool greater_act_int_threshold1 = false;
+		static bool greater_q_fact_threshold1 = false;
+		static bool greater_hist_threshold1 = false;
 
 		float trig_timer = _trig_timer.get();
 
 		if (avs_updated0){
 
-			uint32_t node = data0.device_id;
+			uint32_t node0 = data0.device_id;
 			float yaw  = data0.yaw;
     			float roll = data0.roll;
+			float pitch = data0.pitch;
 
-			float active_int = data0.active_intensity;  // get active intensity value
-			float elevation = data0.elevation_deg; // get elevation value
-    			float azimuth = data0.azimuth_deg;  // get azimuth value
-			greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
+			float active_int0 = data0.active_intensity;  // get active intensity value
+			float elevation0 = data0.elevation_deg; // get elevation value
+    			float azimuth0 = data0.azimuth_deg;  // get azimuth value
+			float q_factor0 = data0.q_factor; // get q-factor value
+			float histogram0 = data0.histogram_count; // get histogram value
 
-			PX4_INFO("Active Intensity: %.2f",(double)active_int);
+			greater_act_int_threshold0 = check_act_int_threshold(active_int0); // check if greater than threshold value
+			greater_q_fact_threshold0 = check_q_factor_threshold(q_factor0); // check if greater than threshold value
+			greater_hist_threshold0 = check_histogram_threshold(histogram0); // check if greater than threshold value
+
+			PX4_INFO("Node: %lu | Active Intensity: %.2f | Q Factor: %.2f | Histogram: %.2f",(unsigned long)node0, (double)active_int0,(double)q_factor0, (double)histogram0);
 
 			if (_mode.get() == 0){  //IMU
 				back_side0 = is_yaw_in_range(yaw); 		// Check and determine if yaw is in target range
-				top_side0 = is_roll_in_range(roll); 		// Check and determine if roll is in target range
-				//PX4_INFO("using IMU mode");
 
-				PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node,(double)yaw,  (double)roll, back_side0, top_side0);
+				if (_up_down_motion.get() == 0) { // if roll is up/down motion
+					top_side0 = is_roll_in_range(roll);
+					PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node0,(double)yaw,  (double)roll, back_side0, top_side0);
+				} else { // if pitch is up/down motion
+					top_side0 = is_pitch_in_range(pitch);
+					PX4_INFO("Node: %lu |Yaw: %.2f deg | Pitch: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node0,(double)yaw,  (double)pitch, back_side0, top_side0);
+				}
+
+				// PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node,(double)yaw,  (double)roll, back_side0, top_side0);
 			}
 
 			if (_mode.get() == 1){  //AVS
-				back_side0 = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
-				top_side0 = is_elevation_in_range(elevation); // Check and determine if elevation is in range
+				back_side0 = is_azimuth_in_range(azimuth0);  // Check and determine if azimuth is in range
+				top_side0 = is_elevation_in_range(elevation0); // Check and determine if elevation is in range
 				//PX4_INFO("using AVS mode");
-				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node ,(double)azimuth, (double)elevation, back_side0, top_side0);
+				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node0 ,(double)azimuth0, (double)elevation0, back_side0, top_side0);
 			}
 		}
 
 		if (avs_updated1){
 
-			uint32_t node = data1.device_id;
-			float active_int = data1.active_intensity;  // get active intensity value
-			float elevation = data1.elevation_deg; // get elevation value
-    			float azimuth = data1.azimuth_deg;  // get azimuth value
-			//greater_threshold = check_act_int_threshold(active_int); // check if greater than threshold value
+			uint32_t node1 = data1.device_id;
+			float active_int1 = data1.active_intensity;  // get active intensity value
+			float elevation1 = data1.elevation_deg; // get elevation value
+    			float azimuth1 = data1.azimuth_deg;  // get azimuth value
+			float q_factor1 = data1.q_factor; // get q-factor value
+			float histogram1 = data1.histogram_count; // get histogram value
 
-			PX4_INFO("Active Intensity: %.2f",(double)active_int);
+			greater_act_int_threshold1 = check_act_int_threshold(active_int1); // check if greater than threshold value
+			greater_q_fact_threshold1 = check_q_factor_threshold(q_factor1); // check if greater than threshold value
+			greater_hist_threshold1 = check_histogram_threshold(histogram1); // check if greater than threshold value
 
-			// if (_mode.get() == 0){  //IMU
-			// 	back_side = is_yaw_in_range(yaw); 		// Check and determine if yaw is in target range
-			// 	top_side = is_roll_in_range(roll); 		// Check and determine if roll is in target range
-			// 	//PX4_INFO("using IMU mode");
-
-			// 	PX4_INFO("Node: %lu |Yaw: %.2f deg | Roll: %.2f deg | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node,(double)yaw,  (double)roll, back_side, top_side);
-			// }
+			PX4_INFO("Node: %lu | Active Intensity: %.2f | Q Factor: %.2f | Histogram: %.2f",(unsigned long)node1, (double)active_int1,(double)q_factor1, (double)histogram1);
 
 			if (_mode.get() == 1){  //AVS
-				back_side1 = is_azimuth_in_range(azimuth);  // Check and determine if azimuth is in range
-				top_side1 = is_elevation_in_range(elevation); // Check and determine if elevation is in range
+				back_side1 = is_azimuth_in_range(azimuth1);  // Check and determine if azimuth is in range
+				top_side1 = is_elevation_in_range(elevation1); // Check and determine if elevation is in range
 				//PX4_INFO("using AVS mode");
-				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node ,(double)azimuth, (double)elevation, back_side1, top_side1);
+				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node1 ,(double)azimuth1, (double)elevation1, back_side1, top_side1);
 			}
 		}
 
 		//Only trigger if in haptic yaw range, haptic pitch range, & exceed active intensity threshold
-		//if ((back_side != 'N' || top_side != 'N') && greater_threshold ) {
-		if ((back_side0 != 'N' || top_side0 != 'N' || back_side1 != 'N' || top_side1 != 'N') && greater_threshold ) {
+		//if ((back_side != 'N' || top_side != 'N') && greater_act_int_threshold ) {
+		if ((back_side0 != 'N' || top_side0 != 'N' || back_side1 != 'N' || top_side1 != 'N') && greater_act_int_threshold0 && greater_q_fact_threshold0 && greater_hist_threshold0 && greater_act_int_threshold1 && greater_q_fact_threshold1 && greater_hist_threshold1) {
 
 			// Get the effect number from parameter
 			uint8_t effectT = static_cast<uint8_t>(_drv_effect_t.get());

@@ -1217,11 +1217,13 @@ int AresAvs::peak_command()		// update event params in ARES, enable/disable FFT
 	memset(&peak, 0, sizeof(peak));
 	orb_advert_t peak_pub = orb_advertise(ORB_ID(sensor_avs_peak_control), &peak);
 
-	param_get(param_find("AVS_PK_NUM_HARM"), &val); peak.max_harmonics = (uint8_t)val;
-	param_get(param_find("AVS_PK_NUM_PEAK"), &val); peak.num_peaks = (uint8_t)val;
+	param_get(param_find("AVS_PK_NUM_HARM"), &val); peak.max_harmonics = (int8_t)val;
+	param_get(param_find("AVS_PK_NUM_PEAK"), &val); peak.num_peaks = (int8_t)val;
 	param_get(param_find("AVS_PK_MIN_HGHT"), &val); peak.min_peak_height = (float)val;
 	param_get(param_find("AVS_PK_MIN_D_DB"), &val); peak.min_peak_change = (float)val;
 	param_get(param_find("AVS_PK_MIN_BLNK"), &val); peak.min_blanking = (float)val;
+
+
 
 	peak.fft_param_id = ares_fft_ParamId_PeakDetector;
 	peak.node_top = aresNodeId_top;
@@ -1371,10 +1373,12 @@ int AresAvs::send_ares_command()
     }
 
     PX4_INFO("Sending ARES command with current parameters based on send_ares setting");
-    fft_command(false);   // 1. disable FFT
-    event_command();      // 2. send event params
-    peak_command();       // 3. send peak params
-    fft_command(true);    // 4. enable FFT
+    fft_command(false);   // disable FFT
+    event_command();      // send event params
+    lin_command();        // send FFT linear bin start, num_bins
+    //disarm_command();    // disarm vehicle to stop measurements and allow FFT param changes
+    dec_command();	  // send FFT decimation
+    fft_command(true);    // enable FFT
 
     // reset flag after sending so it only fires once
     int32_t reset_ares_flag = 0;

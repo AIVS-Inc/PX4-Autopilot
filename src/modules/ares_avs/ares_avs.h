@@ -264,12 +264,10 @@ private:
 	bool bot_node_ack_reported = false;
 	bool top_node_sync = false;
 	bool bot_node_sync = false;
-	uint8_t hb_count = 0;	// heartbeat counter used for implementing delays in the state machine
+	uint8_t hb_count = 0;	// heartbeat counter used for delays in the state machine
 	bool fftEnable = false; //
 
 	DEFINE_PARAMETERS(
-
-		(ParamInt<px4::params::AVS_ENABLE>) _enable_avs,
 		(ParamInt<px4::params::AVS_SEND_ARES>) _send_ares_flag,
 
 		(ParamInt<px4::params::AVS_BOT_NODE_ID>) _nodeid_bot,

@@ -94,9 +94,9 @@ public:
 
 	/** @see ModuleBase */
 	// PX4 integration
-	static int task_spawn(int argc, char *argv[]);
-	static DRV2605L *instantiate(int argc, char *argv[]);
-	static int custom_command(int argc, char *argv[]);
+	static int task_spawn(int argc, char *argv[]); // called by the module framework when you run 'drv2605l_haptic start'
+	static DRV2605L *instantiate(int argc, char *argv[]); //
+	static int custom_command(int argc, char *argv[]); //
 	static int print_usage(const char *reason = nullptr);
 	void run() override; // core logic
 	int print_status() override;
@@ -118,10 +118,13 @@ private:
 	int trigger_effect(uint8_t channel, uint8_t effect); //core logic
 	int init_drv2605l(uint8_t channel);
 	bool check_act_int_threshold(float active_int);
+	bool check_q_factor_threshold(float q_factor);
+	bool check_histogram_threshold(float histogram);
 	char is_azimuth_in_range(float azimuth);
 	char is_elevation_in_range(float elevation);
 	char is_yaw_in_range(float yaw_deg);
 	char is_roll_in_range(float roll);
+	char is_pitch_in_range(float pitch);
 
 	// subsribe to both instances of sensor_avs_lite_ext (account fot 2 AVS sensors)
 	uORB::Subscription _sensor_avs_lite_ext_sub_0{ORB_ID(sensor_avs_lite_ext),0};
@@ -140,11 +143,10 @@ private:
 	//
 
 	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::HAP_ENABLE>) _enable_hap,
-		//(ParamInt<px4::params::HAP_AVS_ENABLE>) _enable_avs,
 
 		(ParamBool<px4::params::HAP_MULTIPLEX>) _multiplexer_flag,
 		(ParamInt<px4::params::HAP_MODE>) _mode,
+		(ParamInt<px4::params::HAP_IMU_UP_DOWN>) _up_down_motion,
 
 		(ParamFloat<px4::params::HAP_OFFSET_AVS_R>) _offset_avs_r,
 		(ParamFloat<px4::params::HAP_OFFSET_AVS_L>) _offset_avs_l,
@@ -157,6 +159,8 @@ private:
 		(ParamFloat<px4::params::HAP_YAW_MIN>) _yaw_min,
 		(ParamFloat<px4::params::HAP_YAW_MAX>) _yaw_max,
 		(ParamFloat<px4::params::HAP_ACT_INT>) _act_int,
+		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor,
+		(ParamFloat<px4::params::HAP_HISTOGRAM>) _histogram,
 		(ParamFloat<px4::params::HAP_ELEV_MAX>) _elevation_max,
 		(ParamFloat<px4::params::HAP_ELEV_MIN>) _elevation_min,
 		(ParamFloat<px4::params::HAP_PITCH_MAX>) _pitch_max,
@@ -165,7 +169,6 @@ private:
 		(ParamFloat<px4::params::HAP_ROLL_MIN>) _roll_min,
 		(ParamFloat<px4::params::HAP_AZIMUTH_MIN>) _azimuth_min,
 		(ParamFloat<px4::params::HAP_AZIMUTH_MAX>) _azimuth_max,
-		(ParamFloat<px4::params::HAP_Q_FACTOR>) _q_factor,
 		(ParamInt<px4::params::HAP_DRV_EFFECT_B>) _drv_effect_b,
 		(ParamInt<px4::params::HAP_DRV_EFFECT_T>) _drv_effect_t,
 		(ParamFloat<px4::params::HAP_TRIG_TIMER>) _trig_timer

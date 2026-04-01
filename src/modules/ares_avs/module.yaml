@@ -4,14 +4,6 @@ parameters:
   - group: AVS
     definitions:
 
-      AVS_ENABLE:
-        description:
-          short: Enable ARES AVS module (1=enable, 0=disable)
-        type: int32
-        default: 0
-        min: 0
-        max: 1
-
       AVS_BOT_NODE_ID:
         description:
           short: Node ID of downward looking AVS node
