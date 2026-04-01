@@ -1373,12 +1373,17 @@ int AresAvs::send_ares_command()
     }
 
     PX4_INFO("Sending ARES command with current parameters based on send_ares setting");
-    fft_command(false);   // disable FFT
+
+    bool fft_was_enabled = fftEnable; // track if FFT was enabled before sending, so we can restore state after sending params
+    if (fft_was_enabled) {
+	fft_command(false);   // only disable if FFT was running
+    }
     event_command();      // send event params
     lin_command();        // send FFT linear bin start, num_bins
-    //disarm_command();    // disarm vehicle to stop measurements and allow FFT param changes
-    dec_command();	  // send FFT decimation
-    fft_command(true);    // enable FFT
+    dec_command();        // send FFT decimation
+    if (fft_was_enabled) {
+	fft_command(true);    // only re-enable if it was running
+    }
 
     // reset flag after sending so it only fires once
     int32_t reset_ares_flag = 0;
