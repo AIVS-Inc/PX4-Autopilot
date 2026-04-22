@@ -1381,6 +1381,7 @@ int AresAvs::send_ares_command()
     event_command();      // send event params
     lin_command();        // send FFT linear bin start, num_bins
     dec_command();        // send FFT decimation
+    reset_command();      // reset ARES, which will re-enable FFT if it was previously on and apply new params
     if (fft_was_enabled) {
 	fft_command(true);    // only re-enable if it was running
     }

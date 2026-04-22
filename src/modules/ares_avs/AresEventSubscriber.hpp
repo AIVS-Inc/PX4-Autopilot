@@ -210,12 +210,12 @@ public:
 			azim = fmodf(azim + 360.0f, 360.0f);
 		}
 
-		// elevation correction
-		if ((node == (uint32_t)left_node_id) && ((fabsf(offset_avs_l) > 0.001f) || (sense_avs_l != 1))) {
-			elev = (elev - offset_avs_l) * sense_avs_l;
-		} else if ((node == (uint32_t)right_node_id) && ((fabsf(offset_avs_r) > 0.001f) || (sense_avs_r != 1))) {
-			elev = (elev - offset_avs_r) * sense_avs_r;
-		}
+		// // elevation correction
+		// if ((node == (uint32_t)left_node_id) && ((fabsf(offset_avs_l) > 0.001f) || (sense_avs_l != 1))) {
+		// 	elev = (elev - offset_avs_l) * sense_avs_l;
+		// } else if ((node == (uint32_t)right_node_id) && ((fabsf(offset_avs_r) > 0.001f) || (sense_avs_r != 1))) {
+		// 	elev = (elev - offset_avs_r) * sense_avs_r;
+		// }
 
 		bearings.timestamp = hrt_absolute_time();
 		bearings.device_id = node;

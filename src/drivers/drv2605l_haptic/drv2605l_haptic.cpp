@@ -433,6 +433,19 @@ void DRV2605L::run()
 		static bool greater_q_fact_threshold1 = false;
 		static bool greater_hist_threshold1 = false;
 
+
+		// static char prev_back_side0 = 'N';
+		// static char prev_top_side0 = 'N';
+		// static char prev_back_side1 = 'N';
+		// static char prev_top_side1 = 'N';
+		// static bool prev_greater_act_int_threshold0 = false;
+		// static bool prev_greater_q_fact_threshold0 = false;
+		// static bool prev_greater_hist_threshold0 = false;
+		// static bool prev_greater_act_int_threshold1 = false;
+		// static bool prev_greater_q_fact_threshold1 = false;
+		// static bool prev_greater_hist_threshold1 = false;
+
+
 		float trig_timer = _trig_timer.get();
 
 		if (avs_updated0){
@@ -447,6 +460,10 @@ void DRV2605L::run()
     			float azimuth0 = data0.azimuth_deg;  // get azimuth value
 			float q_factor0 = data0.q_factor; // get q-factor value
 			float histogram0 = data0.histogram_count; // get histogram value
+
+			// prev_greater_act_int_threshold0 = greater_act_int_threshold0;
+			// prev_greater_q_fact_threshold0 = greater_q_fact_threshold0;
+			// prev_greater_hist_threshold0 = greater_hist_threshold0;
 
 			greater_act_int_threshold0 = check_act_int_threshold(active_int0); // check if greater than threshold value
 			greater_q_fact_threshold0 = check_q_factor_threshold(q_factor0); // check if greater than threshold value
@@ -469,9 +486,12 @@ void DRV2605L::run()
 			}
 
 			if (_mode.get() == 1){  //AVS
+				// prev_top_side0 = top_side0;
+				// prev_back_side0 = back_side0;
+
 				back_side0 = is_azimuth_in_range(azimuth0);  // Check and determine if azimuth is in range
 				top_side0 = is_elevation_in_range(elevation0); // Check and determine if elevation is in range
-				//PX4_INFO("using AVS mode");
+
 				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node0 ,(double)azimuth0, (double)elevation0, back_side0, top_side0);
 			}
 		}
@@ -485,6 +505,10 @@ void DRV2605L::run()
 			float q_factor1 = data1.q_factor; // get q-factor value
 			float histogram1 = data1.histogram_count; // get histogram value
 
+			// prev_greater_act_int_threshold1 = greater_act_int_threshold1;
+			// prev_greater_q_fact_threshold1 = greater_q_fact_threshold1;
+			// prev_greater_hist_threshold1 = greater_hist_threshold1;
+
 			greater_act_int_threshold1 = check_act_int_threshold(active_int1); // check if greater than threshold value
 			greater_q_fact_threshold1 = check_q_factor_threshold(q_factor1); // check if greater than threshold value
 			greater_hist_threshold1 = check_histogram_threshold(histogram1); // check if greater than threshold value
@@ -492,16 +516,41 @@ void DRV2605L::run()
 			PX4_INFO("Node: %lu | Active Intensity: %.2f | Q Factor: %.2f | Histogram: %.2f",(unsigned long)node1, (double)active_int1,(double)q_factor1, (double)histogram1);
 
 			if (_mode.get() == 1){  //AVS
+				// prev_back_side1 = back_side1;
+				// prev_top_side1 = top_side1;
+
 				back_side1 = is_azimuth_in_range(azimuth1);  // Check and determine if azimuth is in range
 				top_side1 = is_elevation_in_range(elevation1); // Check and determine if elevation is in range
+
 				//PX4_INFO("using AVS mode");
 				PX4_INFO("Node: %lu | Azimuth: %.2f | Elevation: %.2f | Haptic Back Side: %c | Haptic Top Side: %c", (unsigned long)node1 ,(double)azimuth1, (double)elevation1, back_side1, top_side1);
 			}
 		}
 
-		//Only trigger if in haptic yaw range, haptic pitch range, & exceed active intensity threshold
-		//if ((back_side != 'N' || top_side != 'N') && greater_act_int_threshold ) {
-		if ((back_side0 != 'N' || top_side0 != 'N' || back_side1 != 'N' || top_side1 != 'N') && greater_act_int_threshold0 && greater_q_fact_threshold0 && greater_hist_threshold0 && greater_act_int_threshold1 && greater_q_fact_threshold1 && greater_hist_threshold1) {
+		//Only trigger if in range, & exceed active intensity threshold, q-factor threshold, and histogram threshold.
+
+
+		if ((back_side0 != 'N' || top_side0 != 'N' || back_side1 != 'N' || top_side1 != 'N') && greater_act_int_threshold0 && greater_q_fact_threshold0 &&
+			greater_hist_threshold0 && greater_act_int_threshold1 && greater_q_fact_threshold1 && greater_hist_threshold1) {
+
+
+
+		// if (
+		// 	((back_side0 != 'N' && prev_back_side0 == 'N') || (top_side0 != 'N' && prev_top_side0 == 'N') || (back_side1 != 'N' && prev_back_side1 == 'N') ||
+		// 	(top_side1 != 'N' && prev_top_side1 == 'N')) &&
+
+		// 	(
+
+		// 	((greater_act_int_threshold0 && greater_q_fact_threshold0 && greater_hist_threshold0) ||
+		// 	(prev_greater_act_int_threshold0 && prev_greater_q_fact_threshold0 && prev_greater_hist_threshold0))
+
+		// 	&&
+
+		// 	((greater_act_int_threshold1 && greater_q_fact_threshold1 && greater_hist_threshold1) ||
+		// 	(prev_greater_act_int_threshold1 && prev_greater_q_fact_threshold1 && prev_greater_hist_threshold1))
+
+		// 	)
+		// ) {
 
 			// Get the effect number from parameter
 			uint8_t effectT = static_cast<uint8_t>(_drv_effect_t.get());
@@ -511,7 +560,7 @@ void DRV2605L::run()
 			//PX4_INFO("Triggering haptic effect right: %d | left: %d", effectR, effectL);
 
 			if (_use_multiplex){ // if using multiplexer
-				if (back_side0 == 'B' and back_side1 == 'B'){  // if either instance triggers backside haptic
+				if (back_side0 == 'B' and back_side1 == 'B'){  //  triggers backside haptic
 					// Trigger backside haptic
 					int ret1 = trigger_effect(_multiplex_channel1, effectB);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
@@ -521,7 +570,7 @@ void DRV2605L::run()
 					}
 					px4_usleep((useconds_t)(trig_timer * 1000000));
 				}
-				if (top_side0 == 'T' and top_side1 == 'T'){  // if either instance triggers topside haptic
+				if (top_side0 == 'T' and top_side1 == 'T'){  //  triggers topside haptic
 					// Trigger backside haptic
 					int ret2 = trigger_effect(_multiplex_channel2, effectT);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);

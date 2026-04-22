@@ -120,7 +120,7 @@ parameters:
         min: 1
         max: 45
         increment: 1
-        default: 10
+        default: 30
 
       AVS_EVT_BG_TC:
         description:
