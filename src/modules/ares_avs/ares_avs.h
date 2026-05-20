@@ -191,6 +191,10 @@ public:
 
 	int send_ares_command();
 
+	int send_capture_on_command();
+
+	int send_capture_off_command();
+
 	int rtcm_command(bool flag);
 
 	int cap_command(bool flag);
@@ -269,6 +273,8 @@ private:
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::AVS_SEND_ARES>) _send_ares_flag,
+		(ParamInt<px4::params::AVS_SEND_CAP_ON>) _send_cap_on_flag,
+		(ParamInt<px4::params::AVS_SEND_CAP_OFF>) _send_cap_off_flag,
 
 		(ParamInt<px4::params::AVS_BOT_NODE_ID>) _nodeid_bot,
 		(ParamInt<px4::params::AVS_TOP_NODE_ID>) _nodeid_top,

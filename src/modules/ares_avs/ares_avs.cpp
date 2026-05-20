@@ -586,6 +586,8 @@ void AresAvs::run()
 		if (current_state <= AVS_ARM_WAIT) {  // only run if in a safe state (not armed/flying)
 			send_ares_command();  // run send_ares_command if AVS_SEND_ARES is enabled
 		}
+		send_capture_on_command();   // run if AVS_SEND_CAP_ON is enabled
+		send_capture_off_command();  // run if AVS_SEND_CAP_OFF is enabled
 
 		// Run ARES measurement state machine
 		switch (current_state) {
@@ -1393,6 +1395,45 @@ int AresAvs::send_ares_command()
     return 0;
 }
 
+int AresAvs::send_capture_on_command() //on //false
+{
+	// enable capture
+
+	if (!_send_cap_on_flag.get()) {  // exit if false/disabled
+		return 0;
+	}
+
+	bool fft_was_enabled = fftEnable; // track if FFT was enabled before sending, so we can restore state after sending params
+	if (fft_was_enabled) {
+		fft_command(false);   // only disable if FFT was running
+	}
+
+	cap_command(true);    // send capture command
+
+	// reset flag after sending so it only fires once
+    	int32_t reset_cap_flag = 0;
+	param_set(param_find("AVS_SEND_CAP_ON"), &reset_cap_flag);
+
+	return 0;
+}
+
+int AresAvs::send_capture_off_command() //off //true
+{
+	// disable capture
+	if (!_send_cap_off_flag.get()) {  // exit if false/disabled
+		return 0;
+	}
+
+	cap_command(false);    // cap0: disable capture
+
+	fft_command(true);     // fft1: always re-enable FFT after capture ends
+
+	// reset flag after sending so it only fires once
+	int32_t reset_cap_flag = 0;
+	param_set(param_find("AVS_SEND_CAP_OFF"), &reset_cap_flag);
+
+	return 0;
+}
 int AresAvs::cal_command()			// recompute FFT correction vectors
 {
 	if (fftEnable == true){

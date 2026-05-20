@@ -54,6 +54,18 @@ parameters:
         type: boolean
         default: false
 
+      AVS_SEND_CAP_ON:
+        description:
+          short: send capture on command to ARES
+        type: boolean
+        default: false
+
+      AVS_SEND_CAP_OFF:
+        description:
+          short: send capture off command to ARES
+        type: boolean
+        default: false
+
       AVS_FFT_STRT_BIN:
         description:
           short: FFT start bin
