@@ -560,7 +560,7 @@ void DRV2605L::run()
 			//PX4_INFO("Triggering haptic effect right: %d | left: %d", effectR, effectL);
 
 			if (_use_multiplex){ // if using multiplexer
-				if (back_side0 == 'B' and back_side1 == 'B'){  //  triggers backside haptic
+				if ((back_side0 == 'B' and back_side1 == 'B') and (top_side0 == 'N' and top_side1 == 'N')){  //  triggers backside haptic
 					// Trigger backside haptic
 					int ret1 = trigger_effect(_multiplex_channel1, effectB);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
@@ -570,12 +570,23 @@ void DRV2605L::run()
 					}
 					px4_usleep((useconds_t)(trig_timer * 1000000));
 				}
-				if (top_side0 == 'T' and top_side1 == 'T'){  //  triggers topside haptic
+				if ((top_side0 == 'T' and top_side1 == 'T') and (back_side0 == 'N' and back_side1 == 'N')){  //  triggers topside haptic
 					// Trigger backside haptic
 					int ret2 = trigger_effect(_multiplex_channel2, effectT);
 					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
 
 					if (ret2 != OK) {
+						PX4_ERR("Failed to trigger effect");
+					}
+					px4_usleep((useconds_t)(trig_timer * 1000000));
+				}
+				if ((top_side0 == 'T' and top_side1 == 'T') and (back_side0 == 'B' and back_side1 == 'B')){  //  triggers topside haptic
+					// Trigger backside haptic
+					int ret1 = trigger_effect(_multiplex_channel1, effectB);
+					int ret2 = trigger_effect(_multiplex_channel2, effectT);
+					//int ret2 = trigger_effect(_multiplex_channel2, effectT);
+
+					if ((ret1 != OK) or (ret2 != OK)) {
 						PX4_ERR("Failed to trigger effect");
 					}
 					px4_usleep((useconds_t)(trig_timer * 1000000));
